@@ -3,19 +3,22 @@ import MeetArtistSection from "@/components/sections/MeetArtistSection";
 import MusicHeardSection from "@/components/sections/MusicHeardSection";
 import NewMusicSection from "@/components/sections/NewMusicSection";
 import NoProfitSection from "@/components/sections/NoProfitSection";
-import Image from "next/image";
+import Navbar from "@/components/local-ui/Navbar";
+import Footer from "@/components/local-ui/Footer";
 
 export default function Home() {
   return (
-    <>
+    <div>
+      <Navbar />
       <HomeHeroSection />
       <NoProfitSection />
       <NewMusicSection />
       <MeetArtistSection />
       <MusicHeardSection
-        heading="Let’s get your music heard."
-        subtext="Artist, visionary, or just someone with big ideas? We’re here to listen. Let’s talk."
+        heading="Let's get your music heard."
+        subtext="Artist, visionary, or just someone with big ideas? We're here to listen. Let's talk."
       />
-    </>
+      <Footer />
+    </div>
   );
-}
+} 

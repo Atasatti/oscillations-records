@@ -1,0 +1,359 @@
+"use client";
+import React, { useState, useEffect } from "react";
+import { useParams, useRouter } from "next/navigation";
+import Link from "next/link";
+import AdminNavbar from "@/components/local-ui/AdminNavbar";
+import MusicCardSm from "@/components/local-ui/MusicCardSm";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { ArrowLeft, MoreVertical, Trash2 } from "lucide-react";
+
+interface Single {
+  id: string;
+  name: string;
+  image?: string;
+  audioFile: string;
+  duration: number;
+  artistId: string;
+  artist?: {
+    id: string;
+    name: string;
+  };
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface EP {
+  id: string;
+  name: string;
+  coverImage: string;
+  artistId: string;
+  description?: string;
+  songIds: string[];
+  songs?: Single[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export default function EPDetail() {
+  const params = useParams();
+  const router = useRouter();
+  const artistId = params.artistId as string;
+  const epId = params.epId as string;
+
+  const [ep, setEp] = useState<EP | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteSongDialogOpen, setDeleteSongDialogOpen] = useState(false);
+  const [songToDelete, setSongToDelete] = useState<{ id: string; name: string } | null>(null);
+
+  useEffect(() => {
+    fetchEPData();
+  }, [artistId, epId]);
+
+  const fetchEPData = async () => {
+    try {
+      const response = await fetch(`/api/artists/${artistId}/eps/${epId}`);
+      if (response.ok) {
+        const epData = await response.json();
+        setEp(epData);
+      } else {
+        if (response.status === 404) {
+          setError("EP not found");
+        } else {
+          setError("Failed to fetch EP");
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching EP:", error);
+      setError("Failed to fetch EP");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const formatDuration = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
+  };
+
+  const handleDeleteClick = () => {
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!ep) return;
+
+    try {
+      const response = await fetch(`/api/artists/${artistId}/eps/${epId}`, {
+        method: "DELETE",
+      });
+
+      if (response.ok) {
+        setDeleteDialogOpen(false);
+        router.push(`/admin/catalog/artist/${artistId}`);
+      } else {
+        const error = await response.json();
+        alert(`Error: ${error.error}`);
+      }
+    } catch (error) {
+      console.error("Error deleting EP:", error);
+      alert("Failed to delete EP");
+    }
+  };
+
+  const handleDeleteSongClick = (songId: string, songName: string) => {
+    setSongToDelete({ id: songId, name: songName });
+    setDeleteSongDialogOpen(true);
+  };
+
+  const handleDeleteSongConfirm = async () => {
+    if (!songToDelete) return;
+
+    try {
+      const response = await fetch(`/api/artists/${artistId}/singles/${songToDelete.id}`, {
+        method: "DELETE",
+      });
+
+      if (response.ok) {
+        setDeleteSongDialogOpen(false);
+        setSongToDelete(null);
+        // Refresh EP data to update song list
+        fetchEPData();
+      } else {
+        const error = await response.json();
+        alert(`Error: ${error.error}`);
+      }
+    } catch (error) {
+      console.error("Error deleting song:", error);
+      alert("Failed to delete song");
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen  text-white">
+        <AdminNavbar />
+        <div className="flex justify-center items-center py-20">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !ep) {
+    return (
+      <div className="min-h-screen  text-white">
+        <AdminNavbar />
+        <div className="px-[10%] py-14">
+          <div className="text-center py-20">
+            <p className="text-red-400 mb-4">{error || "EP not found"}</p>
+            <Button
+              onClick={() => router.back()}
+              variant="outline"
+              className="border-gray-700"
+            >
+              Go Back
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen  text-white">
+      <AdminNavbar />
+
+      <div className="px-[10%] py-14">
+        {/* Header */}
+        <div className="mb-8">
+          <Button
+            variant="ghost"
+            onClick={() => router.back()}
+            className="mb-4 text-gray-400 hover:text-white"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Artist
+          </Button>
+
+          <div className="flex gap-8 items-start">
+            <img
+              src={ep.coverImage}
+              alt={ep.name}
+              className="w-64 h-64 object-cover rounded-lg"
+            />
+            <div className="flex-1">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <h1 className="text-4xl font-light tracking-tighter mb-4">
+                    {ep.name}
+                  </h1>
+                  {ep.description && (
+                    <p className="text-gray-400 mb-4">{ep.description}</p>
+                  )}
+                  <p className="text-gray-500">
+                    {ep.songs?.length || ep.songIds.length} song
+                    {ep.songs?.length !== 1 || ep.songIds.length !== 1
+                      ? "s"
+                      : ""}
+                  </p>
+                </div>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="ml-4 h-8 w-8"
+                    >
+                      <MoreVertical className="w-4 h-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent
+                    align="end"
+                    className="bg-[#0F0F0F] border-gray-800"
+                  >
+                    <DropdownMenuItem
+                      variant="destructive"
+                      onClick={handleDeleteClick}
+                      className="text-red-400 focus:text-red-300 focus:bg-red-950/20"
+                    >
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      Delete EP
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Songs Section */}
+        <div className="mb-12">
+          <h2 className="text-2xl font-light tracking-tighter mb-6">Songs</h2>
+
+          {!ep.songs || ep.songs.length === 0 ? (
+            <div className="text-center py-20 bg-[#0F0F0F] rounded-xl">
+              <p className="text-gray-400 text-lg">No songs found in this EP</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {ep.songs.map((song) => (
+                <div key={song.id} className="relative group  w-72 h-84">
+                  <MusicCardSm
+                    song={{
+                      id: song.id,
+                      name: song.name,
+                      thumbnail: song.image,
+                      audio: song.audioFile,
+                      artist: song.artist?.name
+                    }}
+                  />
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10 h-8 w-8"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                        }}
+                      >
+                        <MoreVertical className="w-4 h-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="bg-[#0F0F0F] border-gray-800">
+                      <DropdownMenuItem
+                        variant="destructive"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleDeleteSongClick(song.id, song.name);
+                        }}
+                        className="text-red-400 focus:text-red-300 focus:bg-red-950/20"
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Delete Song
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Delete EP Confirmation Dialog */}
+        <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <DialogContent className="bg-[#0F0F0F] border-gray-800 text-white">
+            <DialogHeader>
+              <DialogTitle>Delete EP</DialogTitle>
+              <DialogDescription className="text-gray-400">
+                Are you sure you want to delete "{ep?.name}"? This will remove
+                the EP but keep the songs. This action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setDeleteDialogOpen(false)}
+                className="border-gray-700"
+              >
+                Cancel
+              </Button>
+              <Button variant="destructive" onClick={handleDeleteConfirm}>
+                Delete
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Delete Song Confirmation Dialog */}
+        <Dialog open={deleteSongDialogOpen} onOpenChange={setDeleteSongDialogOpen}>
+          <DialogContent className="bg-[#0F0F0F] border-gray-800 text-white">
+            <DialogHeader>
+              <DialogTitle>Delete Song</DialogTitle>
+              <DialogDescription className="text-gray-400">
+                Are you sure you want to delete "{songToDelete?.name}"? This action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setDeleteSongDialogOpen(false);
+                  setSongToDelete(null);
+                }}
+                className="border-gray-700"
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={handleDeleteSongConfirm}
+              >
+                Delete
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
+    </div>
+  );
+}
