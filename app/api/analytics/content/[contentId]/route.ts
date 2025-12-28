@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { prisma } from "@/lib/prisma";
 
+// Force dynamic rendering - prevent static generation
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 // GET /api/analytics/content/[contentId] - Get detailed analytics for a specific content item
 export async function GET(
   request: NextRequest,
