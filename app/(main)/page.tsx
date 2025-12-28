@@ -1,3 +1,4 @@
+"use client";
 import HomeHeroSection from "@/components/sections/HomeHeroSection";
 import MeetArtistSection from "@/components/sections/MeetArtistSection";
 import MusicHeardSection from "@/components/sections/MusicHeardSection";
