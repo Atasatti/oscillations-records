@@ -131,7 +131,9 @@ export default function AnalyticsDashboard() {
   const fetchDashboardData = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch(`/api/analytics/dashboard?days=${days}`);
+      const response = await fetch(`/api/analytics/dashboard?days=${days}`, {
+        cache: "no-store",
+      });
       if (response.ok) {
         const dashboardData = await response.json();
         setData(dashboardData);

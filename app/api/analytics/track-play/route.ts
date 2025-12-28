@@ -2,9 +2,22 @@ import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { prisma } from "@/lib/prisma";
 
+// Force dynamic rendering - prevent static generation
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 // POST /api/analytics/track-play - Track when a user plays content
 export async function POST(request: NextRequest) {
   try {
+    // Safeguard: Ensure NEXTAUTH_SECRET is available
+    if (!process.env.NEXTAUTH_SECRET) {
+      console.error("NEXTAUTH_SECRET is not configured");
+      return NextResponse.json(
+        { error: "Server configuration error" },
+        { status: 500 }
+      );
+    }
+
     const token = await getToken({ 
       req: request,
       secret: process.env.NEXTAUTH_SECRET
