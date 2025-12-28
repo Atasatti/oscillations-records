@@ -1,7 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import Link from "next/link";
 import AdminNavbar from "@/components/local-ui/AdminNavbar";
 import MusicCardSm from "@/components/local-ui/MusicCardSm";
 import { Button } from "@/components/ui/button";
@@ -87,11 +86,6 @@ export default function AlbumDetail() {
     }
   };
 
-  const formatDuration = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
 
   const handleDeleteClick = () => {
     setDeleteDialogOpen(true);
@@ -299,7 +293,7 @@ export default function AlbumDetail() {
             <DialogHeader>
               <DialogTitle>Delete Album</DialogTitle>
               <DialogDescription className="text-gray-400">
-                Are you sure you want to delete "{album?.name}"? This will remove the album but keep the songs. This action cannot be undone.
+                Are you sure you want to delete &quot;{album?.name}&quot;? This will remove the album but keep the songs. This action cannot be undone.
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>
@@ -326,7 +320,7 @@ export default function AlbumDetail() {
             <DialogHeader>
               <DialogTitle>Delete Song</DialogTitle>
               <DialogDescription className="text-gray-400">
-                Are you sure you want to delete "{songToDelete?.name}"? This action cannot be undone.
+                Are you sure you want to delete &quot;{songToDelete?.name}&quot;? This action cannot be undone.
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>

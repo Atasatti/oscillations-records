@@ -3,7 +3,6 @@ import MeetArtistSection from "@/components/sections/MeetArtistSection";
 import MusicHeardSection from "@/components/sections/MusicHeardSection";
 import NewMusicSection from "@/components/sections/NewMusicSection";
 import NoProfitSection from "@/components/sections/NoProfitSection";
-import Image from "next/image";
 
 export default function Home() {
   return (

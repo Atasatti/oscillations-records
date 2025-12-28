@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
 // GET /api/releases - Get all albums and EPs with artist info
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     // Fetch all albums with artist info
     const albums = await prisma.album.findMany({

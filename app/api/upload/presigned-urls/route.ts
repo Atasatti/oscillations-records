@@ -38,7 +38,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const results: any = {};
+    const results: {
+      audio: { uploadURL: string; fileURL: string };
+      image?: { uploadURL: string; fileURL: string };
+    } = {} as {
+      audio: { uploadURL: string; fileURL: string };
+      image?: { uploadURL: string; fileURL: string };
+    };
 
     // Generate presigned URL for audio (required)
     const audioCommand = new PutObjectCommand({

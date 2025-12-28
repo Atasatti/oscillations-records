@@ -1,7 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import Link from "next/link";
 import AdminNavbar from "@/components/local-ui/AdminNavbar";
 import MusicCardSm from "@/components/local-ui/MusicCardSm";
 import { Button } from "@/components/ui/button";
@@ -86,11 +85,6 @@ export default function EPDetail() {
     }
   };
 
-  const formatDuration = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, "0")}`;
-  };
 
   const handleDeleteClick = () => {
     setDeleteDialogOpen(true);
@@ -305,7 +299,7 @@ export default function EPDetail() {
             <DialogHeader>
               <DialogTitle>Delete EP</DialogTitle>
               <DialogDescription className="text-gray-400">
-                Are you sure you want to delete "{ep?.name}"? This will remove
+                Are you sure you want to delete &quot;{ep?.name}&quot;? This will remove
                 the EP but keep the songs. This action cannot be undone.
               </DialogDescription>
             </DialogHeader>
@@ -330,7 +324,7 @@ export default function EPDetail() {
             <DialogHeader>
               <DialogTitle>Delete Song</DialogTitle>
               <DialogDescription className="text-gray-400">
-                Are you sure you want to delete "{songToDelete?.name}"? This action cannot be undone.
+                Are you sure you want to delete &quot;{songToDelete?.name}&quot;? This action cannot be undone.
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>

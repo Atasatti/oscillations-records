@@ -67,7 +67,7 @@ export async function GET(request: NextRequest) {
     const contentMap = new Map<string, { name: string; plays: number; artistName?: string }>();
     playEvents.forEach(event => {
       const key = `${event.contentType}-${event.contentId}`;
-      const existing = contentMap.get(key) || { name: event.contentName, plays: 0, artistName: event.artistName };
+      const existing = contentMap.get(key) || { name: event.contentName, plays: 0, artistName: event.artistName ?? undefined };
       existing.plays++;
       contentMap.set(key, existing);
     });

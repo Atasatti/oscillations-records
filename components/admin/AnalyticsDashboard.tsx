@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { BarChart3, Users, Play, TrendingUp, Music, Disc, Radio, X, Eye } from "lucide-react";
+import { BarChart3, Users, Play, TrendingUp, Music, Disc, Radio, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -99,7 +99,7 @@ interface ContentAnalytics {
     userId: string;
     userName: string;
     playCount: number;
-    profile: any;
+    profile: Record<string, unknown>;
   }>;
   userEngagement: Array<{
     userId: string;
@@ -311,9 +311,9 @@ export default function AnalyticsDashboard() {
           <h3 className="text-lg font-medium text-gray-200 mb-6">Top Content</h3>
           <div className="space-y-4">
             {data.topContent.length > 0 ? (
-              data.topContent.map((content, index) => {
+              data.topContent.map((content) => {
                 // Extract content type and ID from the key format "type-id"
-                const [contentType, contentId] = content.id.includes('-') 
+                const [contentType] = content.id.includes('-') 
                   ? content.id.split('-') 
                   : ['single', content.id];
                 
@@ -358,7 +358,7 @@ export default function AnalyticsDashboard() {
               <h4 className="text-sm font-medium text-gray-400 mb-4">Gender Distribution</h4>
               <div className="space-y-3">
                 {Object.entries(data.demographics.gender)
-                  .filter(([_, count]) => count > 0)
+                  .filter(([, count]) => count > 0)
                   .map(([gender, count]) => (
                     <div key={gender} className="space-y-2">
                       <div className="flex items-center justify-between">
@@ -380,7 +380,7 @@ export default function AnalyticsDashboard() {
               <h4 className="text-sm font-medium text-gray-400 mb-4">Age Range Distribution</h4>
               <div className="space-y-3">
                 {Object.entries(data.demographics.ageRange)
-                  .filter(([_, count]) => count > 0)
+                  .filter(([, count]) => count > 0)
                   .map(([ageRange, count]) => (
                     <div key={ageRange} className="space-y-2">
                       <div className="flex items-center justify-between">
@@ -406,9 +406,9 @@ export default function AnalyticsDashboard() {
         <h3 className="text-lg font-medium text-gray-200 mb-6">Top Artists</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
           {data.topArtists.length > 0 ? (
-            data.topArtists.map((artist, index) => (
+            data.topArtists.map((artist, artistIndex) => (
               <div key={artist.name} className="text-center p-4 bg-[#0F0F0F] rounded-lg">
-                <div className="text-2xl font-bold text-red-500 mb-2">#{index + 1}</div>
+                <div className="text-2xl font-bold text-red-500 mb-2">#{artistIndex + 1}</div>
                 <p className="text-sm font-medium text-white truncate mb-1">{artist.name}</p>
                 <p className="text-xs text-gray-400">{artist.plays} plays</p>
               </div>
@@ -515,7 +515,7 @@ export default function AnalyticsDashboard() {
                   <h4 className="text-lg font-medium mb-4">Gender Distribution</h4>
                   <div className="space-y-3">
                     {Object.entries(contentAnalytics.demographics.gender)
-                      .filter(([_, count]) => count > 0)
+                      .filter(([, count]) => count > 0)
                       .map(([gender, count]) => {
                         const maxGender = Math.max(...Object.values(contentAnalytics.demographics.gender));
                         return (
@@ -540,7 +540,7 @@ export default function AnalyticsDashboard() {
                   <h4 className="text-lg font-medium mb-4">Age Range Distribution</h4>
                   <div className="space-y-3">
                     {Object.entries(contentAnalytics.demographics.ageRange)
-                      .filter(([_, count]) => count > 0)
+                      .filter(([, count]) => count > 0)
                       .map(([ageRange, count]) => {
                         const maxAge = Math.max(...Object.values(contentAnalytics.demographics.ageRange));
                         return (
@@ -569,7 +569,7 @@ export default function AnalyticsDashboard() {
                     <div className="bg-[#0F0F0F] rounded-lg p-6">
                       <h4 className="text-lg font-medium mb-4">Top Countries</h4>
                       <div className="space-y-2">
-                        {contentAnalytics.demographics.topCountries.map((item, index) => (
+                        {contentAnalytics.demographics.topCountries.map((item) => (
                           <div key={item.country} className="flex items-center justify-between">
                             <span className="text-sm text-gray-300">{item.country}</span>
                             <span className="text-sm font-medium text-gray-400">{item.count}</span>
@@ -583,7 +583,7 @@ export default function AnalyticsDashboard() {
                     <div className="bg-[#0F0F0F] rounded-lg p-6">
                       <h4 className="text-lg font-medium mb-4">Top Cities</h4>
                       <div className="space-y-2">
-                        {contentAnalytics.demographics.topCities.map((item, index) => (
+                        {contentAnalytics.demographics.topCities.map((item) => (
                           <div key={item.city} className="flex items-center justify-between">
                             <span className="text-sm text-gray-300">{item.city}</span>
                             <span className="text-sm font-medium text-gray-400">{item.count}</span>
@@ -611,8 +611,8 @@ export default function AnalyticsDashboard() {
                       </tr>
                     </thead>
                     <tbody>
-                      {contentAnalytics.userEngagement.slice(0, 20).map((engagement, index) => (
-                        <tr key={index} className="border-b border-gray-700 hover:bg-[#1a1a1a]/50">
+                      {contentAnalytics.userEngagement.slice(0, 20).map((engagement) => (
+                        <tr key={`${engagement.userId}-${engagement.createdAt}`} className="border-b border-gray-700 hover:bg-[#1a1a1a]/50">
                           <td className="py-2 px-3 text-gray-300">{engagement.userName}</td>
                           <td className="py-2 px-3 text-gray-400 capitalize">{engagement.gender || "—"}</td>
                           <td className="py-2 px-3 text-gray-400">{engagement.ageRange || "—"}</td>

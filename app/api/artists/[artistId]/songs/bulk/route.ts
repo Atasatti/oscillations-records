@@ -4,10 +4,10 @@ import { prisma } from "@/lib/prisma";
 // POST /api/artists/[artistId]/songs/bulk - Create multiple songs (singles) at once
 export async function POST(
   request: NextRequest,
-  { params }: { params: { artistId: string } }
+  { params }: { params: Promise<{ artistId: string }> }
 ) {
   try {
-    const { artistId } = params;
+    const { artistId } = await params;
     const body = await request.json();
     const { songs } = body; // Array of { name, audioFile, duration, image? }
 

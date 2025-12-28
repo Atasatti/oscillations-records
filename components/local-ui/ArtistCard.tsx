@@ -34,7 +34,7 @@ const ArtistCard: React.FC<ArtistCardProps> = ({ artist, onClick }) => {
     }
   };
 
-  const handleCardClick = (e: React.MouseEvent) => {
+  const handleCardClick = () => {
     if (onClick) {
       onClick();
     }

@@ -227,7 +227,7 @@ export default function CreateEP() {
       const uploadedAudioUrls: string[] = [];
       try {
         await Promise.all(
-          presignedUrls.audioFiles.map(async (audioData: any, index: number) => {
+          presignedUrls.audioFiles.map(async (audioData: { uploadURL: string; fileURL: string; fileName: string }, index: number) => {
             await uploadFileToS3(
               audioFiles[index],
               audioData.uploadURL
@@ -267,7 +267,7 @@ export default function CreateEP() {
       }
 
       const createdSongs = await songsResponse.json();
-      const songIds = createdSongs.map((song: any) => song.id);
+      const songIds = createdSongs.map((song: { id: string }) => song.id);
 
       // Step 5: Create EP
       const epResponse = await fetch(`/api/artists/${artistId}/eps`, {

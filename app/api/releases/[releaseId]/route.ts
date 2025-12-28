@@ -10,7 +10,7 @@ export async function GET(
     const { releaseId } = await params;
 
     // Try to find as album first
-    let album = await prisma.album.findUnique({
+    const album = await prisma.album.findUnique({
       where: { id: releaseId },
       include: {
         artist: {
@@ -47,7 +47,7 @@ export async function GET(
     }
 
     // Try to find as EP
-    let ep = await prisma.ep.findUnique({
+    const ep = await prisma.ep.findUnique({
       where: { id: releaseId },
       include: {
         artist: {

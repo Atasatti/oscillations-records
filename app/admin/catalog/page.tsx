@@ -1,7 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import AdminNavbar from "@/components/local-ui/AdminNavbar";
 import ArtistCard from "@/components/local-ui/ArtistCard";
 import { Button } from "@/components/ui/button";
@@ -46,8 +45,6 @@ export default function AdminCatalog() {
   useEffect(() => {
     fetchArtists();
   }, []);
-
-  const router = useRouter();
 
   const fetchArtists = async () => {
     try {
@@ -187,7 +184,7 @@ export default function AdminCatalog() {
             <DialogHeader>
               <DialogTitle>Delete Artist</DialogTitle>
               <DialogDescription className="text-gray-400">
-                Are you sure you want to delete "{artistToDelete?.name}"? This will also delete all their singles, albums, and EPs. This action cannot be undone.
+                Are you sure you want to delete &quot;{artistToDelete?.name}&quot;? This will also delete all their singles, albums, and EPs. This action cannot be undone.
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>

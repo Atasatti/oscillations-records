@@ -1,17 +1,15 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, Suspense } from "react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { FaGoogle } from "react-icons/fa";
 import { signIn } from "next-auth/react";
 
-const SignupPage = () => {
-  const router = useRouter();
+const SignupContent = () => {
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callbackUrl") || "/";
   const error = searchParams.get("error");
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -93,6 +91,14 @@ const SignupPage = () => {
         </p>
       </div>
     </div>
+  );
+};
+
+const SignupPage = () => {
+  return (
+    <Suspense fallback={<div className="min-h-[80vh] flex items-center justify-center">Loading...</div>}>
+      <SignupContent />
+    </Suspense>
   );
 };
 

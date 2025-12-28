@@ -49,7 +49,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const results: any = {};
+    const results: {
+      image: { uploadURL: string; fileURL: string };
+      audioFiles: Array<{ uploadURL: string; fileURL: string; fileName: string }>;
+    } = {} as {
+      image: { uploadURL: string; fileURL: string };
+      audioFiles: Array<{ uploadURL: string; fileURL: string; fileName: string }>;
+    };
 
     // Generate presigned URL for cover image (required)
     const imageCommand = new PutObjectCommand({

@@ -1,6 +1,5 @@
 import React from "react";
 import IconButton from "../local-ui/IconButton";
-import Image from "next/image";
 import StackedImagesSection from "./StackedImagesSection";
 
 const HomeHeroSection = () => {

@@ -167,9 +167,6 @@ export default function CreateSingle() {
     setIsLoading(true);
 
     try {
-      let imageUrl: string | null = null;
-      let audioUrl: string;
-
       // Step 1: Get presigned URLs for both files in one API call
       console.log("Getting presigned URLs...");
       
@@ -213,8 +210,8 @@ export default function CreateSingle() {
 
       // Upload both files (in parallel)
       const uploadedUrls = await Promise.all(uploadPromises);
-      audioUrl = uploadedUrls[0] as string;
-      imageUrl = uploadedUrls[1];
+      const audioUrl = uploadedUrls[0] as string;
+      const imageUrl = uploadedUrls[1];
 
       console.log("Files uploaded:", { audioUrl, imageUrl });
 
