@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
+// Force dynamic rendering - prevent static generation
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 // GET /api/artists/[artistId]/singles - Get all singles for an artist (excluding songs used in albums/EPs)
 export async function GET(
   request: NextRequest,

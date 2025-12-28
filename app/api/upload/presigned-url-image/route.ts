@@ -16,6 +16,10 @@ const s3Client = hasCredentials ? new S3Client({
 const BUCKET_NAME = process.env.AWS_BUCKET_NAME || process.env.S3_BUCKET_NAME || "osrecord";
 const region = process.env.AWS_REGION || "us-east-1";
 
+// Force dynamic rendering - prevent static generation
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 export async function POST(request: NextRequest) {
   try {
     // Check if AWS is configured

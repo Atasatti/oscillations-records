@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
+// Force dynamic rendering - prevent static generation
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 // POST /api/artists/[artistId]/songs/bulk - Create multiple songs (singles) at once
 export async function POST(
   request: NextRequest,
