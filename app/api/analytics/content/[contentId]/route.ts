@@ -3,8 +3,11 @@ import { getToken } from "next-auth/jwt";
 import { prisma } from "@/lib/prisma";
 
 // Force dynamic rendering - prevent static generation
+// These exports tell Next.js to never statically generate or analyze this route
 export const dynamic = 'force-dynamic';
+export const dynamicParams = true;
 export const runtime = 'nodejs';
+export const revalidate = 0;
 
 // GET /api/analytics/content/[contentId] - Get detailed analytics for a specific content item
 export async function GET(
@@ -12,21 +15,75 @@ export async function GET(
   { params }: { params: Promise<{ contentId: string }> }
 ) {
   try {
-    const token = await getToken({ 
-      req: request,
-      secret: process.env.NEXTAUTH_SECRET
-    });
+    // Safeguard: Ensure NEXTAUTH_SECRET is available
+    if (!process.env.NEXTAUTH_SECRET) {
+      console.error("NEXTAUTH_SECRET is not configured");
+      return NextResponse.json(
+        { error: "Server configuration error" },
+        { status: 500 }
+      );
+    }
+
+    // Safely get token - handle build-time scenarios where request might not be valid
+    let token;
+    try {
+      // Check if request is valid before calling getToken
+      if (!request || typeof request !== 'object') {
+        return NextResponse.json(
+          { error: "Invalid request" },
+          { status: 400 }
+        );
+      }
+      
+      token = await getToken({ 
+        req: request,
+        secret: process.env.NEXTAUTH_SECRET
+      });
+    } catch (error) {
+      // If getToken fails (e.g., during build), return error gracefully
+      // Don't log during build to avoid noise
+      if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
+        console.error("Error getting token:", error);
+      }
+      return NextResponse.json(
+        { error: "Authentication error" },
+        { status: 401 }
+      );
+    }
 
     // Check if user is admin
-    if (!token ) {
+    if (!token) {
       return NextResponse.json(
         { error: "Unauthorized" },
         { status: 401 }
       );
     }
 
-    const { contentId } = await params;
-    const { searchParams } = new URL(request.url);
+    // Safely await params - handle build-time scenarios
+    let contentId: string;
+    try {
+      const resolvedParams = await params;
+      contentId = resolvedParams.contentId;
+    } catch (error) {
+      console.error("Error resolving params:", error);
+      return NextResponse.json(
+        { error: "Invalid request parameters" },
+        { status: 400 }
+      );
+    }
+
+    // Safely get search params
+    let searchParams: URLSearchParams;
+    try {
+      const url = new URL(request.url);
+      searchParams = url.searchParams;
+    } catch (error) {
+      console.error("Error parsing URL:", error);
+      return NextResponse.json(
+        { error: "Invalid request URL" },
+        { status: 400 }
+      );
+    }
     const contentType = searchParams.get("type") || "single"; // single, album, or ep
     const days = parseInt(searchParams.get("days") || "30", 10);
     
