@@ -2,6 +2,8 @@
 import React from "react";
 import { Play } from "lucide-react";
 import { useMusic } from "@/contexts/music-context";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 interface Song {
   id: number | string;
@@ -14,9 +16,20 @@ interface Song {
 
 const MusicCardSm: React.FC<{ song: Song }> = ({ song }) => {
   const { playSong } = useMusic();
+  const { data: session, status } = useSession();
+  const router = useRouter();
 
   const handlePlay = (e: React.MouseEvent) => {
     e.stopPropagation();
+    
+    // Check if user is authenticated
+    if (status === "unauthenticated" || !session) {
+      // Redirect to login with callback URL
+      const currentPath = window.location.pathname;
+      router.push(`/login?callbackUrl=${encodeURIComponent(currentPath)}`);
+      return;
+    }
+
     if (song.audio) {
       playSong({
         id: String(song.id),

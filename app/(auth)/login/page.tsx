@@ -26,9 +26,12 @@ const LoginContent = () => {
       setLoading(true)
       setErrorMessage("")
       
+      // Get callbackUrl from query params, default to "/"
+      const callbackUrl = searchParams.get("callbackUrl") || "/"
+      
       // Use the direct next-auth signIn with explicit options
       await signIn("google", {
-        callbackUrl: "/",
+        callbackUrl: callbackUrl,
         redirect: true
       })
       

@@ -15,6 +15,7 @@ export default function CreateSingle() {
   const [uploadingImage, setUploadingImage] = useState(false);
   const [uploadingAudio, setUploadingAudio] = useState(false);
   const [calculatingDuration, setCalculatingDuration] = useState(false);
+  const [imageError, setImageError] = useState<string>("");
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   
   const [formData, setFormData] = useState({
@@ -45,6 +46,7 @@ export default function CreateSingle() {
       // Create preview URL
       const previewUrl = URL.createObjectURL(file);
       setImagePreview(previewUrl);
+      setImageError(""); // Clear any previous error
     } else {
       setFormData(prev => ({ ...prev, audioFile: file }));
       setCalculatingDuration(true);
@@ -81,6 +83,7 @@ export default function CreateSingle() {
     }
     setImagePreview(null);
     setFormData(prev => ({ ...prev, imageFile: null }));
+    setImageError(""); // Clear error when removing image
     if (imageInputRef.current) {
       imageInputRef.current.value = '';
     }
@@ -154,6 +157,13 @@ export default function CreateSingle() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Validate that cover image is required
+    if (!formData.imageFile) {
+      setImageError("Cover image is required");
+      setIsLoading(false);
+      return;
+    }
+
     if (!formData.name || !formData.audioFile) {
       alert("Please fill in the single name and select an audio file");
       return;
@@ -165,6 +175,7 @@ export default function CreateSingle() {
     }
 
     setIsLoading(true);
+    setImageError("");
 
     try {
       // Step 1: Get presigned URLs for both files in one API call
@@ -194,24 +205,22 @@ export default function CreateSingle() {
         ).then(() => audioPresigned.fileURL)
       );
 
-      // Upload image (if provided)
-      if (formData.imageFile && imagePresigned) {
-        uploadPromises.push(
-          uploadFileToS3(
-            formData.imageFile,
-            imagePresigned.uploadURL,
-            'image'
-          ).then(() => imagePresigned.fileURL)
-        );
-      } else {
-        // Resolve with null if no image
-        uploadPromises.push(Promise.resolve<string | null>(null));
+      // Upload image (required)
+      if (!imagePresigned) {
+        throw new Error("Failed to get presigned URL for image");
       }
+      uploadPromises.push(
+        uploadFileToS3(
+          formData.imageFile!,
+          imagePresigned.uploadURL,
+          'image'
+        ).then(() => imagePresigned.fileURL)
+      );
 
       // Upload both files (in parallel)
       const uploadedUrls = await Promise.all(uploadPromises);
       const audioUrl = uploadedUrls[0] as string;
-      const imageUrl = uploadedUrls[1];
+      const imageUrl = uploadedUrls[1] as string;
 
       console.log("Files uploaded:", { audioUrl, imageUrl });
 
@@ -281,7 +290,7 @@ export default function CreateSingle() {
             <div className="lg:col-span-1">
               <div className="bg-[#0F0F0F] rounded-xl p-6 border border-gray-800">
                 <label className="block text-sm font-medium text-gray-300 mb-4">
-                  Single Image
+                  Single Image *
                 </label>
                 <div className="space-y-4">
                   {imagePreview ? (
@@ -329,6 +338,11 @@ export default function CreateSingle() {
                       <ImageIcon className="w-4 h-4 mr-2" />
                       Choose Image
                     </Button>
+                  )}
+                  {imageError && (
+                    <p className="text-xs text-red-400 text-center mt-2">
+                      {imageError}
+                    </p>
                   )}
                 </div>
               </div>

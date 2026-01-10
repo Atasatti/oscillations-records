@@ -11,6 +11,7 @@ export default function CreateArtist() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [imageError, setImageError] = useState<string>("");
   const imageInputRef = useRef<HTMLInputElement>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [formData, setFormData] = useState({
@@ -40,6 +41,7 @@ export default function CreateArtist() {
       // Create preview URL
       const previewUrl = URL.createObjectURL(file);
       setImagePreview(previewUrl);
+      setImageError(""); // Clear any previous error
     }
   };
 
@@ -49,6 +51,7 @@ export default function CreateArtist() {
     }
     setImagePreview(null);
     setFormData(prev => ({ ...prev, profilePictureFile: null }));
+    setImageError(""); // Clear error when removing image
     if (imageInputRef.current) {
       imageInputRef.current.value = '';
     }
@@ -105,19 +108,26 @@ export default function CreateArtist() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate that profile picture is required
+    if (!formData.profilePictureFile) {
+      setImageError("Profile picture is required");
+      setIsLoading(false);
+      return;
+    }
+
     setIsLoading(true);
+    setImageError("");
 
     try {
       let profilePictureUrl: string | null = null;
 
-      // Upload image to S3 if provided
-      if (formData.profilePictureFile) {
-        setUploadingImage(true);
-        const presignedData = await getPresignedUrl(formData.profilePictureFile);
-        await uploadFileToS3(formData.profilePictureFile, presignedData.uploadURL);
-        profilePictureUrl = presignedData.fileURL;
-        setUploadingImage(false);
-      }
+      // Upload image to S3 (required)
+      setUploadingImage(true);
+      const presignedData = await getPresignedUrl(formData.profilePictureFile);
+      await uploadFileToS3(formData.profilePictureFile, presignedData.uploadURL);
+      profilePictureUrl = presignedData.fileURL;
+      setUploadingImage(false);
 
       // Create artist with S3 URL
       const response = await fetch("/api/artists", {
@@ -180,7 +190,7 @@ export default function CreateArtist() {
             <div className="lg:col-span-1">
               <div className="bg-[#0F0F0F] rounded-xl p-6 border border-gray-800">
                 <label className="block text-sm font-medium text-gray-300 mb-4">
-                  Profile Picture
+                  Profile Picture *
                 </label>
                 <div className="space-y-4">
                   {imagePreview ? (
@@ -232,6 +242,11 @@ export default function CreateArtist() {
                   {formData.profilePictureFile && !imagePreview && (
                     <p className="text-xs text-gray-500 text-center">
                       {formData.profilePictureFile.name}
+                    </p>
+                  )}
+                  {imageError && (
+                    <p className="text-xs text-red-400 text-center mt-2">
+                      {imageError}
                     </p>
                   )}
                 </div>

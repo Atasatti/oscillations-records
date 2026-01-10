@@ -52,7 +52,11 @@ const ArtistCard: React.FC<ArtistCardProps> = ({ artist, onClick }) => {
         {/* Content with relative positioning to appear above gradient */}
         <div className="relative z-10">
           <p className="text-white font-semibold">{artist.name}</p>
-          <p className="text-gray-300 text-xs mt-1">{artist.biography}</p>
+          <p className="text-gray-300 text-xs mt-1">
+            {artist.biography.length > 100 
+              ? `${artist.biography.substring(0, 100)}...` 
+              : artist.biography}
+          </p>
           <div className="h-[1px] bg-gray-600 w-full mt-2"></div>
           <div className="flex justify-between items-center gap-2 mt-3">
             {artist.xLink && (
