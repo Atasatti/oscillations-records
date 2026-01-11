@@ -241,12 +241,6 @@ export default function ArtistDetail() {
         <div className="mb-12">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-light tracking-tighter">Singles</h2>
-            <Link href={`/admin/catalog/artist/${artistId}/single`}>
-              <Button className="bg-white text-black hover:bg-gray-200">
-                <Plus className="w-4 h-4 mr-2" />
-                Create Single
-              </Button>
-            </Link>
           </div>
 
           {singles.length === 0 ? (
@@ -306,12 +300,6 @@ export default function ArtistDetail() {
         <div className="mb-12">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-light tracking-tighter">EP</h2>
-            <Link href={`/admin/catalog/artist/${artistId}/ep`}>
-              <Button className="bg-white text-black hover:bg-gray-200">
-                <Plus className="w-4 h-4 mr-2" />
-                Create EP
-              </Button>
-            </Link>
           </div>
 
           {eps.length === 0 ? (
@@ -378,12 +366,6 @@ export default function ArtistDetail() {
         <div className="mb-12">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-light tracking-tighter">Albums</h2>
-            <Link href={`/admin/catalog/artist/${artistId}/album`}>
-              <Button className="bg-white text-black hover:bg-gray-200">
-                <Plus className="w-4 h-4 mr-2" />
-                Create Album
-              </Button>
-            </Link>
           </div>
 
           {albums.length === 0 ? (

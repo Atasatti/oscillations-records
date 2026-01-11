@@ -17,7 +17,10 @@ export async function DELETE(
     const single = await prisma.single.findFirst({
       where: {
         id: singleId,
-        artistId: artistId,
+        OR: [
+          { primaryArtistIds: { has: artistId } },
+          { featureArtistIds: { has: artistId } }
+        ]
       },
     });
 
@@ -32,13 +35,19 @@ export async function DELETE(
     const [albums, eps] = await Promise.all([
       prisma.album.findMany({
         where: {
-          artistId: artistId,
+          OR: [
+            { primaryArtistIds: { has: artistId } },
+            { featureArtistIds: { has: artistId } }
+          ],
           songIds: { has: singleId },
         },
       }),
       prisma.ep.findMany({
         where: {
-          artistId: artistId,
+          OR: [
+            { primaryArtistIds: { has: artistId } },
+            { featureArtistIds: { has: artistId } }
+          ],
           songIds: { has: singleId },
         },
       }),

@@ -5,21 +5,10 @@ import { prisma } from "@/lib/prisma";
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
-// GET /api/artists/[artistId]/albums - Get all albums for an artist
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ artistId: string }> }
-) {
+// GET /api/albums - Get all albums
+export async function GET() {
   try {
-    const { artistId } = await params;
-
     const albums = await prisma.album.findMany({
-      where: {
-        OR: [
-          { primaryArtistIds: { has: artistId } },
-          { featureArtistIds: { has: artistId } }
-        ]
-      },
       orderBy: {
         createdAt: 'desc'
       }
@@ -50,15 +39,11 @@ export async function GET(
   }
 }
 
-// POST /api/artists/[artistId]/albums - Create a new album for an artist
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ artistId: string }> }
-) {
+// POST /api/albums - Create a new album with primary and feature artists
+export async function POST(request: NextRequest) {
   try {
-    const { artistId } = await params;
     const body = await request.json();
-    const { name, coverImage, releaseDate, description, songIds } = body;
+    const { name, coverImage, releaseDate, description, songIds, primaryArtistIds, featureArtistIds } = body;
 
     // Validate required fields
     if (!name || !coverImage || !songIds || !Array.isArray(songIds) || songIds.length === 0) {
@@ -68,16 +53,50 @@ export async function POST(
       );
     }
 
-    // Verify artist exists
-    const artist = await prisma.artist.findUnique({
-      where: { id: artistId },
+    // Validate primary artists (at least one required)
+    if (!primaryArtistIds || !Array.isArray(primaryArtistIds) || primaryArtistIds.length === 0) {
+      return NextResponse.json(
+        { error: "At least one primary artist is required" },
+        { status: 400 }
+      );
+    }
+
+    // Validate feature artists (optional, but must be array if provided)
+    if (featureArtistIds && !Array.isArray(featureArtistIds)) {
+      return NextResponse.json(
+        { error: "Feature artists must be an array" },
+        { status: 400 }
+      );
+    }
+
+    // Verify all primary artists exist
+    const primaryArtists = await prisma.artist.findMany({
+      where: {
+        id: { in: primaryArtistIds },
+      },
     });
 
-    if (!artist) {
+    if (primaryArtists.length !== primaryArtistIds.length) {
       return NextResponse.json(
-        { error: "Artist not found" },
+        { error: "One or more primary artists not found" },
         { status: 404 }
       );
+    }
+
+    // Verify all feature artists exist (if provided)
+    if (featureArtistIds && featureArtistIds.length > 0) {
+      const featureArtists = await prisma.artist.findMany({
+        where: {
+          id: { in: featureArtistIds },
+        },
+      });
+
+      if (featureArtists.length !== featureArtistIds.length) {
+        return NextResponse.json(
+          { error: "One or more feature artists not found" },
+          { status: 404 }
+        );
+      }
     }
 
     // Verify all songs exist
@@ -98,7 +117,8 @@ export async function POST(
       data: {
         name,
         coverImage,
-        artistId: artistId,
+        primaryArtistIds,
+        featureArtistIds: featureArtistIds || [],
         releaseDate: releaseDate ? new Date(releaseDate) : null,
         description: description || null,
         songIds,

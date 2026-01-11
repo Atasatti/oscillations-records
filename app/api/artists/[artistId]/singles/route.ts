@@ -16,11 +16,21 @@ export async function GET(
     // Get all songs used in albums and EPs for this artist
     const [albums, eps] = await Promise.all([
       prisma.album.findMany({
-        where: { artistId },
+        where: {
+          OR: [
+            { primaryArtistIds: { has: artistId } },
+            { featureArtistIds: { has: artistId } }
+          ]
+        },
         select: { songIds: true }
       }),
       prisma.ep.findMany({
-        where: { artistId },
+        where: {
+          OR: [
+            { primaryArtistIds: { has: artistId } },
+            { featureArtistIds: { has: artistId } }
+          ]
+        },
         select: { songIds: true }
       })
     ]);
@@ -37,7 +47,10 @@ export async function GET(
     // Get all singles, excluding those used in albums/EPs
     const singles = await prisma.single.findMany({
       where: {
-        artistId: artistId,
+        OR: [
+          { primaryArtistIds: { has: artistId } },
+          { featureArtistIds: { has: artistId } }
+        ],
         id: {
           notIn: Array.from(usedSongIds)
         }

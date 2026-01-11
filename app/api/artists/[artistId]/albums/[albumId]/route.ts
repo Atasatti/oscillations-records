@@ -16,7 +16,10 @@ export async function GET(
     const album = await prisma.album.findFirst({
       where: {
         id: albumId,
-        artistId: artistId,
+        OR: [
+          { primaryArtistIds: { has: artistId } },
+          { featureArtistIds: { has: artistId } }
+        ]
       },
     });
 
@@ -27,18 +30,10 @@ export async function GET(
       );
     }
 
-    // Populate song details with artist information
+    // Populate song details
     const songs = await prisma.single.findMany({
       where: {
         id: { in: album.songIds },
-      },
-      include: {
-        artist: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
       },
     });
 
@@ -69,7 +64,10 @@ export async function DELETE(
     const album = await prisma.album.findFirst({
       where: {
         id: albumId,
-        artistId: artistId,
+        OR: [
+          { primaryArtistIds: { has: artistId } },
+          { featureArtistIds: { has: artistId } }
+        ]
       },
     });
 
