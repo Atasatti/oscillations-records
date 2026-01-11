@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import AdminNavbar from "@/components/local-ui/AdminNavbar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Save, Music, Image as ImageIcon, Loader2, X } from "lucide-react";
+import { ArrowLeft, Save, Music, Image as ImageIcon, Loader2 } from "lucide-react";
 import { MultiSelect } from "@/components/ui/multi-select";
 
 interface Artist {

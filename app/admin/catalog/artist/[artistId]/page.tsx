@@ -19,7 +19,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Plus, ArrowLeft, MoreVertical, Trash2 } from "lucide-react";
+import { ArrowLeft, MoreVertical, Trash2 } from "lucide-react";
 
 interface Artist {
   id: string;

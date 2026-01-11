@@ -16,36 +16,33 @@ export async function GET(
     // Try to find as album first
     const album = await prisma.album.findUnique({
       where: { id: releaseId },
-      include: {
-        artist: {
-          select: {
-            id: true,
-            name: true,
-            profilePicture: true,
-          }
-        }
-      }
     });
 
     if (album) {
+      // Fetch primary and feature artists
+      const allArtistIds = [...album.primaryArtistIds, ...album.featureArtistIds];
+      const artists = await prisma.artist.findMany({
+        where: {
+          id: { in: allArtistIds },
+        },
+        select: {
+          id: true,
+          name: true,
+          profilePicture: true,
+        }
+      });
+
       // Populate song details
       const songs = await prisma.single.findMany({
         where: {
           id: { in: album.songIds },
         },
-        include: {
-          artist: {
-            select: {
-              id: true,
-              name: true,
-            }
-          }
-        }
       });
 
       return NextResponse.json({
         ...album,
         type: 'album',
+        artists,
         songs,
       });
     }
@@ -53,36 +50,33 @@ export async function GET(
     // Try to find as EP
     const ep = await prisma.ep.findUnique({
       where: { id: releaseId },
-      include: {
-        artist: {
-          select: {
-            id: true,
-            name: true,
-            profilePicture: true,
-          }
-        }
-      }
     });
 
     if (ep) {
+      // Fetch primary and feature artists
+      const allArtistIds = [...ep.primaryArtistIds, ...ep.featureArtistIds];
+      const artists = await prisma.artist.findMany({
+        where: {
+          id: { in: allArtistIds },
+        },
+        select: {
+          id: true,
+          name: true,
+          profilePicture: true,
+        }
+      });
+
       // Populate song details
       const songs = await prisma.single.findMany({
         where: {
           id: { in: ep.songIds },
         },
-        include: {
-          artist: {
-            select: {
-              id: true,
-              name: true,
-            }
-          }
-        }
       });
 
       return NextResponse.json({
         ...ep,
         type: 'ep',
+        artists,
         songs,
       });
     }

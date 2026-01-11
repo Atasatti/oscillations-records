@@ -70,53 +70,5 @@ export async function GET(
   }
 }
 
-// POST /api/artists/[artistId]/singles - Create a new single for an artist
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ artistId: string }> }
-) {
-  try {
-    const { artistId } = await params;
-    const body = await request.json();
-    const { name, image, audioFile, duration } = body;
-
-    // Validate required fields
-    if (!name || !audioFile || !duration) {
-      return NextResponse.json(
-        { error: "Name, audioFile, and duration are required" },
-        { status: 400 }
-      );
-    }
-
-    // Verify artist exists
-    const artist = await prisma.artist.findUnique({
-      where: { id: artistId },
-    });
-
-    if (!artist) {
-      return NextResponse.json(
-        { error: "Artist not found" },
-        { status: 404 }
-      );
-    }
-
-    const single = await prisma.single.create({
-      data: {
-        name,
-        image: image || null,
-        audioFile,
-        duration: parseInt(duration, 10),
-        artistId: artistId,
-      },
-    });
-
-    return NextResponse.json(single, { status: 201 });
-  } catch (error) {
-    console.error("Error creating single:", error);
-    return NextResponse.json(
-      { error: "Failed to create single" },
-      { status: 500 }
-    );
-  }
-}
+// POST method removed - use /api/singles instead
 
