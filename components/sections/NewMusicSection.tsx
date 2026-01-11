@@ -23,7 +23,7 @@ interface Single {
     id: string;
     name: string;
     profilePicture: string | null;
-  };
+  } | null;
 }
 
 const NewMusicSection = () => {
@@ -40,15 +40,17 @@ const NewMusicSection = () => {
       const response = await fetch("/api/songs/latest?limit=8");
       if (response.ok) {
         const data: Single[] = await response.json();
-        const formattedSongs: Song[] = data.map((single) => ({
-          id: single.id,
-          title: single.name,
-          artist: single.artist.name,
-          duration: formatDuration(single.duration),
-          backgroundImage: single.image || "/new-music-img1.svg",
-          avatar: single.artist.profilePicture || undefined,
-          audio: single.audioFile || null,
-        }));
+        const formattedSongs: Song[] = data
+          .filter((single) => single.artist !== null) // Filter out songs without artists
+          .map((single) => ({
+            id: single.id,
+            title: single.name,
+            artist: single.artist!.name,
+            duration: formatDuration(single.duration),
+            backgroundImage: single.image || "/new-music-img1.svg",
+            avatar: single.artist!.profilePicture || undefined,
+            audio: single.audioFile || null,
+          }));
         setSongs(formattedSongs);
       }
     } catch (error) {
