@@ -4,7 +4,6 @@ import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import MusicCard from "@/components/local-ui/MusicCard";
-import Navbar from "@/components/local-ui/Navbar";
 import Footer from "@/components/local-ui/Footer";
 
 interface Song {
