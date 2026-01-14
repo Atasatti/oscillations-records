@@ -26,11 +26,8 @@ interface Single {
   image?: string;
   audioFile: string;
   duration: number;
-  artistId: string;
-  artist?: {
-    id: string;
-    name: string;
-  };
+  primaryArtistIds: string[];
+  featureArtistIds: string[];
   createdAt: string;
   updatedAt: string;
 }
@@ -39,7 +36,8 @@ interface EP {
   id: string;
   name: string;
   coverImage: string;
-  artistId: string;
+  primaryArtistIds: string[];
+  featureArtistIds: string[];
   description?: string;
   songIds: string[];
   songs?: Single[];
@@ -247,18 +245,21 @@ export default function EPDetail() {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {ep.songs.map((song) => (
-                <div key={song.id} className="relative group  w-72 h-84">
-                  <MusicCardSm
-                    song={{
-                      id: song.id,
-                      name: song.name,
-                      thumbnail: song.image,
-                      audio: song.audioFile,
-                      artist: song.artist?.name
-                    }}
-                  />
-                  <DropdownMenu>
+              {ep.songs.map((song) => {
+                // For admin pages, we can use the EP's primary artist or leave undefined
+                // Since songs don't have artist objects, we'll just not show artist name
+                return (
+                  <div key={song.id} className="relative group  w-72 h-84">
+                    <MusicCardSm
+                      song={{
+                        id: song.id,
+                        name: song.name,
+                        thumbnail: song.image,
+                        audio: song.audioFile,
+                        artist: undefined // Songs don't have artist objects in the new structure
+                      }}
+                    />
+                    <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button
                         variant="ghost"
@@ -288,7 +289,8 @@ export default function EPDetail() {
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>

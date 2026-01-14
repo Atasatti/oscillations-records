@@ -13,10 +13,14 @@ interface Song {
   image: string | null;
   audioFile: string;
   duration: number;
-  artist: {
-    id: string;
-    name: string;
-  };
+  primaryArtistIds: string[];
+  featureArtistIds: string[];
+}
+
+interface Artist {
+  id: string;
+  name: string;
+  profilePicture: string | null;
 }
 
 interface Release {
@@ -24,11 +28,9 @@ interface Release {
   name: string;
   coverImage: string;
   type: 'album' | 'ep';
-  artist: {
-    id: string;
-    name: string;
-    profilePicture: string | null;
-  };
+  primaryArtistIds: string[];
+  featureArtistIds: string[];
+  artists: Artist[];
   description?: string | null;
   releaseDate?: string | null;
   songs: Song[];
@@ -56,6 +58,12 @@ export default function ReleaseDetail() {
 
   const trackReleaseView = async (release: Release) => {
     try {
+      // Get primary artist (first one) for tracking
+      const primaryArtistId = release.primaryArtistIds[0];
+      const primaryArtist = primaryArtistId 
+        ? release.artists.find(a => a.id === primaryArtistId)
+        : null;
+      
       await fetch("/api/analytics/track-play", {
         method: "POST",
         headers: {
@@ -65,8 +73,8 @@ export default function ReleaseDetail() {
           contentType: release.type,
           contentId: release.id,
           contentName: release.name,
-          artistId: release.artist.id,
-          artistName: release.artist.name,
+          artistId: primaryArtistId || null,
+          artistName: primaryArtist?.name || 'Unknown Artist',
           playDuration: null,
           completed: false,
         }),
@@ -106,7 +114,7 @@ export default function ReleaseDetail() {
   if (isLoading) {
     return (
       <div>
-        <Navbar />
+        {/* <Navbar /> */}
         <div className="min-h-screen text-white flex justify-center items-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
         </div>
@@ -158,7 +166,7 @@ export default function ReleaseDetail() {
                   {release.type === 'album' ? 'Album' : 'EP'}
                 </p>
                 <h1 className="text-5xl font-light tracking-tighter mb-4">{release.name}</h1>
-                <p className="text-xl text-gray-400 mb-2">{release.artist.name}</p>
+                {/* <p className="text-xl text-gray-400 mb-2">{release.artist.name}</p> */}
                 {release.releaseDate && (
                   <p className="text-sm text-gray-500">
                     Released: {new Date(release.releaseDate).toLocaleDateString('en-US', { 
@@ -182,20 +190,35 @@ export default function ReleaseDetail() {
               <p className="text-gray-400">No songs available.</p>
             ) : (
               <div className="flex gap-4 overflow-x-auto scrollbar-hide scroll-smooth">
-                {release.songs.map((song) => (
-                  <MusicCard
-                    key={song.id}
-                    song={{
-                      id: song.id,
-                      title: song.name,
-                      artist: song.artist.name,
-                      duration: formatDuration(song.duration),
-                      backgroundImage: song.image || release.coverImage,
-                      avatar: release.artist.profilePicture || undefined,
-                      audio: song.audioFile,
-                    }}
-                  />
-                ))}
+                {release.songs.map((song) => {
+                  // Get primary artist for this song from the release's artists array
+                  const primaryArtistId = song.primaryArtistIds[0];
+                  const primaryArtist = primaryArtistId 
+                    ? release.artists.find(a => a.id === primaryArtistId)
+                    : null;
+                  const artistName = primaryArtist?.name || 'Unknown Artist';
+                  
+                  // Get primary artist for release (for avatar)
+                  const releasePrimaryArtistId = release.primaryArtistIds[0];
+                  const releasePrimaryArtist = releasePrimaryArtistId
+                    ? release.artists.find(a => a.id === releasePrimaryArtistId)
+                    : null;
+                  
+                  return (
+                    <MusicCard
+                      key={song.id}
+                      song={{
+                        id: song.id,
+                        title: song.name,
+                        artist: artistName,
+                        duration: formatDuration(song.duration),
+                        backgroundImage: song.image || release.coverImage,
+                        avatar: releasePrimaryArtist?.profilePicture || undefined,
+                        audio: song.audioFile,
+                      }}
+                    />
+                  );
+                })}
               </div>
             )}
           </div>

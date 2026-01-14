@@ -70,43 +70,46 @@ model Artist {
   facebookLink String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  singles     Single[]
+  albums      Album[]
+  eps         Ep[]
 }
 
 model Single {
-  id                String   @id @default(auto()) @map("_id") @db.ObjectId
-  name              String
-  image             String?
-  audioFile         String
-  duration          Int      // Duration in seconds
-  primaryArtistIds  String[] @db.ObjectId // Array of primary artist IDs (at least one required)
-  featureArtistIds  String[] @db.ObjectId // Array of feature artist IDs (optional)
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  id          String  @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  image       String?
+  audioFile   String
+  duration    Int     // Duration in seconds
+  artistId    String  @db.ObjectId
+  artist      Artist  @relation(fields: [artistId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 model Album {
-  id                String   @id @default(auto()) @map("_id") @db.ObjectId
-  name              String
-  coverImage        String
-  primaryArtistIds  String[] @db.ObjectId // Array of primary artist IDs (at least one required)
-  featureArtistIds  String[] @db.ObjectId // Array of feature artist IDs (optional)
-  releaseDate       DateTime?
-  description       String?
-  songIds           String[] @db.ObjectId // Array of Single IDs
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  coverImage  String
+  artistId    String   @db.ObjectId
+  artist      Artist   @relation(fields: [artistId], references: [id], onDelete: Cascade)
+  releaseDate DateTime?
+  description String?
+  songIds     String[] @db.ObjectId // Array of Single IDs
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 model Ep {
-  id                String   @id @default(auto()) @map("_id") @db.ObjectId
-  name              String
-  coverImage        String
-  primaryArtistIds  String[] @db.ObjectId // Array of primary artist IDs (at least one required)
-  featureArtistIds  String[] @db.ObjectId // Array of feature artist IDs (optional)
-  description       String?
-  songIds           String[] @db.ObjectId // Array of Single IDs
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  coverImage  String
+  artistId    String   @db.ObjectId
+  artist      Artist   @relation(fields: [artistId], references: [id], onDelete: Cascade)
+  description String?
+  songIds     String[] @db.ObjectId // Array of Single IDs
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 // Analytics Models

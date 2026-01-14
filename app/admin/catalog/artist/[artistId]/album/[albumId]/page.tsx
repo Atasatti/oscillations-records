@@ -26,11 +26,8 @@ interface Single {
   image?: string;
   audioFile: string;
   duration: number;
-  artistId: string;
-  artist?: {
-    id: string;
-    name: string;
-  };
+  primaryArtistIds: string[];
+  featureArtistIds: string[];
   createdAt: string;
   updatedAt: string;
 }
@@ -39,7 +36,8 @@ interface Album {
   id: string;
   name: string;
   coverImage: string;
-  artistId: string;
+  primaryArtistIds: string[];
+  featureArtistIds: string[];
   releaseDate?: string;
   description?: string;
   songIds: string[];
@@ -241,48 +239,52 @@ export default function AlbumDetail() {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {album.songs.map((song) => (
-                <div key={song.id} className="relative group w-72 h-84">
-                  <MusicCardSm
-                    song={{
-                      id: song.id,
-                      name: song.name,
-                      thumbnail: song.image,
-                      audio: song.audioFile,
-                      artist: song.artist?.name
-                    }}
-                  />
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10 h-8 w-8"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                        }}
-                      >
-                        <MoreVertical className="w-4 h-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="bg-[#0F0F0F] border-gray-800">
-                      <DropdownMenuItem
-                        variant="destructive"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          handleDeleteSongClick(song.id, song.name);
-                        }}
-                        className="text-red-400 focus:text-red-300 focus:bg-red-950/20"
-                      >
-                        <Trash2 className="w-4 h-4 mr-2" />
-                        Delete Song
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-              ))}
+              {album.songs.map((song) => {
+                // For admin pages, we can use the album's primary artist or leave undefined
+                // Since songs don't have artist objects, we'll just not show artist name
+                return (
+                  <div key={song.id} className="relative group w-72 h-84">
+                    <MusicCardSm
+                      song={{
+                        id: song.id,
+                        name: song.name,
+                        thumbnail: song.image,
+                        audio: song.audioFile,
+                        artist: undefined // Songs don't have artist objects in the new structure
+                      }}
+                    />
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10 h-8 w-8"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                          }}
+                        >
+                          <MoreVertical className="w-4 h-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="bg-[#0F0F0F] border-gray-800">
+                        <DropdownMenuItem
+                          variant="destructive"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            handleDeleteSongClick(song.id, song.name);
+                          }}
+                          className="text-red-400 focus:text-red-300 focus:bg-red-950/20"
+                        >
+                          <Trash2 className="w-4 h-4 mr-2" />
+                          Delete Song
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>
@@ -347,6 +349,4 @@ export default function AlbumDetail() {
     </div>
   );
 }
-
-
 
