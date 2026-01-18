@@ -61,13 +61,13 @@ const MeetArtistSection = () => {
 
   if (isLoading) {
     return (
-      <div className="bg-center bg-no-repeat px-[10%] w-full mx-auto py-28"
+      <div className="bg-center bg-no-repeat px-4 sm:px-6 md:px-[10%] w-full mx-auto py-14 sm:py-20 md:py-28"
         style={{ backgroundImage: `url('/hero-bg.svg')` }}>
-        <p className="font-light text-5xl opacity-90 text-center tracking-tighter">
+        <p className="font-light text-3xl sm:text-4xl md:text-5xl opacity-90 text-center tracking-tighter">
           Meet the Artists.
         </p>
-        <p className="text-muted-foreground text-lg text-center mt-3 opacity-50 font-light">Our roster is filled with boundary-pushing talent. These are the voices shaping the future of music.</p>
-        <div className="flex justify-center items-center mt-16">
+        <p className="text-muted-foreground text-sm sm:text-base md:text-lg text-center mt-3 opacity-50 font-light px-4">Our roster is filled with boundary-pushing talent. These are the voices shaping the future of music.</p>
+        <div className="flex justify-center items-center mt-8 sm:mt-12 md:mt-16">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
         </div>
       </div>
@@ -76,16 +76,16 @@ const MeetArtistSection = () => {
 
   if (artists.length === 0) {
     return (
-      <div className="bg-center bg-no-repeat px-[10%] w-full mx-auto py-28"
+      <div className="bg-center bg-no-repeat px-4 sm:px-6 md:px-[10%] w-full mx-auto py-14 sm:py-20 md:py-28"
         style={{ backgroundImage: `url('/hero-bg.svg')` }}>
-        <p className="font-light text-5xl opacity-90 text-center tracking-tighter">
+        <p className="font-light text-3xl sm:text-4xl md:text-5xl opacity-90 text-center tracking-tighter">
           Meet the Artists.
         </p>
-        <p className="text-muted-foreground text-lg text-center mt-3 opacity-50 font-light">Our roster is filled with boundary-pushing talent. These are the voices shaping the future of music.</p>
-        <div className="flex justify-center mt-8">
+        <p className="text-muted-foreground text-sm sm:text-base md:text-lg text-center mt-3 opacity-50 font-light px-4">Our roster is filled with boundary-pushing talent. These are the voices shaping the future of music.</p>
+        <div className="flex justify-center mt-6 sm:mt-8">
           <IconButton text="See Who's Here"/>
         </div>
-        <p className="text-center text-muted-foreground mt-16">No artists available yet.</p>
+        <p className="text-center text-muted-foreground mt-12 sm:mt-16">No artists available yet.</p>
       </div>
     );
   }
@@ -94,86 +94,112 @@ const MeetArtistSection = () => {
   const artistNumber = String(currentIndex + 1).padStart(2, '0');
 
   return (
-    <div className="bg-center bg-no-repeat px-[10%] w-full mx-auto py-28"
+    <div className="bg-center bg-no-repeat px-4 sm:px-6 md:px-[10%] w-full mx-auto py-14 sm:py-20 md:py-28"
       style={{ backgroundImage: `url('/hero-bg.svg')` }}>
-      <p className="font-light text-5xl opacity-90 text-center tracking-tighter">
+      <p className="font-light text-3xl sm:text-4xl md:text-5xl opacity-90 text-center tracking-tighter">
         Meet the Artists.
       </p>
-      <p className="text-muted-foreground text-lg text-center mt-3 opacity-50 font-light">Our roster is filled with boundary-pushing talent. These are the voices shaping the future of music.</p>
-      <div className="flex justify-center mt-8">
+      <p className="text-muted-foreground text-sm sm:text-base md:text-lg text-center mt-3 opacity-50 font-light px-4">Our roster is filled with boundary-pushing talent. These are the voices shaping the future of music.</p>
+      <div className="flex justify-center mt-6 sm:mt-8">
         <IconButton text="See Who's Here" onClick={() => router.push("/artists")}/>
       </div>
-      <div className="mt-16 flex justify-between items-center">
+      <div className="mt-8 sm:mt-12 md:mt-16 flex flex-col lg:flex-row justify-between items-center gap-8 lg:gap-4 min-h-[600px] sm:min-h-[700px] md:min-h-[800px]">
+        {/* Previous button - hidden on mobile, shown on desktop */}
         <div 
-          className="flex items-center gap-2 cursor-pointer hover:opacity-70 transition-opacity"
+          className="hidden lg:flex items-center gap-2 cursor-pointer hover:opacity-70 transition-opacity"
           onClick={handlePrevious}
         >
           <ArrowLeft className="w-4 h-4"/>
           <p className="text-muted-foreground text-sm uppercase">View previous artist</p>
         </div>
-        <div className="relative flex-1 flex justify-center">
-          <div className="relative">
-            <Image 
-              src={currentArtist.profilePicture || "/meet-artist-img.svg"} 
-              width={500} 
-              height={600} 
-              alt={currentArtist.name} 
-              className="rounded-[18px] object-cover"
-            />
-            <div className="flex justify-center items-center gap-7 mt-5">
+        
+        {/* Main content - image and info */}
+        <div className="relative w-full lg:flex-1 flex justify-center">
+          <div className="relative w-full max-w-[500px]">
+            <div className="relative w-full aspect-[5/6] max-h-[600px]">
+              <Image 
+                src={currentArtist.profilePicture || "/meet-artist-img.svg"} 
+                width={500} 
+                height={600} 
+                alt={currentArtist.name} 
+                className="rounded-[18px] object-cover w-full h-full"
+              />
+            </div>
+            <div className="flex justify-center items-center gap-5 sm:gap-7 mt-4 sm:mt-5">
               {currentArtist.xLink && (
                 <a href={currentArtist.xLink} target="_blank" rel="noopener noreferrer">
-                  <LuX className="h-5 w-5 text-muted-foreground hover:text-white transition-colors cursor-pointer" />
+                  <LuX className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground hover:text-white transition-colors cursor-pointer" />
                 </a>
               )}
               {currentArtist.tiktokLink && (
                 <a href={currentArtist.tiktokLink} target="_blank" rel="noopener noreferrer">
-                  <RiTiktokFill className="h-5 w-5 text-muted-foreground hover:text-white transition-colors cursor-pointer" />
+                  <RiTiktokFill className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground hover:text-white transition-colors cursor-pointer" />
                 </a>
               )}
               {currentArtist.youtubeLink && (
                 <a href={currentArtist.youtubeLink} target="_blank" rel="noopener noreferrer">
-                  <FaYoutube className="h-5 w-5 text-muted-foreground hover:text-white transition-colors cursor-pointer" />
+                  <FaYoutube className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground hover:text-white transition-colors cursor-pointer" />
                 </a>
               )}
               {currentArtist.instagramLink && (
                 <a href={currentArtist.instagramLink} target="_blank" rel="noopener noreferrer">
-                  <FaInstagram className="h-5 w-5 text-muted-foreground hover:text-white transition-colors cursor-pointer" />
+                  <FaInstagram className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground hover:text-white transition-colors cursor-pointer" />
                 </a>
               )}
               {currentArtist.facebookLink && (
                 <a href={currentArtist.facebookLink} target="_blank" rel="noopener noreferrer">
-                  <FaFacebookF className="h-5 w-5 text-muted-foreground hover:text-white transition-colors cursor-pointer" />
+                  <FaFacebookF className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground hover:text-white transition-colors cursor-pointer" />
                 </a>
               )}
               {currentArtist.spotifyLink && (
                 <a href={currentArtist.spotifyLink} target="_blank" rel="noopener noreferrer">
-                  <FaSpotify className="h-5 w-5 text-muted-foreground hover:text-white transition-colors cursor-pointer" />
+                  <FaSpotify className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground hover:text-white transition-colors cursor-pointer" />
                 </a>
               )}
             </div>
-            <div className="absolute left-[105%] bottom-0 w-80">
+            {/* Artist info - below image on mobile, to the right on desktop */}
+            <div className="mt-6 lg:absolute lg:left-[105%] lg:bottom-0 lg:w-80 lg:mt-0 min-h-[200px] sm:min-h-[250px]">
               <p className="text-xs text-muted-foreground">({artistNumber})</p>
-              <p className="font-light text-6xl">{currentArtist.name}</p>
-              <p className="text-sm font-light text-muted-foreground mt-2 line-clamp-4">
+              <p className="font-light text-3xl sm:text-4xl md:text-5xl lg:text-6xl mt-1">{currentArtist.name}</p>
+              <p className="text-xs sm:text-sm font-light text-muted-foreground mt-2 line-clamp-3 lg:line-clamp-4 min-h-[60px] sm:min-h-[80px]">
                 {currentArtist.biography}
               </p>
               <div 
-                className="mt-14 flex items-center gap-2 cursor-pointer hover:opacity-70 transition-opacity"
+                className="mt-6 sm:mt-10 lg:mt-14 flex items-center gap-2 cursor-pointer hover:opacity-70 transition-opacity"
                 onClick={handleViewDetails}
               >
-                <p className="text-sm font-medium">View details</p>
-                <ArrowRight className="w-5 h-5"/>
+                <p className="text-xs sm:text-sm font-medium">View details</p>
+                <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5"/>
               </div>
             </div>
           </div>
         </div>
+        
+        {/* Next button - hidden on mobile, shown on desktop */}
         <div 
-          className="flex items-center gap-2 cursor-pointer hover:opacity-70 transition-opacity"
+          className="hidden lg:flex items-center gap-2 cursor-pointer hover:opacity-70 transition-opacity"
           onClick={handleNext}
         >
           <p className="text-muted-foreground text-sm uppercase">View next artist</p>
           <ArrowRight className="w-4 h-4"/>
+        </div>
+        
+        {/* Mobile navigation buttons */}
+        <div className="flex lg:hidden items-center justify-between w-full max-w-md mt-4">
+          <div 
+            className="flex items-center gap-2 cursor-pointer hover:opacity-70 transition-opacity"
+            onClick={handlePrevious}
+          >
+            <ArrowLeft className="w-4 h-4"/>
+            <p className="text-muted-foreground text-xs sm:text-sm uppercase">Previous</p>
+          </div>
+          <div 
+            className="flex items-center gap-2 cursor-pointer hover:opacity-70 transition-opacity"
+            onClick={handleNext}
+          >
+            <p className="text-muted-foreground text-xs sm:text-sm uppercase">Next</p>
+            <ArrowRight className="w-4 h-4"/>
+          </div>
         </div>
       </div>
     </div>

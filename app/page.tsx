@@ -1,3 +1,4 @@
+import Navbar from "@/components/local-ui/Navbar";
 import HomeHeroSection from "@/components/sections/HomeHeroSection";
 import MeetArtistSection from "@/components/sections/MeetArtistSection";
 import MusicHeardSection from "@/components/sections/MusicHeardSection";
@@ -7,6 +8,7 @@ import NoProfitSection from "@/components/sections/NoProfitSection";
 export default function Home() {
   return (
     <div>
+      <Navbar />
       <HomeHeroSection />
       <NoProfitSection />
       <NewMusicSection />

@@ -67,13 +67,13 @@ const NewMusicSection = () => {
   };
 
   return (
-    <div className="px-[10%] w-full mx-auto py-28">
-      <p className="text-8xl tracking-tighter ">New Music, No Compromise.</p>
-      <p className="mt-5 text-muted-foreground text-xl">
+    <div className="px-4 sm:px-6 md:px-[10%] w-full mx-auto py-14 sm:py-20 md:py-28">
+      <p className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl tracking-tighter">New Music, No Compromise.</p>
+      <p className="mt-4 sm:mt-5 text-muted-foreground text-base sm:text-lg md:text-xl">
         From underground hits to future anthems, our releases are about pushing
         boundaries and setting trends.
       </p>
-      <div className="flex justify-end mt-4">
+      <div className="flex justify-center md:justify-end mt-4 sm:mt-6">
         <IconButton text="Listen Now" />
       </div>
       <div className="relative">
@@ -86,7 +86,7 @@ const NewMusicSection = () => {
         ) : (
           <div
             ref={scrollContainerRef}
-            className="flex gap-4 overflow-x-auto scrollbar-hide scroll-smooth mt-10"
+            className="flex gap-4 overflow-x-auto scrollbar-hide scroll-smooth mt-8 sm:mt-10"
             style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
           >
             {songs.map((song) => (
