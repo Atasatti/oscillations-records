@@ -15,7 +15,7 @@ const NoProfitSection = () => {
       <div className="flex flex-col md:flex-row justify-between items-center md:items-start gap-8 md:gap-4 mt-12 sm:mt-16 md:mt-20 lg:mt-30">
         <div className="w-full md:w-1/3 order-2 md:order-1">
           <p className="text-xs sm:text-sm font-light text-muted-foreground mt-0 md:mt-5 text-center md:text-left">
-            We're not a major label. We're a team of music lovers who believe in
+            We&apos;re not a major label. We&apos;re a team of music lovers who believe in
             doing things differently. Based in Manchester but working globally,
             we focus on raw talent, smart marketing, and creating real
             opportunities for artists.
