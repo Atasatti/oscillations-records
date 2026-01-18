@@ -45,17 +45,29 @@ const LoginContent = () => {
   }
 
   return (
-    <div className="min-h-[80vh] flex items-center justify-center px-4">
-      <div className="w-full max-w-[400px] space-y-8">
+    <div className="min-h-[80vh] flex items-center justify-center px-4 py-8">
+      <div className="w-full max-w-[400px] space-y-6 md:space-y-8">
         <div className="text-center">
-          <div className="flex justify-center gap-2 mb-6">
-            <Image width={50} height={50} alt="logo-icon" src="/logo-icon.svg" />
-            <Image width={100} height={30} alt="logo-name" src="/logo-name.svg" />
+          <div className="flex justify-center gap-2 mb-4 md:mb-6">
+            <Image 
+              width={50} 
+              height={50} 
+              className="w-10 h-10 md:w-12 md:h-12"
+              alt="logo-icon" 
+              src="/logo-icon.svg" 
+            />
+            <Image 
+              width={100} 
+              height={30} 
+              className="w-20 h-6 md:w-24 md:h-7"
+              alt="logo-name" 
+              src="/logo-name.svg" 
+            />
           </div>
-          <h1 className="text-3xl font-light tracking-tighter opacity-90">
+          <h1 className="text-2xl md:text-3xl font-light tracking-tighter opacity-90">
             Welcome back
           </h1>
-          <p className="text-muted-foreground text-sm mt-2">
+          <p className="text-muted-foreground text-xs md:text-sm mt-2">
             Sign in to access your account
           </p>
         </div>
@@ -67,11 +79,11 @@ const LoginContent = () => {
           
           <Button
             type="button"
-            className="w-full !py-5 rounded-full text-base"
+            className="w-full !py-4 md:!py-5 rounded-full text-sm md:text-base"
             onClick={handleGoogleSignIn}
             disabled={loading}
           >
-            <FaGoogle className="w-5 h-5 mr-2" />
+            <FaGoogle className="w-4 h-4 md:w-5 md:h-5 mr-2" />
             {loading ? "Signing in..." : "Sign in with Google"}
           </Button>
         </div>

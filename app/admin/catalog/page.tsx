@@ -171,28 +171,28 @@ export default function AdminCatalog() {
     <div className="min-h-screen text-white">
       <AdminNavbar />
       
-      <div className="px-[10%] py-14">
+      <div className="px-4 md:px-6 lg:px-[10%] py-8 md:py-12 lg:py-14">
         {/* Header */}
-        <div className="mb-14">
+        <div className="mb-8 md:mb-12 lg:mb-14">
           <p className="text-xs uppercase tracking-wider text-center text-muted-foreground">
             Music Catalog
           </p>
-          <p className="font-light text-5xl text-center tracking-tighter mt-3">Manage Artists</p>
+          <p className="font-light text-3xl md:text-4xl lg:text-5xl text-center tracking-tighter mt-2 md:mt-3">Manage Artists</p>
         </div>
 
         {/* Create Artist Button */}
-        <div className="mb-8 flex justify-center">
+        <div className="mb-6 md:mb-8 flex justify-center">
           <Link href="/admin/catalog/create">
-            <Button className="bg-white text-black hover:bg-gray-200 px-6 py-3">
-              <Plus className="w-5 h-5 mr-2" />
+            <Button className="bg-white text-black hover:bg-gray-200 px-4 md:px-6 py-2.5 md:py-3 text-sm md:text-base">
+              <Plus className="w-4 h-4 md:w-5 md:h-5 mr-2" />
               Create New Artist
             </Button>
           </Link>
         </div>
 
         {/* Artists Section */}
-        <div className="mb-16">
-          <h2 className="text-2xl font-light tracking-tighter mb-6">Artists</h2>
+        <div className="mb-12 md:mb-16">
+          <h2 className="text-xl md:text-2xl font-light tracking-tighter mb-4 md:mb-6">Artists</h2>
           {isLoading ? (
             <div className="flex justify-center items-center py-20">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
@@ -211,7 +211,7 @@ export default function AdminCatalog() {
               <p className="text-gray-500 mb-6">Create your first artist to get started</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
               {artists.map((artist) => (
                 <div key={artist.id} className="relative group">
                   <Link href={`/admin/catalog/artist/${artist.id}`}>
@@ -253,11 +253,11 @@ export default function AdminCatalog() {
         </div>
 
         {/* Singles Section */}
-        <div className="mb-16">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-light tracking-tighter">Manage Singles</h2>
+        <div className="mb-12 md:mb-16">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4 md:mb-6">
+            <h2 className="text-xl md:text-2xl font-light tracking-tighter">Manage Singles</h2>
             <Link href="/admin/catalog/create/single">
-              <Button className="bg-white text-black hover:bg-gray-200">
+              <Button className="bg-white text-black hover:bg-gray-200 text-sm md:text-base w-full sm:w-auto">
                 <Plus className="w-4 h-4 mr-2" />
                 Create Single
               </Button>
@@ -269,9 +269,9 @@ export default function AdminCatalog() {
               <p className="text-gray-500 mb-6">Create your first single</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
               {singles.map((single) => (
-                <div key={single.id} className="w-72 h-84">
+                <div key={single.id} className="w-full sm:w-72 h-84">
                   <MusicCardSm
                     song={{
                       id: single.id,
@@ -287,11 +287,11 @@ export default function AdminCatalog() {
         </div>
 
         {/* Albums Section */}
-        <div className="mb-16">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-light tracking-tighter">Manage Albums</h2>
+        <div className="mb-12 md:mb-16">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4 md:mb-6">
+            <h2 className="text-xl md:text-2xl font-light tracking-tighter">Manage Albums</h2>
             <Link href="/admin/catalog/create/album">
-              <Button className="bg-white text-black hover:bg-gray-200">
+              <Button className="bg-white text-black hover:bg-gray-200 text-sm md:text-base w-full sm:w-auto">
                 <Plus className="w-4 h-4 mr-2" />
                 Create Album
               </Button>
@@ -303,9 +303,9 @@ export default function AdminCatalog() {
               <p className="text-gray-500 mb-6">Create your first album</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
               {albums.map((album) => (
-                <div key={album.id} className="w-72 h-84">
+                <div key={album.id} className="w-full sm:w-72 h-84">
                   <MusicCardSm
                     song={{
                       id: album.id,
@@ -322,11 +322,11 @@ export default function AdminCatalog() {
         </div>
 
         {/* EPs Section */}
-        <div className="mb-16">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-light tracking-tighter">Manage EPs</h2>
+        <div className="mb-12 md:mb-16">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4 md:mb-6">
+            <h2 className="text-xl md:text-2xl font-light tracking-tighter">Manage EPs</h2>
             <Link href="/admin/catalog/create/ep">
-              <Button className="bg-white text-black hover:bg-gray-200">
+              <Button className="bg-white text-black hover:bg-gray-200 text-sm md:text-base w-full sm:w-auto">
                 <Plus className="w-4 h-4 mr-2" />
                 Create EP
               </Button>
@@ -338,9 +338,9 @@ export default function AdminCatalog() {
               <p className="text-gray-500 mb-6">Create your first EP</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
               {eps.map((ep) => (
-                <div key={ep.id} className="w-72 h-84">
+                <div key={ep.id} className="w-full sm:w-72 h-84">
                   <MusicCardSm
                     song={{
                       id: ep.id,
