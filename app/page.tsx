@@ -15,7 +15,7 @@ export default function Home() {
       <MeetArtistSection />
       <MusicHeardSection
         heading="Let's get your music heard."
-        subtext="Artist, visionary, or just someone with big ideas? We're here to listen. Let's talk."
+        subtext="Artist, visionary, or just someone with big ideas? We're here to listen. Let's talk. "
       />
     </div>
   );
