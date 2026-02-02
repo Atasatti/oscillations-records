@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# large binary assets (host elsewhere or use LFS)
+/public/bsk-stem.zip

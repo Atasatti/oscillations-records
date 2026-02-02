@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +15,7 @@ import {
 } from "@/components/ui/dialog";
 
 export default function UserDemographicsCollector() {
+  const pathname = usePathname();
   const { data: session } = useSession();
   const [showDialog, setShowDialog] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -25,7 +27,11 @@ export default function UserDemographicsCollector() {
     city: "",
   });
 
+  const skipOnPaths = pathname?.startsWith("/admin") || pathname?.startsWith("/benert-remix");
+
   useEffect(() => {
+    if (skipOnPaths) return;
+
     // Check if user has already provided demographics
     const checkProfile = async () => {
       if (!session?.user) return;
@@ -48,7 +54,7 @@ export default function UserDemographicsCollector() {
     };
 
     checkProfile();
-  }, [session]);
+  }, [session, skipOnPaths]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -97,7 +103,7 @@ export default function UserDemographicsCollector() {
     }));
   };
 
-  if (!session?.user) return null;
+  if (!session?.user || skipOnPaths) return null;
 
   return (
     <Dialog open={showDialog} onOpenChange={setShowDialog}>

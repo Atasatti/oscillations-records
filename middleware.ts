@@ -5,8 +5,8 @@ import { getToken } from "next-auth/jwt";
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Admin routes that require specific user access
-  const isAdminRoute = pathname.startsWith("/admin");
+  // Admin routes that require specific user access (including benert-remix admin)
+  const isAdminRoute = pathname.startsWith("/admin") || pathname.startsWith("/benert-remix/admin");
 
   // Only protect admin routes - all other pages are public
   if (isAdminRoute) {
@@ -35,6 +35,7 @@ export async function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     // Admin routes that need specific user access
-    "/admin/:path*"
+    "/admin/:path*",
+    "/benert-remix/admin/:path*"
   ]
 };
