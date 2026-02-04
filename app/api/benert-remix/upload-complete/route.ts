@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
-// POST /api/benert-remix/upload-complete - Save uploaded file URL (stops timer)
+// POST /api/benert-remix/upload-complete - Save uploaded file URL
 export async function POST(request: NextRequest) {
   try {
     const token = await getToken({
@@ -17,14 +17,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const user = await prisma.user.findUnique({
+    let user = await prisma.user.findUnique({
       where: { email: token.email as string },
     });
+
     if (!user) {
-      return NextResponse.json(
-        { error: "Download the STEM first" },
-        { status: 400 }
-      );
+      user = await prisma.user.create({
+        data: {
+          email: token.email as string,
+          name: (token.name as string) ?? null,
+          image: (token.picture as string) ?? null,
+        },
+      });
     }
 
     const body = await request.json();
@@ -41,23 +45,34 @@ export async function POST(request: NextRequest) {
       where: { userId: user.id },
     });
 
-    if (!entry?.downloadStartedAt) {
-      return NextResponse.json(
-        { error: "Download the STEM first" },
-        { status: 400 }
-      );
-    }
-
-    if (entry.uploadedFileUrl) {
+    if (entry?.uploadedFileUrl) {
       return NextResponse.json(
         { error: "You have already submitted your remix" },
         { status: 400 }
       );
     }
 
-    await prisma.benertRemixEntry.update({
+    // Check competition still active
+    const competition = await prisma.benertRemixCompetition.findFirst({
+      orderBy: { startedAt: "desc" },
+    });
+
+    if (!competition || competition.endsAt <= new Date()) {
+      return NextResponse.json(
+        { error: "Competition has ended" },
+        { status: 400 }
+      );
+    }
+
+    await prisma.benertRemixEntry.upsert({
       where: { userId: user.id },
-      data: { uploadedFileUrl: fileURL },
+      create: {
+        userId: user.id,
+        uploadedFileUrl: fileURL,
+      },
+      update: {
+        uploadedFileUrl: fileURL,
+      },
     });
 
     return NextResponse.json({ success: true });

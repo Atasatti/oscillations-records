@@ -18,42 +18,59 @@ function formatCountdown(ms: number): string {
 
 export default function BenertRemixPage() {
   const { data: session, status } = useSession();
-  const [statusData, setStatusData] = useState<{
-    hasDownloaded: boolean;
-    timerEndsAt: string | null;
-    hasUploaded: boolean;
-    fileUrl: string | null;
+  const [competition, setCompetition] = useState<{
+    active: boolean;
+    endsAt: string | null;
   } | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [downloading, setDownloading] = useState(false);
+  const [userStatus, setUserStatus] = useState<{
+    hasUploaded: boolean;
+  } | null>(null);
   const [uploading, setUploading] = useState(false);
   const [countdownMs, setCountdownMs] = useState<number | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
-  const fetchStatus = useCallback(async () => {
+  const fetchCompetition = useCallback(async () => {
+    const res = await fetch("/api/benert-remix/competition");
+    if (!res.ok) return;
+    const data = await res.json();
+    setCompetition({ active: data.active, endsAt: data.endsAt });
+  }, []);
+
+  const fetchUserStatus = useCallback(async () => {
+    if (status !== "authenticated") return;
     const res = await fetch("/api/benert-remix/status");
     if (!res.ok) {
-      setStatusData(null);
+      setUserStatus({ hasUploaded: false });
       return;
     }
     const data = await res.json();
-    setStatusData(data);
-  }, []);
+    setUserStatus({ hasUploaded: data.hasUploaded });
+  }, [status]);
 
   useEffect(() => {
-    if (status === "unauthenticated") {
-      setLoading(false);
-      setStatusData(null);
-      return;
+    fetchCompetition();
+  }, [fetchCompetition]);
+
+  useEffect(() => {
+    if (status === "authenticated") {
+      fetchUserStatus();
+    } else {
+      setUserStatus(null);
     }
-    if (status !== "authenticated") return;
-    fetchStatus().finally(() => setLoading(false));
-  }, [status, fetchStatus]);
+  }, [status, fetchUserStatus]);
 
+  // Poll competition status when not active (so users see when admin starts)
   useEffect(() => {
-    if (!statusData?.timerEndsAt || statusData.hasUploaded) return;
-    const endsAt = new Date(statusData.timerEndsAt).getTime();
+    if (competition?.active) return;
+    const interval = setInterval(fetchCompetition, 5000);
+    return () => clearInterval(interval);
+  }, [competition?.active, fetchCompetition]);
+
+  // Countdown when competition is active and user hasn't submitted
+  useEffect(() => {
+    if (!competition?.active || !competition.endsAt || userStatus?.hasUploaded) return;
+    const endsAt = new Date(competition.endsAt).getTime();
     const update = () => {
       const now = Date.now();
       setCountdownMs(Math.max(0, endsAt - now));
@@ -61,32 +78,19 @@ export default function BenertRemixPage() {
     update();
     const interval = setInterval(update, 1000);
     return () => clearInterval(interval);
-  }, [statusData?.timerEndsAt, statusData?.hasUploaded]);
+  }, [competition?.active, competition?.endsAt, userStatus?.hasUploaded]);
 
-  const handleDownload = async () => {
+  const handleDownload = () => {
     if (!session?.user) {
       signIn("google", { callbackUrl: "/benert-remix" });
       return;
     }
-    setDownloading(true);
-    try {
-      const res = await fetch("/api/benert-remix/download", { method: "POST" });
-      if (!res.ok) {
-        const data = await res.json();
-        if (data.error === "Already downloaded") await fetchStatus();
-        setDownloading(false);
-        return;
-      }
-      const a = document.createElement("a");
-      a.href = "/bsk-stem.zip";
-      a.download = "bsk-stem.zip";
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      await fetchStatus();
-    } finally {
-      setDownloading(false);
-    }
+    const a = document.createElement("a");
+    a.href = "/bsk-stem.zip";
+    a.download = "bsk-stem.zip";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
   };
 
   const handleUpload = async () => {
@@ -147,30 +151,20 @@ export default function BenertRemixPage() {
         return;
       }
       setSelectedFile(null);
-      await fetchStatus();
+      await fetchUserStatus();
     } finally {
       setUploading(false);
     }
   };
 
-  if (loading && status === "authenticated") {
-    return (
-      <div className="min-h-screen bg-[#0f0f0f] text-white flex flex-col">
-        <BenertRemixNavbar />
-        <div className="flex-1 flex items-center justify-center px-4">
-          <p className="text-white/60 font-[family-name:var(--font-inter)]">Loading...</p>
-        </div>
-      </div>
-    );
-  }
+  const hasSubmitted = userStatus?.hasUploaded ?? false;
+  const showTimerAndUpload = competition?.active && !hasSubmitted && session?.user;
 
   return (
     <div className="min-h-screen bg-[#0f0f0f] text-white flex flex-col font-[family-name:var(--font-inter)]">
       <BenertRemixNavbar />
 
-      {/* Hero: left content, right image */}
       <section className="flex flex-col lg:flex-row flex-1 min-h-0 w-full">
-        {/* Left: content — ~60% on desktop */}
         <div className="flex-1 flex flex-col justify-center px-4 md:px-8 lg:px-12 xl:px-[10%] py-10 lg:py-16 order-2 lg:order-1">
           <h1 className="text-3xl md:text-4xl lg:text-5xl font-light tracking-tighter text-white mb-4">
             Welcome to Benert Remix
@@ -179,35 +173,27 @@ export default function BenertRemixPage() {
             How it works
           </h2>
           <p className="text-sm md:text-base text-white/60 max-w-lg mb-8 leading-relaxed">
-            Download the STEM file below. Once you start the download, a timer begins. You must upload your remix before the timer ends, and you can only upload once. You cannot upload after the timer expires or after you&apos;ve already submitted.
+            Download the STEM file below. When the competition starts, a timer will appear and you can upload your remix. You must upload before the timer ends, and you can only upload once. You cannot upload after the timer expires or after you&apos;ve already submitted.
           </p>
 
-          {/* Flow: same for logged in/out — Download triggers login if needed */}
-          {!statusData?.hasUploaded && (
+          {!hasSubmitted && (
             <div className="space-y-4 max-w-md">
-              {!statusData?.hasDownloaded && (
-                <>
-                  <Button
-                    className="w-full sm:w-auto bg-rose-500 hover:bg-rose-600 text-white rounded-lg px-6 py-3 text-sm font-medium uppercase tracking-wider"
-                    onClick={handleDownload}
-                    disabled={downloading}
-                  >
-                    {session?.user
-                      ? downloading
-                        ? "Preparing..."
-                        : "Download STEM"
-                      : "Download STEM"}
-                  </Button>
-                  {!session?.user && (
-                    <p className="text-xs text-white/50">
-                      Sign in with Google to download the STEM file and submit your remix.
-                    </p>
-                  )}
-                </>
+              {/* Download button - always visible */}
+              <Button
+                className="w-full sm:w-auto bg-rose-500 hover:bg-rose-600 text-white rounded-lg px-6 py-3 text-sm font-medium uppercase tracking-wider"
+                onClick={handleDownload}
+              >
+                {session?.user ? "Download STEM" : "Download STEM"}
+              </Button>
+              {!session?.user && (
+                <p className="text-xs text-white/50">
+                  Sign in with Google to download the STEM file and submit your remix.
+                </p>
               )}
 
-              {statusData?.hasDownloaded && !statusData?.hasUploaded && (
-                <div className="space-y-4">
+              {/* Timer and upload - only when competition active and user logged in */}
+              {showTimerAndUpload && (
+                <div className="space-y-4 pt-4 border-t border-white/10">
                   <div>
                     <p className="text-xs text-white/50 uppercase tracking-wider mb-1">Time remaining</p>
                     <p className="text-2xl md:text-3xl font-mono tabular-nums text-rose-400">
@@ -238,17 +224,28 @@ export default function BenertRemixPage() {
                   </div>
                 </div>
               )}
+
+              {competition?.active && !session?.user && (
+                <p className="text-xs text-white/50 pt-2">
+                  Sign in to upload your remix before the timer ends.
+                </p>
+              )}
+
+              {!competition?.active && session?.user && (
+                <p className="text-xs text-white/50 pt-2">
+                  Competition has not started yet. Check back later to upload your remix.
+                </p>
+              )}
             </div>
           )}
 
-          {statusData?.hasUploaded && (
-            <p className="text-white/70 text-base">
+          {hasSubmitted && (
+            <p className="text-rose-400 text-lg">
               You&apos;ve submitted your remix. Thank you!
             </p>
           )}
         </div>
 
-        {/* Right: image — ~40% on desktop */}
         <div className="w-full lg:w-[40%] lg:min-w-[40%] flex-shrink-0 flex items-center justify-center lg:justify-end order-1 lg:order-2 pt-6 lg:pt-0">
           <div className="relative w-full max-w-md lg:max-w-none aspect-[4/5] lg:aspect-auto lg:h-full min-h-[320px] lg:min-h-0">
             <Image

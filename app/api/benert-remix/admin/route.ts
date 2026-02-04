@@ -6,9 +6,8 @@ export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 const ADMIN_EMAIL = "oscillationrecordz@gmail.com";
-const TIMER_HOURS = 24;
 
-// GET /api/benert-remix/admin - List all users who have uploaded (admin only)
+// GET /api/benert-remix/admin - List all submissions (admin only)
 export async function GET(request: NextRequest) {
   try {
     const token = await getToken({
@@ -30,32 +29,12 @@ export async function GET(request: NextRequest) {
       orderBy: { updatedAt: "desc" },
     });
 
-    const rows = entries.map((entry) => {
-      const timerEndsAt = entry.downloadStartedAt
-        ? new Date(
-            entry.downloadStartedAt.getTime() +
-              TIMER_HOURS * 60 * 60 * 1000
-          )
-        : null;
-      const now = new Date();
-      const timeRemaining =
-        timerEndsAt && timerEndsAt > now
-          ? Math.max(0, Math.floor((timerEndsAt.getTime() - now.getTime()) / 1000))
-          : null;
-      const timeRemainingLabel = entry.uploadedFileUrl
-        ? "Submitted"
-        : timeRemaining !== null
-          ? formatDuration(timeRemaining)
-          : "—";
-
-      return {
-        id: entry.id,
-        name: entry.user.name ?? "—",
-        email: entry.user.email ?? "—",
-        timeRemaining: timeRemainingLabel,
-        musicFileUrl: entry.uploadedFileUrl,
-      };
-    });
+    const rows = entries.map((entry) => ({
+      id: entry.id,
+      name: entry.user.name ?? "—",
+      email: entry.user.email ?? "—",
+      musicFileUrl: entry.uploadedFileUrl,
+    }));
 
     return NextResponse.json(rows);
   } catch (error) {
@@ -65,11 +44,4 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
-}
-
-function formatDuration(seconds: number): string {
-  const h = Math.floor(seconds / 3600);
-  const m = Math.floor((seconds % 3600) / 60);
-  const s = seconds % 60;
-  return [h, m, s].map((n) => String(n).padStart(2, "0")).join(":");
 }

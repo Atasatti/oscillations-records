@@ -5,13 +5,10 @@ import { prisma } from "@/lib/prisma";
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
-const TIMER_HOURS = 24;
-
-// GET /api/benert-remix/status - Get current user's competition status
+// GET /api/benert-remix/status - Get current user's submission status (auth required)
 export async function GET(request: NextRequest) {
   try {
     if (!process.env.NEXTAUTH_SECRET) {
-      console.error("NEXTAUTH_SECRET is not configured");
       return NextResponse.json(
         { error: "Server configuration error" },
         { status: 500 }
@@ -30,58 +27,27 @@ export async function GET(request: NextRequest) {
     const user = await prisma.user.findUnique({
       where: { email: token.email as string },
     });
+
     if (!user) {
       return NextResponse.json({
-        hasDownloaded: false,
-        timerEndsAt: null,
         hasUploaded: false,
         fileUrl: null,
       });
     }
 
-    const defaultStatus = {
-      hasDownloaded: false,
-      timerEndsAt: null,
-      hasUploaded: false,
-      fileUrl: null,
-    };
-
-    let entry;
-    try {
-      entry = await prisma.benertRemixEntry.findUnique({
-        where: { userId: user.id },
-      });
-    } catch (dbError) {
-      const msg = dbError instanceof Error ? dbError.message : String(dbError);
-      console.error("Benert remix status DB lookup error:", msg);
-      return NextResponse.json(defaultStatus);
-    }
-
-    if (!entry) {
-      return NextResponse.json(defaultStatus);
-    }
-
-    const hasDownloaded = !!entry.downloadStartedAt;
-    const timerEndsAt = entry.downloadStartedAt
-      ? new Date(entry.downloadStartedAt.getTime() + TIMER_HOURS * 60 * 60 * 1000)
-      : null;
-    const hasUploaded = !!entry.uploadedFileUrl;
+    const entry = await prisma.benertRemixEntry.findUnique({
+      where: { userId: user.id },
+    });
 
     return NextResponse.json({
-      hasDownloaded,
-      timerEndsAt: timerEndsAt?.toISOString() ?? null,
-      hasUploaded,
-      fileUrl: entry.uploadedFileUrl,
+      hasUploaded: !!entry?.uploadedFileUrl,
+      fileUrl: entry?.uploadedFileUrl ?? null,
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    const stack = error instanceof Error ? error.stack : undefined;
-    console.error("Benert remix status error:", message, stack);
+    console.error("Benert remix status error:", message);
     return NextResponse.json(
-      {
-        error: "Failed to get status",
-        ...(process.env.NODE_ENV === "development" && { detail: message }),
-      },
+      { error: "Failed to get status" },
       { status: 500 }
     );
   }

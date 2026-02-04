@@ -5,8 +5,7 @@ import { prisma } from "@/lib/prisma";
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
-// POST /api/benert-remix/upload-url - Validate user can upload (has downloaded, not uploaded yet)
-// This is a validation endpoint - actual presigned URL is obtained from /api/upload/presigned-urls
+// POST /api/benert-remix/upload-url - Validate user can upload (competition active, not uploaded yet)
 export async function POST(request: NextRequest) {
   try {
     const token = await getToken({
@@ -21,9 +20,22 @@ export async function POST(request: NextRequest) {
     const user = await prisma.user.findUnique({
       where: { email: token.email as string },
     });
+
     if (!user) {
       return NextResponse.json(
-        { error: "Download the STEM first" },
+        { error: "User not found" },
+        { status: 400 }
+      );
+    }
+
+    // Check competition is active
+    const competition = await prisma.benertRemixCompetition.findFirst({
+      orderBy: { startedAt: "desc" },
+    });
+
+    if (!competition || competition.endsAt <= new Date()) {
+      return NextResponse.json(
+        { error: "Competition is not active or has ended" },
         { status: 400 }
       );
     }
@@ -32,21 +44,13 @@ export async function POST(request: NextRequest) {
       where: { userId: user.id },
     });
 
-    if (!entry?.downloadStartedAt) {
-      return NextResponse.json(
-        { error: "Download the STEM first" },
-        { status: 400 }
-      );
-    }
-
-    if (entry.uploadedFileUrl) {
+    if (entry?.uploadedFileUrl) {
       return NextResponse.json(
         { error: "You have already submitted your remix" },
         { status: 400 }
       );
     }
 
-    // Validation passed - client can proceed to get presigned URL from /api/upload/presigned-urls
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Benert remix upload-url validation error:", error);
