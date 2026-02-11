@@ -33,6 +33,7 @@ export async function GET(request: NextRequest) {
       id: entry.id,
       name: entry.user.name ?? "—",
       email: entry.user.email ?? "—",
+      releaseName: entry.releaseName ?? "—",
       musicFileUrl: entry.uploadedFileUrl,
     }));
 

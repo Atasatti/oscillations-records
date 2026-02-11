@@ -64,6 +64,7 @@ model BenertRemixEntry {
   id              String    @id @default(auto()) @map("_id") @db.ObjectId
   userId          String    @unique @db.ObjectId
   user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  releaseName     String?   // Name of the release (which song they remixed)
   uploadedFileUrl String?   // S3 URL after upload; when set, user has submitted
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt

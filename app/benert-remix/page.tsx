@@ -29,6 +29,7 @@ export default function BenertRemixPage() {
   const [countdownMs, setCountdownMs] = useState<number | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [releaseName, setReleaseName] = useState("");
 
   const fetchCompetition = useCallback(async () => {
     const res = await fetch("/api/benert-remix/competition");
@@ -95,6 +96,10 @@ export default function BenertRemixPage() {
 
   const handleUpload = async () => {
     if (!selectedFile || !session?.user) return;
+    if (!releaseName.trim()) {
+      setUploadError("Please enter the name of your release (which song you remixed).");
+      return;
+    }
     const allowed = ["audio/mpeg", "audio/wav", "audio/x-wav", "audio/mp3", "audio/m4a", "audio/x-m4a"];
     if (!allowed.includes(selectedFile.type) && !selectedFile.name.match(/\.(mp3|wav|m4a)$/i)) {
       setUploadError("Please select an audio file (MP3, WAV, or M4A).");
@@ -143,7 +148,7 @@ export default function BenertRemixPage() {
       const completeRes = await fetch("/api/benert-remix/upload-complete", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fileURL }),
+        body: JSON.stringify({ fileURL, releaseName: releaseName.trim() }),
       });
       if (!completeRes.ok) {
         setUploadError("Failed to save submission");
@@ -151,6 +156,7 @@ export default function BenertRemixPage() {
         return;
       }
       setSelectedFile(null);
+      setReleaseName("");
       await fetchUserStatus();
     } finally {
       setUploading(false);
@@ -164,16 +170,47 @@ export default function BenertRemixPage() {
     <div className="min-h-screen bg-[#0f0f0f] text-white flex flex-col font-[family-name:var(--font-inter)]">
       <BenertRemixNavbar />
 
-      <section className="flex flex-col lg:flex-row flex-1 min-h-0 w-full">
-        <div className="flex-1 flex flex-col justify-center px-4 md:px-8 lg:px-12 xl:px-[10%] py-10 lg:py-16 order-2 lg:order-1">
-          <h1 className="text-3xl md:text-4xl lg:text-5xl font-light tracking-tighter text-white mb-4">
-            Welcome to Benert Remix
+      <section className="flex flex-col lg:flex-row flex-1 min-h-0 w-full overflow-hidden">
+        <div className="flex-1 overflow-y-auto flex flex-col px-4 md:px-8 lg:px-12 xl:px-[10%] py-8 lg:py-12 order-2 lg:order-1">
+          <h1 className="text-3xl md:text-4xl lg:text-5xl font-light tracking-tighter text-white mb-2">
+            Welcome to the competition
           </h1>
-          <h2 className="text-lg md:text-xl font-medium text-white/90 mb-3">
+          <p className="text-white/70 text-sm max-w-lg mb-8">
+            Each contestant can upload one remix of one song from the Benert EP. Name your release after the song you remixed and watch the email you sign up with for updates.
+          </p>
+
+          {/* Competition rules */}
+          <div className="max-w-lg mb-6 p-5 rounded-xl bg-white/5 border border-white/10">
+            <h2 className="text-sm font-semibold text-white mb-2.5 uppercase tracking-wider">
+              Competition rules
+            </h2>
+            <p className="text-sm text-white/75 leading-relaxed mb-2">
+              Each contestant can only upload one remix of one of the songs from the Benert EP. Make sure to name the song after which song you remixed. Keep an eye out through the Google email you sign up with for updates about the competition.
+            </p>
+          </div>
+
+          {/* Competition rewards */}
+          <div className="max-w-lg mb-8 p-5 rounded-xl bg-rose-500/10 border border-rose-500/20">
+            <h2 className="text-sm font-semibold text-rose-200 mb-2 uppercase tracking-wider">
+              Competition rewards
+            </h2>
+            <p className="text-sm text-white/85 leading-relaxed mb-2">
+              If your song gets chosen as one of the five winners for the remix you chose, you will be awarded:
+            </p>
+            <ul className="text-sm text-white/80 leading-relaxed space-y-1 list-disc list-inside mb-2">
+              <li>£100</li>
+              <li>The song coming out on all platforms</li>
+              <li>A physical limited edition signed vinyl of the songs including the remixes</li>
+              <li>A limited Benert EP T-shirt</li>
+            </ul>
+            <p className="text-sm text-white/70 italic">Thank you for your time and effort.</p>
+          </div>
+
+          <h2 className="text-base md:text-lg font-medium text-white/90 mb-2">
             How it works
           </h2>
-          <p className="text-sm md:text-base text-white/60 max-w-lg mb-8 leading-relaxed">
-            Download the STEM file below. When the competition starts, a timer will appear and you can upload your remix. You must upload before the timer ends, and you can only upload once. You cannot upload after the timer expires or after you&apos;ve already submitted.
+          <p className="text-sm text-white/60 max-w-lg mb-6 leading-relaxed">
+            Download the STEM file below. When the competition starts, a timer will appear and you can upload your remix. You must upload before the timer ends, and you can only upload once.
           </p>
 
           {!hasSubmitted && (
@@ -200,7 +237,24 @@ export default function BenertRemixPage() {
                       {countdownMs !== null ? formatCountdown(countdownMs) : "00:00:00"}
                     </p>
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-3">
+                    <div>
+                      <label htmlFor="release-name" className="block text-sm font-medium text-white/80 mb-1.5">
+                        Name of the release <span className="text-rose-400">*</span>
+                      </label>
+                      <Input
+                        id="release-name"
+                        type="text"
+                        placeholder="e.g. Song Name (Remix)"
+                        value={releaseName}
+                        onChange={(e) => {
+                          setReleaseName(e.target.value);
+                          setUploadError(null);
+                        }}
+                        className="bg-white/10 border-white/20 text-white placeholder:text-white/40 rounded-lg"
+                      />
+                      <p className="text-xs text-white/50 mt-1">Name your remix after the Benert EP track you remixed.</p>
+                    </div>
                     <Input
                       type="file"
                       accept="audio/mpeg,audio/wav,audio/x-wav,audio/mp3,audio/m4a,audio/x-m4a,.mp3,.wav,.m4a"
@@ -217,7 +271,7 @@ export default function BenertRemixPage() {
                     <Button
                       className="w-full sm:w-auto bg-rose-500 hover:bg-rose-600 text-white rounded-lg px-6 py-3 text-sm font-medium uppercase tracking-wider"
                       onClick={handleUpload}
-                      disabled={!selectedFile || uploading}
+                      disabled={!releaseName.trim() || !selectedFile || uploading}
                     >
                       {uploading ? "Uploading..." : "Upload remix"}
                     </Button>

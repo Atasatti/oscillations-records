@@ -32,11 +32,19 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { fileURL } = body;
+    const { fileURL, releaseName } = body;
 
     if (!fileURL || typeof fileURL !== "string") {
       return NextResponse.json(
         { error: "fileURL is required" },
+        { status: 400 }
+      );
+    }
+
+    const trimmedReleaseName = typeof releaseName === "string" ? releaseName.trim() : "";
+    if (!trimmedReleaseName) {
+      return NextResponse.json(
+        { error: "Release name is required" },
         { status: 400 }
       );
     }
@@ -68,9 +76,11 @@ export async function POST(request: NextRequest) {
       where: { userId: user.id },
       create: {
         userId: user.id,
+        releaseName: trimmedReleaseName,
         uploadedFileUrl: fileURL,
       },
       update: {
+        releaseName: trimmedReleaseName,
         uploadedFileUrl: fileURL,
       },
     });

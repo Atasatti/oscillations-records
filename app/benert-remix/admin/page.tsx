@@ -17,6 +17,7 @@ type AdminRow = {
   id: string;
   name: string;
   email: string;
+  releaseName: string;
   musicFileUrl: string | null;
 };
 
@@ -210,13 +211,14 @@ export default function BenertRemixAdminPage() {
               <tr className="bg-white/5 border-b border-white/10">
                 <th className="text-left p-3 md:p-4 text-sm font-medium">Name</th>
                 <th className="text-left p-3 md:p-4 text-sm font-medium">Email</th>
+                <th className="text-left p-3 md:p-4 text-sm font-medium">Release name</th>
                 <th className="text-left p-3 md:p-4 text-sm font-medium">Music File</th>
               </tr>
             </thead>
             <tbody>
               {rows.length === 0 ? (
                 <tr>
-                  <td colSpan={3} className="p-4 text-center text-white/50 text-sm">
+                  <td colSpan={4} className="p-4 text-center text-white/50 text-sm">
                     No submissions yet.
                   </td>
                 </tr>
@@ -225,6 +227,7 @@ export default function BenertRemixAdminPage() {
                   <tr key={row.id} className="border-b border-white/5 last:border-0">
                     <td className="p-3 md:p-4 text-sm">{row.name}</td>
                     <td className="p-3 md:p-4 text-sm">{row.email}</td>
+                    <td className="p-3 md:p-4 text-sm">{row.releaseName}</td>
                     <td className="p-3 md:p-4">
                       {row.musicFileUrl ? (
                         <Button
