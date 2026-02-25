@@ -21,7 +21,7 @@ export default function BenertRemixNavbar() {
   return (
     <nav className="flex justify-between items-center py-4 px-4 md:px-8 lg:px-[10%] border-b border-white/10 font-[family-name:var(--font-inter)]">
       <span className="text-lg md:text-xl font-medium tracking-tight text-white">
-        Benert Remix
+        Benert Remix Competition
       </span>
       <div className="flex items-center gap-2">
         {isLoading ? (

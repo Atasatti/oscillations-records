@@ -94,7 +94,7 @@ export default function BenertRemixPage() {
       return;
     }
     const a = document.createElement("a");
-    a.href = "/bsk-stem.zip";
+    a.href = "https://osrecord.s3.us-east-1.amazonaws.com/bsk-stem.zip";
     a.download = "bsk-stem.zip";
     document.body.appendChild(a);
     a.click();
