@@ -20,11 +20,12 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const durationHours = typeof body.durationHours === "number" ? body.durationHours : 24;
+    const durationHours =
+      typeof body.durationHours === "number" ? body.durationHours : 24;
 
-    if (durationHours < 1 || durationHours > 168) {
+    if (durationHours < 1) {
       return NextResponse.json(
-        { error: "Duration must be between 1 and 168 hours" },
+        { error: "Duration must be at least 1 hour" },
         { status: 400 }
       );
     }

@@ -5,12 +5,19 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 function formatCountdown(ms: number): string {
-  if (ms <= 0) return "00:00:00";
+  if (ms <= 0) return "0 hrs 0 min 0 sec";
   const totalSeconds = Math.floor(ms / 1000);
-  const h = Math.floor(totalSeconds / 3600);
-  const m = Math.floor((totalSeconds % 3600) / 60);
-  const s = totalSeconds % 60;
-  return [h, m, s].map((n) => String(n).padStart(2, "0")).join(":");
+  const days = Math.floor(totalSeconds / (24 * 3600));
+  const remainderAfterDays = totalSeconds % (24 * 3600);
+  const hours = Math.floor(remainderAfterDays / 3600);
+  const minutes = Math.floor((remainderAfterDays % 3600) / 60);
+  const seconds = remainderAfterDays % 60;
+
+  if (days >= 1) {
+    return `${days} day${days > 1 ? "s" : ""} ${hours} hrs ${minutes} min ${seconds} sec`;
+  }
+
+  return `${hours} hrs ${minutes} min ${seconds} sec`;
 }
 
 type AdminRow = {
@@ -79,7 +86,7 @@ export default function BenertRemixAdminPage() {
   }, [competition?.active, competition?.endsAt]);
 
   const handleStartCompetition = async () => {
-    if (durationHours < 1 || durationHours > 168) return;
+    if (durationHours < 1) return;
     setStarting(true);
     try {
       const res = await fetch("/api/benert-remix/admin/start", {
