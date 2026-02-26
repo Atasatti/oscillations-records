@@ -17,9 +17,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const user = await prisma.user.findUnique({
+    let user = await prisma.user.findUnique({
       where: { email: token.email as string },
     });
+
+    // If user signed in with Google but was never synced to DB (e.g. before auth sync existed), create them now
+    if (!user && token.email) {
+      user = await prisma.user.create({
+        data: {
+          email: token.email as string,
+          name: (token.name as string) ?? null,
+          image: (token.picture as string) ?? null,
+        },
+      });
+    }
 
     if (!user) {
       return NextResponse.json(

@@ -1,5 +1,6 @@
 import NextAuth, { AuthOptions, Session, JWT } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
+import { prisma } from "@/lib/prisma";
 
 interface ExtendedToken extends JWT {
   accessToken?: string;
@@ -85,10 +86,26 @@ export const authOptions: AuthOptions = {
   },
   callbacks: {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    async jwt({ token, account }): Promise<any> {
+    async jwt({ token, account, user }): Promise<any> {
       const extendedToken = token as ExtendedToken;
-      // On initial sign in
-      if (account) {
+      // On initial sign in: persist Google user to DB so APIs (e.g. upload-url) can find them
+      if (account && user?.email) {
+        try {
+          await prisma.user.upsert({
+            where: { email: user.email },
+            create: {
+              email: user.email,
+              name: user.name ?? null,
+              image: user.image ?? null,
+            },
+            update: {
+              name: user.name ?? null,
+              image: user.image ?? null,
+            },
+          });
+        } catch (e) {
+          console.error("Auth: failed to sync user to DB", e);
+        }
         extendedToken.accessToken = account.access_token;
         extendedToken.refreshToken = account.refresh_token ?? extendedToken.refreshToken;
         // account.expires_at is in seconds; normalize to ms
