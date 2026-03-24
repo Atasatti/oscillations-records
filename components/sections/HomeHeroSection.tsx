@@ -1,8 +1,11 @@
 import React from "react";
 import IconButton from "../local-ui/IconButton";
 import StackedImagesSection from "./StackedImagesSection";
+import { getStackedHeroImages } from "@/lib/site-settings";
 
-const HomeHeroSection = () => {
+export default async function HomeHeroSection() {
+  const stacked = await getStackedHeroImages();
+
   return (
     <div
       className="bg-center bg-no-repeat px-4 sm:px-6 md:px-[10%] w-full mx-auto py-8 sm:py-12 md:py-14"
@@ -21,10 +24,12 @@ const HomeHeroSection = () => {
           <IconButton text="Let's Work Together" />
         </div>
         <div className="my-12 sm:my-20 md:my-28">
-            <StackedImagesSection/>
+            <StackedImagesSection
+              image1={stacked.image1}
+              image2={stacked.image2}
+              image3={stacked.image3}
+            />
         </div>
     </div>
   );
-};
-
-export default HomeHeroSection;
+}

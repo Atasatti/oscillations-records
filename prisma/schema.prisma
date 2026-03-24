@@ -145,6 +145,15 @@ model UserProfile {
   updatedAt   DateTime @updatedAt
 }
 
+// Singleton row id "site" — home page hero and other global settings
+model SiteSettings {
+  id                String   @id @map("_id")
+  stackedHeroImage1 String
+  stackedHeroImage2 String
+  stackedHeroImage3 String
+  updatedAt         DateTime @updatedAt
+}
+
 model PlayEvent {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
   userId      String   @db.ObjectId
