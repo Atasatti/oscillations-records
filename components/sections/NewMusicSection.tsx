@@ -1,5 +1,6 @@
 "use client";
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useState, useEffect, useCallback } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import IconButton from "../local-ui/IconButton";
 import MusicCard from "../local-ui/MusicCard";
 
@@ -26,10 +27,54 @@ interface Single {
   } | null;
 }
 
+const SCROLL_GAP_PX = 16; // matches gap-4
+
 const NewMusicSection = () => {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [songs, setSongs] = useState<Song[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  const updateScrollArrows = useCallback(() => {
+    const el = scrollContainerRef.current;
+    if (!el) return;
+    const { scrollLeft, scrollWidth, clientWidth } = el;
+    const epsilon = 2;
+    setCanScrollLeft(scrollLeft > epsilon);
+    setCanScrollRight(scrollLeft + clientWidth < scrollWidth - epsilon);
+  }, []);
+
+  const scrollByCard = (direction: "prev" | "next") => {
+    const el = scrollContainerRef.current;
+    if (!el) return;
+    const first = el.firstElementChild as HTMLElement | null;
+    if (!first) return;
+    const delta = first.offsetWidth + SCROLL_GAP_PX;
+    el.scrollBy({
+      left: direction === "next" ? delta : -delta,
+      behavior: "smooth",
+    });
+  };
+
+  useEffect(() => {
+    const el = scrollContainerRef.current;
+    if (!el || songs.length === 0) return;
+
+    updateScrollArrows();
+
+    el.addEventListener("scroll", updateScrollArrows, { passive: true });
+    const ro = new ResizeObserver(() => updateScrollArrows());
+    ro.observe(el);
+
+    const id = requestAnimationFrame(() => updateScrollArrows());
+
+    return () => {
+      cancelAnimationFrame(id);
+      el.removeEventListener("scroll", updateScrollArrows);
+      ro.disconnect();
+    };
+  }, [songs, updateScrollArrows]);
 
   useEffect(() => {
     fetchLatestSongs();
@@ -84,14 +129,36 @@ const NewMusicSection = () => {
         ) : songs.length === 0 ? (
           <p className="text-center text-muted-foreground mt-10">No songs available yet.</p>
         ) : (
-          <div
-            ref={scrollContainerRef}
-            className="flex gap-4 overflow-x-auto scrollbar-hide scroll-smooth mt-8 sm:mt-10"
-            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-          >
-            {songs.map((song) => (
-              <MusicCard key={song.id} song={song} />
-            ))}
+          <div className="flex items-center gap-2 sm:gap-3 mt-8 sm:mt-10 min-w-0">
+            {canScrollLeft ? (
+              <button
+                type="button"
+                onClick={() => scrollByCard("prev")}
+                aria-label="Previous release"
+                className="flex-shrink-0 flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-full border border-white/15 bg-black/50 text-white backdrop-blur-sm transition-colors hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/40"
+              >
+                <ChevronLeft className="h-5 w-5 sm:h-6 sm:w-6" aria-hidden />
+              </button>
+            ) : null}
+            <div
+              ref={scrollContainerRef}
+              className="flex min-w-0 flex-1 gap-4 overflow-x-auto scrollbar-hide scroll-smooth"
+              style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+            >
+              {songs.map((song) => (
+                <MusicCard key={song.id} song={song} />
+              ))}
+            </div>
+            {canScrollRight ? (
+              <button
+                type="button"
+                onClick={() => scrollByCard("next")}
+                aria-label="Next release"
+                className="flex-shrink-0 flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-full border border-white/15 bg-black/50 text-white backdrop-blur-sm transition-colors hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/40"
+              >
+                <ChevronRight className="h-5 w-5 sm:h-6 sm:w-6" aria-hidden />
+              </button>
+            ) : null}
           </div>
         )}
       </div>
