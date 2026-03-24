@@ -306,15 +306,17 @@ export default function AdminCatalog() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
               {albums.map((album) => (
                 <div key={album.id} className="w-full sm:w-72 h-84">
-                  <MusicCardSm
-                    song={{
-                      id: album.id,
-                      name: album.name,
-                      thumbnail: album.coverImage,
-                      audio: null,
-                      songCount: album.songIds.length,
-                    }}
-                  />
+                  <Link href={`/admin/catalog/album/${album.id}`}>
+                    <MusicCardSm
+                      song={{
+                        id: album.id,
+                        name: album.name,
+                        thumbnail: album.coverImage,
+                        audio: null,
+                        songCount: album.songIds.length,
+                      }}
+                    />
+                  </Link>
                 </div>
               ))}
             </div>
@@ -341,15 +343,17 @@ export default function AdminCatalog() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
               {eps.map((ep) => (
                 <div key={ep.id} className="w-full sm:w-72 h-84">
-                  <MusicCardSm
-                    song={{
-                      id: ep.id,
-                      name: ep.name,
-                      thumbnail: ep.coverImage,
-                      audio: null,
-                      songCount: ep.songIds.length,
-                    }}
-                  />
+                  <Link href={`/admin/catalog/ep/${ep.id}`}>
+                    <MusicCardSm
+                      song={{
+                        id: ep.id,
+                        name: ep.name,
+                        thumbnail: ep.coverImage,
+                        audio: null,
+                        songCount: ep.songIds.length,
+                      }}
+                    />
+                  </Link>
                 </div>
               ))}
             </div>
