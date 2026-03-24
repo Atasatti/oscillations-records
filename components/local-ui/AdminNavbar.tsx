@@ -34,23 +34,24 @@ const AdminNavbar = () => {
     <>
       <div className="flex justify-between items-center py-6 md:py-8 px-4 md:px-[10%]">
         {/* Logo - smaller on mobile */}
-        <div className="flex items-center gap-1.5 md:gap-2">
+        <Link href={"/admin"}>
+        <div className="flex items-center gap-1.5 md:gap-3">
           <Image 
             width={40} 
             height={40} 
-            className="w-8 h-8 md:w-10 md:h-10"
+            className="w-8 h-8 md:w-14 md:h-14"
             alt="logo-icon" 
             src={"/logo-icon.svg"} 
           />
           <Image 
             width={80} 
             height={24} 
-            className="w-20 h-6 md:w-24 md:h-7"
+            className="w-22 h-8 md:w-28 md:h-9"
             alt="logo-name" 
             src={"/logo-name.svg"} 
           />
         </div>
-
+        </Link>
         {/* Desktop Navigation - hidden on md and below */}
         <div
           className="hidden lg:flex items-center gap-8 xl:gap-10 font-[family-name:var(--font-inter)]
