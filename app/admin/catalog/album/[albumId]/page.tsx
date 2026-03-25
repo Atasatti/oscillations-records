@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
+import Link from "next/link";
 import AdminNavbar from "@/components/local-ui/AdminNavbar";
 import MusicCardSm from "@/components/local-ui/MusicCardSm";
 import { Button } from "@/components/ui/button";
@@ -18,7 +19,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { ArrowLeft, MoreVertical, Trash2 } from "lucide-react";
+import { ArrowLeft, MoreVertical, Trash2, Pencil } from "lucide-react";
 
 interface Single {
   id: string;
@@ -207,6 +208,12 @@ export default function AlbumDetail() {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="bg-[#0F0F0F] border-gray-800">
+                    <DropdownMenuItem asChild>
+                      <Link href={`/admin/catalog/edit/album/${albumId}`}>
+                        <Pencil className="w-4 h-4 mr-2" />
+                        Edit Album
+                      </Link>
+                    </DropdownMenuItem>
                     <DropdownMenuItem
                       variant="destructive"
                       onClick={handleDeleteClick}
@@ -257,6 +264,17 @@ export default function AlbumDetail() {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="bg-[#0F0F0F] border-gray-800">
+                      <DropdownMenuItem asChild>
+                        <Link
+                          href={`/admin/catalog/edit/single/${song.id}`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                          }}
+                        >
+                          <Pencil className="w-4 h-4 mr-2" />
+                          Edit Song
+                        </Link>
+                      </DropdownMenuItem>
                       <DropdownMenuItem
                         variant="destructive"
                         onClick={(e) => {

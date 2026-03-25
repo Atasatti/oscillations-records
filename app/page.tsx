@@ -4,6 +4,7 @@ import MeetArtistSection from "@/components/sections/MeetArtistSection";
 import MusicHeardSection from "@/components/sections/MusicHeardSection";
 import NewMusicSection from "@/components/sections/NewMusicSection";
 import NoProfitSection from "@/components/sections/NoProfitSection";
+import UpcomingReleasesSection from "@/components/sections/UpcomingReleasesSection";
 
 export default function Home() {
   return (
@@ -12,6 +13,7 @@ export default function Home() {
       <HomeHeroSection />
       <NoProfitSection />
       <NewMusicSection />
+      <UpcomingReleasesSection />
       <MeetArtistSection />
       <MusicHeardSection
         heading="Let's get your music heard."

@@ -43,7 +43,17 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { name, coverImage, description, songIds, primaryArtistIds, featureArtistIds } = body;
+    const {
+      name,
+      coverImage,
+      description,
+      composer,
+      lyricist,
+      leadVocal,
+      songIds,
+      primaryArtistIds,
+      featureArtistIds,
+    } = body;
 
     // Validate required fields
     if (!name || !coverImage || !songIds || !Array.isArray(songIds) || songIds.length === 0) {
@@ -120,6 +130,9 @@ export async function POST(request: NextRequest) {
         primaryArtistIds,
         featureArtistIds: featureArtistIds || [],
         description: description || null,
+        composer: composer || null,
+        lyricist: lyricist || null,
+        leadVocal: leadVocal || null,
         songIds,
       },
     });

@@ -28,7 +28,17 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { name, image, audioFile, duration, primaryArtistIds, featureArtistIds } = body;
+    const {
+      name,
+      image,
+      audioFile,
+      duration,
+      composer,
+      lyricist,
+      leadVocal,
+      primaryArtistIds,
+      featureArtistIds,
+    } = body;
 
     // Validate required fields
     if (!name || !audioFile || !duration) {
@@ -90,6 +100,9 @@ export async function POST(request: NextRequest) {
         image: image || null,
         audioFile,
         duration: parseInt(duration, 10),
+        composer: composer || null,
+        lyricist: lyricist || null,
+        leadVocal: leadVocal || null,
         primaryArtistIds,
         featureArtistIds: featureArtistIds || [],
       },

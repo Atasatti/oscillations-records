@@ -84,6 +84,9 @@ model Artist {
   name          String
   biography     String
   profilePicture String?
+  composer      String?
+  lyricist      String?
+  leadVocal     String?
   xLink         String?
   tiktokLink    String?
   spotifyLink   String?
@@ -100,6 +103,9 @@ model Single {
   image            String?
   audioFile        String
   duration         Int      // Duration in seconds
+  composer         String?
+  lyricist         String?
+  leadVocal        String?
   primaryArtistIds String[] @db.ObjectId
   featureArtistIds String[] @db.ObjectId
   createdAt        DateTime @default(now())
@@ -126,9 +132,24 @@ model Ep {
   primaryArtistIds String[] @db.ObjectId
   featureArtistIds String[] @db.ObjectId
   description      String?
+  composer         String?
+  lyricist         String?
+  leadVocal        String?
   songIds          String[] @db.ObjectId // Array of Single IDs
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
+}
+
+model UpcomingRelease {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  type        String   // "single" | "ep" | "album"
+  image       String
+  releaseDate DateTime
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([releaseDate])
 }
 
 // Analytics Models

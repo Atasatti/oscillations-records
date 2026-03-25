@@ -19,7 +19,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { ArrowLeft, MoreVertical, Trash2 } from "lucide-react";
+import { ArrowLeft, MoreVertical, Trash2, Pencil } from "lucide-react";
 
 interface Artist {
   id: string;
@@ -235,6 +235,14 @@ export default function ArtistDetail() {
           
           <h1 className="text-4xl font-light tracking-tighter">{artist.name}</h1>
           <p className="text-gray-400 mt-2">{artist.biography}</p>
+          <div className="mt-4">
+            <Link href={`/admin/catalog/edit/artist/${artistId}`}>
+              <Button variant="outline" className="border-gray-700 text-gray-300 hover:bg-[#1a1a1a]">
+                <Pencil className="w-4 h-4 mr-2" />
+                Edit Artist
+              </Button>
+            </Link>
+          </div>
         </div>
 
         {/* Singles Section */}
@@ -276,6 +284,12 @@ export default function ArtistDetail() {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="bg-[#0F0F0F] border-gray-800">
+                      <DropdownMenuItem asChild>
+                        <Link href={`/admin/catalog/edit/single/${single.id}`}>
+                          <Pencil className="w-4 h-4 mr-2" />
+                          Edit Single
+                        </Link>
+                      </DropdownMenuItem>
                       <DropdownMenuItem
                         variant="destructive"
                         onClick={(e) => {
@@ -342,6 +356,17 @@ export default function ArtistDetail() {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="bg-[#0F0F0F] border-gray-800">
+                      <DropdownMenuItem asChild>
+                        <Link
+                          href={`/admin/catalog/edit/ep/${ep.id}`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                          }}
+                        >
+                          <Pencil className="w-4 h-4 mr-2" />
+                          Edit EP
+                        </Link>
+                      </DropdownMenuItem>
                       <DropdownMenuItem
                         variant="destructive"
                         onClick={(e) => {
@@ -413,6 +438,17 @@ export default function ArtistDetail() {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="bg-[#0F0F0F] border-gray-800">
+                      <DropdownMenuItem asChild>
+                        <Link
+                          href={`/admin/catalog/edit/album/${album.id}`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                          }}
+                        >
+                          <Pencil className="w-4 h-4 mr-2" />
+                          Edit Album
+                        </Link>
+                      </DropdownMenuItem>
                       <DropdownMenuItem
                         variant="destructive"
                         onClick={(e) => {

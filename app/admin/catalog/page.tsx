@@ -19,7 +19,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Plus, Users, MoreVertical, Trash2 } from "lucide-react";
+import { Plus, Users, MoreVertical, Trash2, Pencil, Image as ImageIcon, Loader2 } from "lucide-react";
 
 interface Artist {
   id: string;
@@ -75,15 +75,41 @@ interface EP {
   updatedAt: string;
 }
 
+interface UpcomingRelease {
+  id: string;
+  name: string;
+  type: "single" | "ep" | "album";
+  image: string;
+  releaseDate: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export default function AdminCatalog() {
   const [artists, setArtists] = useState<Artist[]>([]);
   const [singles, setSingles] = useState<Single[]>([]);
   const [albums, setAlbums] = useState<Album[]>([]);
   const [eps, setEps] = useState<EP[]>([]);
+  const [upcomingReleases, setUpcomingReleases] = useState<UpcomingRelease[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [artistToDelete, setArtistToDelete] = useState<{ id: string; name: string } | null>(null);
+  const [contentDeleteDialogOpen, setContentDeleteDialogOpen] = useState(false);
+  const [contentToDelete, setContentToDelete] = useState<{
+    id: string;
+    name: string;
+    type: "single" | "album" | "ep";
+  } | null>(null);
+  const [upcomingForm, setUpcomingForm] = useState({
+    name: "",
+    type: "single" as "single" | "ep" | "album",
+    releaseDate: "",
+    imageFile: null as File | null,
+  });
+  const [upcomingImagePreview, setUpcomingImagePreview] = useState<string | null>(null);
+  const [isCreatingUpcoming, setIsCreatingUpcoming] = useState(false);
+  const [isUploadingUpcomingImage, setIsUploadingUpcomingImage] = useState(false);
 
   useEffect(() => {
     fetchAllData();
@@ -91,11 +117,12 @@ export default function AdminCatalog() {
 
   const fetchAllData = async () => {
     try {
-      const [artistsRes, singlesRes, albumsRes, epsRes] = await Promise.all([
+      const [artistsRes, singlesRes, albumsRes, epsRes, upcomingRes] = await Promise.all([
         fetch("/api/artists"),
         fetch("/api/singles"),
         fetch("/api/albums"),
         fetch("/api/eps"),
+        fetch("/api/upcoming-releases"),
       ]);
 
       if (artistsRes.ok) {
@@ -116,6 +143,11 @@ export default function AdminCatalog() {
       if (epsRes.ok) {
         const data = await epsRes.json();
         setEps(data);
+      }
+
+      if (upcomingRes.ok) {
+        const data = await upcomingRes.json();
+        setUpcomingReleases(data);
       }
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -164,6 +196,134 @@ export default function AdminCatalog() {
     } catch (error) {
       console.error("Error deleting artist:", error);
       alert("Failed to delete artist");
+    }
+  };
+
+  const handleContentDeleteClick = (
+    type: "single" | "album" | "ep",
+    id: string,
+    name: string
+  ) => {
+    setContentToDelete({ type, id, name });
+    setContentDeleteDialogOpen(true);
+  };
+
+  const handleContentDeleteConfirm = async () => {
+    if (!contentToDelete) return;
+
+    const endpoint =
+      contentToDelete.type === "single"
+        ? `/api/singles/${contentToDelete.id}`
+        : contentToDelete.type === "album"
+          ? `/api/albums/${contentToDelete.id}`
+          : `/api/eps/${contentToDelete.id}`;
+
+    try {
+      const response = await fetch(endpoint, { method: "DELETE" });
+      if (response.ok) {
+        setContentDeleteDialogOpen(false);
+        setContentToDelete(null);
+        fetchAllData();
+      } else {
+        const error = await response.json();
+        alert(`Error: ${error.error}`);
+      }
+    } catch (error) {
+      console.error(`Error deleting ${contentToDelete.type}:`, error);
+      alert(`Failed to delete ${contentToDelete.type}`);
+    }
+  };
+
+  const getUpcomingPresignedUrl = async (imageFile: File) => {
+    const timestamp = Date.now();
+    const imageFileName = `upcoming-releases/images/${timestamp}-${imageFile.name.replace(/[^a-zA-Z0-9.-]/g, "_")}`;
+    const response = await fetch("/api/upload/presigned-url-image", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        imageFileName,
+        imageFileType: imageFile.type,
+      }),
+    });
+    if (!response.ok) {
+      throw new Error("Failed to get image upload URL");
+    }
+    return response.json() as Promise<{ uploadURL: string; fileURL: string }>;
+  };
+
+  const handleUpcomingImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUpcomingForm((prev) => ({ ...prev, imageFile: file }));
+    setUpcomingImagePreview(URL.createObjectURL(file));
+  };
+
+  const handleCreateUpcomingRelease = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!upcomingForm.name || !upcomingForm.releaseDate || !upcomingForm.imageFile) {
+      alert("Please fill all fields and choose an image");
+      return;
+    }
+
+    setIsCreatingUpcoming(true);
+    try {
+      setIsUploadingUpcomingImage(true);
+      const presigned = await getUpcomingPresignedUrl(upcomingForm.imageFile);
+      const uploadRes = await fetch(presigned.uploadURL, {
+        method: "PUT",
+        body: upcomingForm.imageFile,
+        headers: { "Content-Type": upcomingForm.imageFile.type },
+      });
+      if (!uploadRes.ok) throw new Error("Failed to upload image");
+      setIsUploadingUpcomingImage(false);
+
+      const createRes = await fetch("/api/upcoming-releases", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: upcomingForm.name,
+          type: upcomingForm.type,
+          image: presigned.fileURL,
+          releaseDate: upcomingForm.releaseDate,
+        }),
+      });
+      if (!createRes.ok) {
+        const err = await createRes.json();
+        throw new Error(err.error || "Failed to create upcoming release");
+      }
+
+      setUpcomingForm({
+        name: "",
+        type: "single",
+        releaseDate: "",
+        imageFile: null,
+      });
+      setUpcomingImagePreview(null);
+      fetchAllData();
+    } catch (error) {
+      console.error("Error creating upcoming release:", error);
+      alert(error instanceof Error ? error.message : "Failed to create upcoming release");
+    } finally {
+      setIsUploadingUpcomingImage(false);
+      setIsCreatingUpcoming(false);
+    }
+  };
+
+  const handleDeleteUpcomingRelease = async (releaseId: string) => {
+    const confirmed = window.confirm("Delete this upcoming release?");
+    if (!confirmed) return;
+    try {
+      const response = await fetch(`/api/upcoming-releases/${releaseId}`, {
+        method: "DELETE",
+      });
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error || "Failed to delete upcoming release");
+      }
+      fetchAllData();
+    } catch (error) {
+      console.error("Error deleting upcoming release:", error);
+      alert(error instanceof Error ? error.message : "Failed to delete upcoming release");
     }
   };
 
@@ -232,6 +392,17 @@ export default function AdminCatalog() {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="bg-[#0F0F0F] border-gray-800">
+                      <DropdownMenuItem asChild>
+                        <Link
+                          href={`/admin/catalog/edit/artist/${artist.id}`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                          }}
+                        >
+                          <Pencil className="w-4 h-4 mr-2" />
+                          Edit Artist
+                        </Link>
+                      </DropdownMenuItem>
                       <DropdownMenuItem
                         variant="destructive"
                         onClick={(e) => {
@@ -271,7 +442,7 @@ export default function AdminCatalog() {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
               {singles.map((single) => (
-                <div key={single.id} className="w-full sm:w-72 h-84">
+                <div key={single.id} className="relative group w-full sm:w-72 h-84">
                   <MusicCardSm
                     song={{
                       id: single.id,
@@ -280,6 +451,33 @@ export default function AdminCatalog() {
                       audio: single.audioFile
                     }}
                   />
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10 h-8 w-8"
+                      >
+                        <MoreVertical className="w-4 h-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="bg-[#0F0F0F] border-gray-800">
+                      <DropdownMenuItem asChild>
+                        <Link href={`/admin/catalog/edit/single/${single.id}`}>
+                          <Pencil className="w-4 h-4 mr-2" />
+                          Edit Single
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        variant="destructive"
+                        onClick={() => handleContentDeleteClick("single", single.id, single.name)}
+                        className="text-red-400 focus:text-red-300 focus:bg-red-950/20"
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Delete Single
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               ))}
             </div>
@@ -305,7 +503,7 @@ export default function AdminCatalog() {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
               {albums.map((album) => (
-                <div key={album.id} className="w-full sm:w-72 h-84">
+                <div key={album.id} className="relative group w-full sm:w-72 h-84">
                   <Link href={`/admin/catalog/album/${album.id}`}>
                     <MusicCardSm
                       song={{
@@ -317,6 +515,46 @@ export default function AdminCatalog() {
                       }}
                     />
                   </Link>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10 h-8 w-8"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                        }}
+                      >
+                        <MoreVertical className="w-4 h-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="bg-[#0F0F0F] border-gray-800">
+                      <DropdownMenuItem asChild>
+                        <Link
+                          href={`/admin/catalog/edit/album/${album.id}`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                          }}
+                        >
+                          <Pencil className="w-4 h-4 mr-2" />
+                          Edit Album
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        variant="destructive"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleContentDeleteClick("album", album.id, album.name);
+                        }}
+                        className="text-red-400 focus:text-red-300 focus:bg-red-950/20"
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Delete Album
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               ))}
             </div>
@@ -342,7 +580,7 @@ export default function AdminCatalog() {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
               {eps.map((ep) => (
-                <div key={ep.id} className="w-full sm:w-72 h-84">
+                <div key={ep.id} className="relative group w-full sm:w-72 h-84">
                   <Link href={`/admin/catalog/ep/${ep.id}`}>
                     <MusicCardSm
                       song={{
@@ -354,10 +592,148 @@ export default function AdminCatalog() {
                       }}
                     />
                   </Link>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10 h-8 w-8"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                        }}
+                      >
+                        <MoreVertical className="w-4 h-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="bg-[#0F0F0F] border-gray-800">
+                      <DropdownMenuItem asChild>
+                        <Link
+                          href={`/admin/catalog/edit/ep/${ep.id}`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                          }}
+                        >
+                          <Pencil className="w-4 h-4 mr-2" />
+                          Edit EP
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        variant="destructive"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleContentDeleteClick("ep", ep.id, ep.name);
+                        }}
+                        className="text-red-400 focus:text-red-300 focus:bg-red-950/20"
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Delete EP
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               ))}
             </div>
           )}
+        </div>
+
+        {/* Upcoming Releases Section */}
+        <div className="mb-12 md:mb-16">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4 md:mb-6">
+            <h2 className="text-xl md:text-2xl font-light tracking-tighter">Upcoming Releases</h2>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <form
+              onSubmit={handleCreateUpcomingRelease}
+              className="bg-[#0F0F0F] border border-gray-800 rounded-xl p-5 space-y-4"
+            >
+              <h3 className="text-lg">Add Upcoming Release</h3>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleUpcomingImageChange}
+                className="block w-full text-sm text-gray-300 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:bg-white file:text-black hover:file:bg-gray-200"
+                required
+              />
+              {upcomingImagePreview ? (
+                <img src={upcomingImagePreview} alt="Upcoming preview" className="w-24 h-24 rounded-md object-cover border border-gray-700" />
+              ) : null}
+              <input
+                value={upcomingForm.name}
+                onChange={(e) => setUpcomingForm((prev) => ({ ...prev, name: e.target.value }))}
+                placeholder="Release name"
+                className="w-full bg-black border border-gray-700 rounded-md px-3 py-2 text-white"
+                required
+              />
+              <select
+                value={upcomingForm.type}
+                onChange={(e) =>
+                  setUpcomingForm((prev) => ({
+                    ...prev,
+                    type: e.target.value as "single" | "ep" | "album",
+                  }))
+                }
+                className="w-full bg-black border border-gray-700 rounded-md px-3 py-2 text-white"
+              >
+                <option value="single">Single</option>
+                <option value="ep">EP</option>
+                <option value="album">Album</option>
+              </select>
+              <input
+                type="date"
+                value={upcomingForm.releaseDate}
+                onChange={(e) => setUpcomingForm((prev) => ({ ...prev, releaseDate: e.target.value }))}
+                className="w-full bg-black border border-gray-700 rounded-md px-3 py-2 text-white"
+                required
+              />
+              <Button type="submit" className="bg-white text-black hover:bg-gray-200" disabled={isCreatingUpcoming}>
+                {isCreatingUpcoming ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    {isUploadingUpcomingImage ? "Uploading..." : "Saving..."}
+                  </>
+                ) : (
+                  <>
+                    <ImageIcon className="w-4 h-4 mr-2" />
+                    Add Upcoming Release
+                  </>
+                )}
+              </Button>
+            </form>
+
+            <div className="bg-[#0F0F0F] border border-gray-800 rounded-xl p-5">
+              <h3 className="text-lg mb-4">Scheduled</h3>
+              {upcomingReleases.length === 0 ? (
+                <p className="text-gray-400">No upcoming releases scheduled.</p>
+              ) : (
+                <div className="space-y-3">
+                  {upcomingReleases.map((release) => (
+                    <div key={release.id} className="flex items-center justify-between gap-3 bg-black/40 border border-gray-800 rounded-lg p-3">
+                      <div className="flex items-center gap-3">
+                        <img src={release.image} alt={release.name} className="w-14 h-14 rounded object-cover" />
+                        <div>
+                          <p className="text-sm font-medium">{release.name}</p>
+                          <p className="text-xs text-gray-400 uppercase">
+                            {release.type} • {new Date(release.releaseDate).toLocaleDateString()}
+                          </p>
+                        </div>
+                      </div>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => handleDeleteUpcomingRelease(release.id)}
+                      >
+                        <Trash2 className="w-4 h-4 mr-1" />
+                        Delete
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* Delete Confirmation Dialog */}
@@ -384,6 +760,37 @@ export default function AdminCatalog() {
                 variant="destructive"
                 onClick={handleDeleteConfirm}
               >
+                Delete
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={contentDeleteDialogOpen} onOpenChange={setContentDeleteDialogOpen}>
+          <DialogContent className="bg-[#0F0F0F] border-gray-800 text-white">
+            <DialogHeader>
+              <DialogTitle>
+                Delete {contentToDelete?.type === "single" ? "Single" : contentToDelete?.type === "album" ? "Album" : "EP"}
+              </DialogTitle>
+              <DialogDescription className="text-gray-400">
+                Are you sure you want to delete &quot;{contentToDelete?.name}&quot;?
+                {contentToDelete?.type === "single"
+                  ? " This action cannot be undone."
+                  : " This will remove it but keep the songs. This action cannot be undone."}
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setContentDeleteDialogOpen(false);
+                  setContentToDelete(null);
+                }}
+                className="border-gray-700"
+              >
+                Cancel
+              </Button>
+              <Button variant="destructive" onClick={handleContentDeleteConfirm}>
                 Delete
               </Button>
             </DialogFooter>
