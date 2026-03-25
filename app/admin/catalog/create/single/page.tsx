@@ -31,6 +31,7 @@ export default function CreateSingle() {
     composer: "",
     lyricist: "",
     leadVocal: "",
+    isrcCode: "",
     spotifyLink: "",
     appleMusicLink: "",
     tidalLink: "",
@@ -282,6 +283,7 @@ export default function CreateSingle() {
           composer: formData.composer,
           lyricist: formData.lyricist,
           leadVocal: formData.leadVocal,
+          isrcCode: formData.isrcCode,
           spotifyLink: formData.spotifyLink,
           appleMusicLink: formData.appleMusicLink,
           tidalLink: formData.tidalLink,
@@ -455,6 +457,19 @@ export default function CreateSingle() {
                       value={formData.leadVocal}
                       onChange={handleInputChange}
                       placeholder="Lead vocalist"
+                      className="bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:border-gray-600"
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label htmlFor="isrcCode" className="block text-sm font-medium text-gray-300 mb-2">
+                      ISRC Code
+                    </label>
+                    <Input
+                      id="isrcCode"
+                      name="isrcCode"
+                      value={formData.isrcCode}
+                      onChange={handleInputChange}
+                      placeholder="ISRC code"
                       className="bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:border-gray-600"
                     />
                   </div>

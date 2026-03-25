@@ -84,6 +84,7 @@ export async function POST(request: NextRequest) {
             image: song.image || null,
             audioFile: song.audioFile,
             duration: parseInt(song.duration, 10),
+            isrcCode: song.isrcCode || null,
             spotifyLink: song.spotifyLink || null,
             appleMusicLink: song.appleMusicLink || null,
             tidalLink: song.tidalLink || null,

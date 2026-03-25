@@ -18,9 +18,6 @@ export default function CreateArtist() {
     name: "",
     biography: "",
     profilePictureFile: null as File | null,
-    composer: "",
-    lyricist: "",
-    leadVocal: "",
     xLink: "",
     tiktokLink: "",
     spotifyLink: "",
@@ -142,9 +139,6 @@ export default function CreateArtist() {
           name: formData.name,
           biography: formData.biography,
           profilePicture: profilePictureUrl,
-          composer: formData.composer,
-          lyricist: formData.lyricist,
-          leadVocal: formData.leadVocal,
           xLink: formData.xLink,
           tiktokLink: formData.tiktokLink,
           spotifyLink: formData.spotifyLink,
@@ -296,51 +290,6 @@ export default function CreateArtist() {
                         className="bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:border-gray-600 resize-none"
                       />
                     </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-[#0F0F0F] rounded-xl p-6 border border-gray-800">
-                <h3 className="text-lg font-medium text-gray-200 mb-4">Credits</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label htmlFor="composer" className="block text-sm font-medium text-gray-300 mb-2">
-                      Composer
-                    </label>
-                    <Input
-                      id="composer"
-                      name="composer"
-                      value={formData.composer}
-                      onChange={handleInputChange}
-                      placeholder="Composer name"
-                      className="bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:border-gray-600"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="lyricist" className="block text-sm font-medium text-gray-300 mb-2">
-                      Lyricist
-                    </label>
-                    <Input
-                      id="lyricist"
-                      name="lyricist"
-                      value={formData.lyricist}
-                      onChange={handleInputChange}
-                      placeholder="Lyricist name"
-                      className="bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:border-gray-600"
-                    />
-                  </div>
-                  <div className="md:col-span-2">
-                    <label htmlFor="leadVocal" className="block text-sm font-medium text-gray-300 mb-2">
-                      Lead vocal
-                    </label>
-                    <Input
-                      id="leadVocal"
-                      name="leadVocal"
-                      value={formData.leadVocal}
-                      onChange={handleInputChange}
-                      placeholder="Lead vocalist"
-                      className="bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:border-gray-600"
-                    />
                   </div>
                 </div>
               </div>

@@ -22,9 +22,6 @@ export default function EditArtist() {
     biography: "",
     profilePicture: "",
     profilePictureFile: null as File | null,
-    composer: "",
-    lyricist: "",
-    leadVocal: "",
     xLink: "",
     tiktokLink: "",
     spotifyLink: "",
@@ -44,9 +41,6 @@ export default function EditArtist() {
           name: data.name || "",
           biography: data.biography || "",
           profilePicture: data.profilePicture || "",
-          composer: data.composer || "",
-          lyricist: data.lyricist || "",
-          leadVocal: data.leadVocal || "",
           xLink: data.xLink || "",
           tiktokLink: data.tiktokLink || "",
           spotifyLink: data.spotifyLink || "",
@@ -115,9 +109,6 @@ export default function EditArtist() {
           name: formData.name,
           biography: formData.biography,
           profilePicture,
-          composer: formData.composer,
-          lyricist: formData.lyricist,
-          leadVocal: formData.leadVocal,
           xLink: formData.xLink,
           tiktokLink: formData.tiktokLink,
           spotifyLink: formData.spotifyLink,
@@ -182,13 +173,6 @@ export default function EditArtist() {
               <div className="bg-gray-900 rounded-xl p-6 border border-gray-800 space-y-4">
                 <Input name="name" value={formData.name} onChange={handleInputChange} required placeholder="Artist name" className="bg-[#0F0F0F] border-gray-700 text-white" />
                 <Textarea name="biography" value={formData.biography} onChange={handleInputChange} required rows={5} placeholder="Biography" className="bg-[#0F0F0F] border-gray-700 text-white" />
-              </div>
-              <div className="bg-[#0F0F0F] rounded-xl p-6 border border-gray-800 grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Input name="composer" value={formData.composer} onChange={handleInputChange} placeholder="Composer" className="bg-gray-800 border-gray-700 text-white" />
-                <Input name="lyricist" value={formData.lyricist} onChange={handleInputChange} placeholder="Lyricist" className="bg-gray-800 border-gray-700 text-white" />
-                <div className="md:col-span-2">
-                  <Input name="leadVocal" value={formData.leadVocal} onChange={handleInputChange} placeholder="Lead vocal" className="bg-gray-800 border-gray-700 text-white" />
-                </div>
               </div>
               <div className="bg-[#0F0F0F] rounded-xl p-6 border border-gray-800 grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Input name="xLink" value={formData.xLink} onChange={handleInputChange} placeholder="X link" className="bg-gray-800 border-gray-700 text-white" />

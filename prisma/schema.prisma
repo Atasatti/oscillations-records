@@ -106,6 +106,7 @@ model Single {
   composer         String?
   lyricist         String?
   leadVocal        String?
+  isrcCode         String?
   spotifyLink      String?
   appleMusicLink   String?
   tidalLink        String?
@@ -124,6 +125,7 @@ model Album {
   featureArtistIds String[] @db.ObjectId
   releaseDate      DateTime?
   description      String?
+  isrcCode         String?
   spotifyLink      String?
   appleMusicLink   String?
   tidalLink        String?
@@ -143,6 +145,7 @@ model Ep {
   composer         String?
   lyricist         String?
   leadVocal        String?
+  isrcCode         String?
   spotifyLink      String?
   appleMusicLink   String?
   tidalLink        String?

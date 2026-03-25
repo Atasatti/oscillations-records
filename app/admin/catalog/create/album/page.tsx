@@ -12,6 +12,7 @@ interface Song {
   name: string;
   audioFile: File | null;
   duration: number;
+  isrcCode?: string;
   spotifyLink?: string;
   appleMusicLink?: string;
   tidalLink?: string;
@@ -39,6 +40,7 @@ export default function CreateAlbum() {
     coverImageFile: null as File | null,
     description: "",
     releaseDate: "",
+    isrcCode: "",
     spotifyLink: "",
     appleMusicLink: "",
     tidalLink: "",
@@ -48,7 +50,7 @@ export default function CreateAlbum() {
   });
   
   const [songs, setSongs] = useState<Song[]>([
-    { name: "", audioFile: null, duration: 0, spotifyLink: "", appleMusicLink: "", tidalLink: "", amazonMusicLink: "" }
+    { name: "", audioFile: null, duration: 0, isrcCode: "", spotifyLink: "", appleMusicLink: "", tidalLink: "", amazonMusicLink: "" }
   ]);
   
   const imageInputRef = useRef<HTMLInputElement>(null);
@@ -174,7 +176,7 @@ export default function CreateAlbum() {
   };
 
   const addSong = () => {
-    setSongs([...songs, { name: "", audioFile: null, duration: 0, spotifyLink: "", appleMusicLink: "", tidalLink: "", amazonMusicLink: "" }]);
+    setSongs([...songs, { name: "", audioFile: null, duration: 0, isrcCode: "", spotifyLink: "", appleMusicLink: "", tidalLink: "", amazonMusicLink: "" }]);
   };
 
   const removeSong = (index: number) => {
@@ -308,6 +310,7 @@ export default function CreateAlbum() {
         audioFile: uploadedAudioUrls[index],
         duration: song.duration,
         image: coverImageUrl,
+        isrcCode: song.isrcCode || "",
         spotifyLink: song.spotifyLink || "",
         appleMusicLink: song.appleMusicLink || "",
         tidalLink: song.tidalLink || "",
@@ -344,6 +347,7 @@ export default function CreateAlbum() {
           coverImage: coverImageUrl,
           releaseDate: formData.releaseDate || null,
           description: formData.description || null,
+          isrcCode: formData.isrcCode,
           spotifyLink: formData.spotifyLink,
           appleMusicLink: formData.appleMusicLink,
           tidalLink: formData.tidalLink,
@@ -492,6 +496,19 @@ export default function CreateAlbum() {
                       className="bg-[#0F0F0F] border-gray-700 text-white placeholder-gray-500 focus:border-gray-600"
                     />
                   </div>
+                  <div>
+                    <label htmlFor="isrcCode" className="block text-sm font-medium text-gray-300 mb-2">
+                      ISRC Code
+                    </label>
+                    <Input
+                      id="isrcCode"
+                      name="isrcCode"
+                      value={formData.isrcCode}
+                      onChange={handleInputChange}
+                      placeholder="ISRC code"
+                      className="bg-[#0F0F0F] border-gray-700 text-white placeholder-gray-500 focus:border-gray-600"
+                    />
+                  </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <Input name="spotifyLink" value={formData.spotifyLink} onChange={handleInputChange} placeholder="Spotify URL" className="bg-[#0F0F0F] border-gray-700 text-white placeholder-gray-500 focus:border-gray-600" />
                     <Input name="appleMusicLink" value={formData.appleMusicLink} onChange={handleInputChange} placeholder="Apple Music URL" className="bg-[#0F0F0F] border-gray-700 text-white placeholder-gray-500 focus:border-gray-600" />
@@ -574,6 +591,16 @@ export default function CreateAlbum() {
                           value={song.name}
                           onChange={(e) => handleSongNameChange(index, e.target.value)}
                           className="bg-[#0F0F0F] border-gray-700 text-white placeholder-gray-500 mb-3 focus:border-gray-600"
+                        />
+                        <Input
+                          placeholder="Song ISRC code"
+                          value={song.isrcCode || ""}
+                          onChange={(e) => {
+                            const newSongs = [...songs];
+                            newSongs[index].isrcCode = e.target.value;
+                            setSongs(newSongs);
+                          }}
+                          className="bg-[#0F0F0F] border-gray-700 text-white placeholder-gray-500 mb-3"
                         />
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
                           <Input

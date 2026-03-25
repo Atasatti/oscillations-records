@@ -28,6 +28,7 @@ export default function EditAlbum() {
     coverImageFile: null as File | null,
     description: "",
     releaseDate: "",
+    isrcCode: "",
     spotifyLink: "",
     appleMusicLink: "",
     tidalLink: "",
@@ -58,6 +59,7 @@ export default function EditAlbum() {
           coverImageFile: null,
           description: album.description || "",
           releaseDate: album.releaseDate ? new Date(album.releaseDate).toISOString().split("T")[0] : "",
+          isrcCode: album.isrcCode || "",
           spotifyLink: album.spotifyLink || "",
           appleMusicLink: album.appleMusicLink || "",
           tidalLink: album.tidalLink || "",
@@ -109,6 +111,7 @@ export default function EditAlbum() {
           coverImage,
           description: formData.description,
           releaseDate: formData.releaseDate || null,
+          isrcCode: formData.isrcCode,
           spotifyLink: formData.spotifyLink,
           appleMusicLink: formData.appleMusicLink,
           tidalLink: formData.tidalLink,
@@ -142,25 +145,27 @@ export default function EditAlbum() {
         <p className="text-gray-400 mt-2 mb-8">Update album details</p>
         <form onSubmit={handleSubmit} className="max-w-4xl space-y-6">
           <div className="bg-gray-900 rounded-xl p-6 border border-gray-800 space-y-4">
-            <Input value={formData.name} onChange={(e) => setFormData((p) => ({ ...p, name: e.target.value }))} required placeholder="Album name" className="bg-[#0F0F0F] border-gray-700 text-white" />
-            <Textarea value={formData.description} onChange={(e) => setFormData((p) => ({ ...p, description: e.target.value }))} rows={4} placeholder="Description" className="bg-[#0F0F0F] border-gray-700 text-white" />
-            <Input type="date" value={formData.releaseDate} onChange={(e) => setFormData((p) => ({ ...p, releaseDate: e.target.value }))} className="bg-[#0F0F0F] border-gray-700 text-white" />
+            <div><label className="block text-sm font-medium text-gray-300 mb-2">Album Name *</label><Input value={formData.name} onChange={(e) => setFormData((p) => ({ ...p, name: e.target.value }))} required placeholder="Album name" className="bg-[#0F0F0F] border-gray-700 text-white" /></div>
+            <div><label className="block text-sm font-medium text-gray-300 mb-2">Description</label><Textarea value={formData.description} onChange={(e) => setFormData((p) => ({ ...p, description: e.target.value }))} rows={4} placeholder="Description" className="bg-[#0F0F0F] border-gray-700 text-white" /></div>
+            <div><label className="block text-sm font-medium text-gray-300 mb-2">Release Date</label><Input type="date" value={formData.releaseDate} onChange={(e) => setFormData((p) => ({ ...p, releaseDate: e.target.value }))} className="bg-[#0F0F0F] border-gray-700 text-white" /></div>
+            <div><label className="block text-sm font-medium text-gray-300 mb-2">ISRC Code</label><Input value={formData.isrcCode} onChange={(e) => setFormData((p) => ({ ...p, isrcCode: e.target.value }))} placeholder="ISRC code" className="bg-[#0F0F0F] border-gray-700 text-white" /></div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Input value={formData.spotifyLink} onChange={(e) => setFormData((p) => ({ ...p, spotifyLink: e.target.value }))} placeholder="Spotify URL" className="bg-[#0F0F0F] border-gray-700 text-white" />
-              <Input value={formData.appleMusicLink} onChange={(e) => setFormData((p) => ({ ...p, appleMusicLink: e.target.value }))} placeholder="Apple Music URL" className="bg-[#0F0F0F] border-gray-700 text-white" />
-              <Input value={formData.tidalLink} onChange={(e) => setFormData((p) => ({ ...p, tidalLink: e.target.value }))} placeholder="Tidal URL" className="bg-[#0F0F0F] border-gray-700 text-white" />
-              <Input value={formData.amazonMusicLink} onChange={(e) => setFormData((p) => ({ ...p, amazonMusicLink: e.target.value }))} placeholder="Amazon Music URL" className="bg-[#0F0F0F] border-gray-700 text-white" />
+              <div><label className="block text-sm font-medium text-gray-300 mb-2">Spotify URL</label><Input value={formData.spotifyLink} onChange={(e) => setFormData((p) => ({ ...p, spotifyLink: e.target.value }))} placeholder="Spotify URL" className="bg-[#0F0F0F] border-gray-700 text-white" /></div>
+              <div><label className="block text-sm font-medium text-gray-300 mb-2">Apple Music URL</label><Input value={formData.appleMusicLink} onChange={(e) => setFormData((p) => ({ ...p, appleMusicLink: e.target.value }))} placeholder="Apple Music URL" className="bg-[#0F0F0F] border-gray-700 text-white" /></div>
+              <div><label className="block text-sm font-medium text-gray-300 mb-2">Tidal URL</label><Input value={formData.tidalLink} onChange={(e) => setFormData((p) => ({ ...p, tidalLink: e.target.value }))} placeholder="Tidal URL" className="bg-[#0F0F0F] border-gray-700 text-white" /></div>
+              <div><label className="block text-sm font-medium text-gray-300 mb-2">Amazon Music URL</label><Input value={formData.amazonMusicLink} onChange={(e) => setFormData((p) => ({ ...p, amazonMusicLink: e.target.value }))} placeholder="Amazon Music URL" className="bg-[#0F0F0F] border-gray-700 text-white" /></div>
             </div>
           </div>
           <div className="bg-[#0F0F0F] rounded-xl p-6 border border-gray-800 space-y-4">
+            <label className="block text-sm font-medium text-gray-300 mb-2">Cover Image</label>
             {imagePreview ? <img src={imagePreview} alt="Album cover" className="w-44 h-44 rounded-lg object-cover border border-gray-700" /> : null}
             <input ref={imageInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => { const file = e.target.files?.[0]; if (file) { setFormData((p) => ({ ...p, coverImageFile: file })); setImagePreview(URL.createObjectURL(file)); } }} />
             <Button type="button" variant="outline" className="border-gray-700 text-gray-300" onClick={() => imageInputRef.current?.click()}><ImageIcon className="w-4 h-4 mr-2" />Replace Cover</Button>
           </div>
           <div className="bg-[#0F0F0F] rounded-xl p-6 border border-gray-800 space-y-4">
-            <MultiSelect options={artists.map((a) => ({ value: a.id, label: a.name }))} selected={formData.primaryArtistIds} onChange={(selected) => setFormData((p) => ({ ...p, primaryArtistIds: selected, featureArtistIds: p.featureArtistIds.filter((id) => !selected.includes(id)) }))} placeholder="Select primary artists..." />
-            <MultiSelect options={artists.filter((a) => !formData.primaryArtistIds.includes(a.id)).map((a) => ({ value: a.id, label: a.name }))} selected={formData.featureArtistIds} onChange={(selected) => setFormData((p) => ({ ...p, featureArtistIds: selected }))} placeholder="Select feature artists..." />
-            <MultiSelect options={singles.map((s) => ({ value: s.id, label: s.name }))} selected={formData.songIds} onChange={(selected) => setFormData((p) => ({ ...p, songIds: selected }))} placeholder="Select songs..." />
+            <div><label className="block text-sm font-medium text-gray-300 mb-2">Primary Artists *</label><MultiSelect options={artists.map((a) => ({ value: a.id, label: a.name }))} selected={formData.primaryArtistIds} onChange={(selected) => setFormData((p) => ({ ...p, primaryArtistIds: selected, featureArtistIds: p.featureArtistIds.filter((id) => !selected.includes(id)) }))} placeholder="Select primary artists..." /></div>
+            <div><label className="block text-sm font-medium text-gray-300 mb-2">Feature Artists</label><MultiSelect options={artists.filter((a) => !formData.primaryArtistIds.includes(a.id)).map((a) => ({ value: a.id, label: a.name }))} selected={formData.featureArtistIds} onChange={(selected) => setFormData((p) => ({ ...p, featureArtistIds: selected }))} placeholder="Select feature artists..." /></div>
+            <div><label className="block text-sm font-medium text-gray-300 mb-2">Songs *</label><MultiSelect options={singles.map((s) => ({ value: s.id, label: s.name }))} selected={formData.songIds} onChange={(selected) => setFormData((p) => ({ ...p, songIds: selected }))} placeholder="Select songs..." /></div>
           </div>
           <Button type="submit" disabled={isLoading} className="bg-white text-black hover:bg-gray-200">{isLoading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Saving...</> : <><Save className="w-4 h-4 mr-2" />Save Changes</>}</Button>
         </form>
