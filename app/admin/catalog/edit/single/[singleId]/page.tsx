@@ -30,6 +30,10 @@ export default function EditSingle() {
     composer: "",
     lyricist: "",
     leadVocal: "",
+    spotifyLink: "",
+    appleMusicLink: "",
+    tidalLink: "",
+    amazonMusicLink: "",
     primaryArtistIds: [] as string[],
     featureArtistIds: [] as string[],
     duration: 0,
@@ -55,6 +59,10 @@ export default function EditSingle() {
           composer: singleData.composer || "",
           lyricist: singleData.lyricist || "",
           leadVocal: singleData.leadVocal || "",
+          spotifyLink: singleData.spotifyLink || "",
+          appleMusicLink: singleData.appleMusicLink || "",
+          tidalLink: singleData.tidalLink || "",
+          amazonMusicLink: singleData.amazonMusicLink || "",
           primaryArtistIds: singleData.primaryArtistIds || [],
           featureArtistIds: singleData.featureArtistIds || [],
           duration: singleData.duration || 0,
@@ -147,6 +155,10 @@ export default function EditSingle() {
           composer: formData.composer,
           lyricist: formData.lyricist,
           leadVocal: formData.leadVocal,
+          spotifyLink: formData.spotifyLink,
+          appleMusicLink: formData.appleMusicLink,
+          tidalLink: formData.tidalLink,
+          amazonMusicLink: formData.amazonMusicLink,
           primaryArtistIds: formData.primaryArtistIds,
           featureArtistIds: formData.featureArtistIds,
         }),
@@ -182,6 +194,12 @@ export default function EditSingle() {
               <div className="md:col-span-2">
                 <Input value={formData.leadVocal} onChange={(e) => setFormData((p) => ({ ...p, leadVocal: e.target.value }))} placeholder="Lead vocal" className="bg-[#0F0F0F] border-gray-700 text-white" />
               </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Input value={formData.spotifyLink} onChange={(e) => setFormData((p) => ({ ...p, spotifyLink: e.target.value }))} placeholder="Spotify URL" className="bg-[#0F0F0F] border-gray-700 text-white" />
+              <Input value={formData.appleMusicLink} onChange={(e) => setFormData((p) => ({ ...p, appleMusicLink: e.target.value }))} placeholder="Apple Music URL" className="bg-[#0F0F0F] border-gray-700 text-white" />
+              <Input value={formData.tidalLink} onChange={(e) => setFormData((p) => ({ ...p, tidalLink: e.target.value }))} placeholder="Tidal URL" className="bg-[#0F0F0F] border-gray-700 text-white" />
+              <Input value={formData.amazonMusicLink} onChange={(e) => setFormData((p) => ({ ...p, amazonMusicLink: e.target.value }))} placeholder="Amazon Music URL" className="bg-[#0F0F0F] border-gray-700 text-white" />
             </div>
             <MultiSelect options={artists.map((a) => ({ value: a.id, label: a.name }))} selected={formData.primaryArtistIds} onChange={(selected) => setFormData((p) => ({ ...p, primaryArtistIds: selected, featureArtistIds: p.featureArtistIds.filter((id) => !selected.includes(id)) }))} placeholder="Select primary artists..." />
             <MultiSelect options={artists.filter((a) => !formData.primaryArtistIds.includes(a.id)).map((a) => ({ value: a.id, label: a.name }))} selected={formData.featureArtistIds} onChange={(selected) => setFormData((p) => ({ ...p, featureArtistIds: selected }))} placeholder="Select feature artists..." />

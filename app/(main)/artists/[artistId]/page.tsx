@@ -15,6 +15,10 @@ interface Single {
   image?: string;
   audioFile: string;
   duration: number;
+  spotifyLink?: string;
+  appleMusicLink?: string;
+  tidalLink?: string;
+  amazonMusicLink?: string;
   artistId: string;
   artist?: {
     id: string;
@@ -31,6 +35,10 @@ interface Album {
   artistId: string;
   releaseDate?: string | null;
   description?: string | null;
+  spotifyLink?: string;
+  appleMusicLink?: string;
+  tidalLink?: string;
+  amazonMusicLink?: string;
   songIds: string[];
   songs?: Single[];
   createdAt: string;
@@ -43,6 +51,10 @@ interface EP {
   coverImage: string;
   artistId: string;
   description?: string | null;
+  spotifyLink?: string;
+  appleMusicLink?: string;
+  tidalLink?: string;
+  amazonMusicLink?: string;
   songIds: string[];
   songs?: Single[];
   createdAt: string;
@@ -270,6 +282,10 @@ export default function ArtistDetail() {
                       backgroundImage: single.image || artist.profilePicture || "/placeholder.svg",
                       avatar: artist.profilePicture || undefined,
                       audio: single.audioFile,
+                      spotifyLink: single.spotifyLink,
+                      appleMusicLink: single.appleMusicLink,
+                      tidalLink: single.tidalLink,
+                      amazonMusicLink: single.amazonMusicLink,
                     }}
                   />
                 ))}
@@ -296,6 +312,10 @@ export default function ArtistDetail() {
                         audio: null,
                         artist: artist.name,
                         songCount: album.songIds.length,
+                        spotifyLink: album.spotifyLink,
+                        appleMusicLink: album.appleMusicLink,
+                        tidalLink: album.tidalLink,
+                        amazonMusicLink: album.amazonMusicLink,
                       }} 
                     />
                   </div>
@@ -323,6 +343,10 @@ export default function ArtistDetail() {
                         audio: null,
                         artist: artist.name,
                         songCount: ep.songIds.length,
+                        spotifyLink: ep.spotifyLink,
+                        appleMusicLink: ep.appleMusicLink,
+                        tidalLink: ep.tidalLink,
+                        amazonMusicLink: ep.amazonMusicLink,
                       }} 
                     />
                   </div>

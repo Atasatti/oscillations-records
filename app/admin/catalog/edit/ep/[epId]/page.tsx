@@ -30,6 +30,10 @@ export default function EditEP() {
     composer: "",
     lyricist: "",
     leadVocal: "",
+    spotifyLink: "",
+    appleMusicLink: "",
+    tidalLink: "",
+    amazonMusicLink: "",
     primaryArtistIds: [] as string[],
     featureArtistIds: [] as string[],
     songIds: [] as string[],
@@ -58,6 +62,10 @@ export default function EditEP() {
           composer: ep.composer || "",
           lyricist: ep.lyricist || "",
           leadVocal: ep.leadVocal || "",
+          spotifyLink: ep.spotifyLink || "",
+          appleMusicLink: ep.appleMusicLink || "",
+          tidalLink: ep.tidalLink || "",
+          amazonMusicLink: ep.amazonMusicLink || "",
           primaryArtistIds: ep.primaryArtistIds || [],
           featureArtistIds: ep.featureArtistIds || [],
           songIds: ep.songIds || [],
@@ -107,6 +115,10 @@ export default function EditEP() {
           composer: formData.composer,
           lyricist: formData.lyricist,
           leadVocal: formData.leadVocal,
+          spotifyLink: formData.spotifyLink,
+          appleMusicLink: formData.appleMusicLink,
+          tidalLink: formData.tidalLink,
+          amazonMusicLink: formData.amazonMusicLink,
           primaryArtistIds: formData.primaryArtistIds,
           featureArtistIds: formData.featureArtistIds,
           songIds: formData.songIds,
@@ -144,6 +156,12 @@ export default function EditEP() {
               <div className="md:col-span-2">
                 <Input value={formData.leadVocal} onChange={(e) => setFormData((p) => ({ ...p, leadVocal: e.target.value }))} placeholder="Lead vocal" className="bg-[#0F0F0F] border-gray-700 text-white" />
               </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Input value={formData.spotifyLink} onChange={(e) => setFormData((p) => ({ ...p, spotifyLink: e.target.value }))} placeholder="Spotify URL" className="bg-[#0F0F0F] border-gray-700 text-white" />
+              <Input value={formData.appleMusicLink} onChange={(e) => setFormData((p) => ({ ...p, appleMusicLink: e.target.value }))} placeholder="Apple Music URL" className="bg-[#0F0F0F] border-gray-700 text-white" />
+              <Input value={formData.tidalLink} onChange={(e) => setFormData((p) => ({ ...p, tidalLink: e.target.value }))} placeholder="Tidal URL" className="bg-[#0F0F0F] border-gray-700 text-white" />
+              <Input value={formData.amazonMusicLink} onChange={(e) => setFormData((p) => ({ ...p, amazonMusicLink: e.target.value }))} placeholder="Amazon Music URL" className="bg-[#0F0F0F] border-gray-700 text-white" />
             </div>
           </div>
           <div className="bg-[#0F0F0F] rounded-xl p-6 border border-gray-800 space-y-4">

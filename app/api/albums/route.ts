@@ -43,7 +43,19 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { name, coverImage, releaseDate, description, songIds, primaryArtistIds, featureArtistIds } = body;
+    const {
+      name,
+      coverImage,
+      releaseDate,
+      description,
+      spotifyLink,
+      appleMusicLink,
+      tidalLink,
+      amazonMusicLink,
+      songIds,
+      primaryArtistIds,
+      featureArtistIds,
+    } = body;
 
     // Validate required fields
     if (!name || !coverImage || !songIds || !Array.isArray(songIds) || songIds.length === 0) {
@@ -121,6 +133,10 @@ export async function POST(request: NextRequest) {
         featureArtistIds: featureArtistIds || [],
         releaseDate: releaseDate ? new Date(releaseDate) : null,
         description: description || null,
+        spotifyLink: spotifyLink || null,
+        appleMusicLink: appleMusicLink || null,
+        tidalLink: tidalLink || null,
+        amazonMusicLink: amazonMusicLink || null,
         songIds,
       },
     });

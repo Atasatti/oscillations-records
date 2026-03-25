@@ -12,6 +12,10 @@ interface Release {
   artist: string;
   artistId: string;
   releaseDate: string | null;
+  spotifyLink?: string | null;
+  appleMusicLink?: string | null;
+  tidalLink?: string | null;
+  amazonMusicLink?: string | null;
   createdAt: string;
   year: string;
   songCount: number;
@@ -123,6 +127,10 @@ const ReleasesSection = () => {
                   audio: release.audio,
                   artist: release.artist,
                   songCount: release.songCount,
+                  spotifyLink: release.spotifyLink,
+                  appleMusicLink: release.appleMusicLink,
+                  tidalLink: release.tidalLink,
+                  amazonMusicLink: release.amazonMusicLink,
                 }} 
               />
             </div>

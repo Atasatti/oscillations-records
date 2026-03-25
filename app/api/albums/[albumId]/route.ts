@@ -68,7 +68,19 @@ export async function PUT(
   try {
     const { albumId } = await params;
     const body = await request.json();
-    const { name, coverImage, releaseDate, description, songIds, primaryArtistIds, featureArtistIds } = body;
+    const {
+      name,
+      coverImage,
+      releaseDate,
+      description,
+      spotifyLink,
+      appleMusicLink,
+      tidalLink,
+      amazonMusicLink,
+      songIds,
+      primaryArtistIds,
+      featureArtistIds,
+    } = body;
 
     if (!name || !coverImage || !songIds || !Array.isArray(songIds) || songIds.length === 0) {
       return NextResponse.json(
@@ -137,6 +149,10 @@ export async function PUT(
         coverImage,
         releaseDate: releaseDate ? new Date(releaseDate) : null,
         description: description || null,
+        spotifyLink: spotifyLink || null,
+        appleMusicLink: appleMusicLink || null,
+        tidalLink: tidalLink || null,
+        amazonMusicLink: amazonMusicLink || null,
         songIds,
         primaryArtistIds,
         featureArtistIds: featureArtistIds || [],

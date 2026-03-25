@@ -28,6 +28,10 @@ export default function EditAlbum() {
     coverImageFile: null as File | null,
     description: "",
     releaseDate: "",
+    spotifyLink: "",
+    appleMusicLink: "",
+    tidalLink: "",
+    amazonMusicLink: "",
     primaryArtistIds: [] as string[],
     featureArtistIds: [] as string[],
     songIds: [] as string[],
@@ -54,6 +58,10 @@ export default function EditAlbum() {
           coverImageFile: null,
           description: album.description || "",
           releaseDate: album.releaseDate ? new Date(album.releaseDate).toISOString().split("T")[0] : "",
+          spotifyLink: album.spotifyLink || "",
+          appleMusicLink: album.appleMusicLink || "",
+          tidalLink: album.tidalLink || "",
+          amazonMusicLink: album.amazonMusicLink || "",
           primaryArtistIds: album.primaryArtistIds || [],
           featureArtistIds: album.featureArtistIds || [],
           songIds: album.songIds || [],
@@ -101,6 +109,10 @@ export default function EditAlbum() {
           coverImage,
           description: formData.description,
           releaseDate: formData.releaseDate || null,
+          spotifyLink: formData.spotifyLink,
+          appleMusicLink: formData.appleMusicLink,
+          tidalLink: formData.tidalLink,
+          amazonMusicLink: formData.amazonMusicLink,
           primaryArtistIds: formData.primaryArtistIds,
           featureArtistIds: formData.featureArtistIds,
           songIds: formData.songIds,
@@ -133,6 +145,12 @@ export default function EditAlbum() {
             <Input value={formData.name} onChange={(e) => setFormData((p) => ({ ...p, name: e.target.value }))} required placeholder="Album name" className="bg-[#0F0F0F] border-gray-700 text-white" />
             <Textarea value={formData.description} onChange={(e) => setFormData((p) => ({ ...p, description: e.target.value }))} rows={4} placeholder="Description" className="bg-[#0F0F0F] border-gray-700 text-white" />
             <Input type="date" value={formData.releaseDate} onChange={(e) => setFormData((p) => ({ ...p, releaseDate: e.target.value }))} className="bg-[#0F0F0F] border-gray-700 text-white" />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Input value={formData.spotifyLink} onChange={(e) => setFormData((p) => ({ ...p, spotifyLink: e.target.value }))} placeholder="Spotify URL" className="bg-[#0F0F0F] border-gray-700 text-white" />
+              <Input value={formData.appleMusicLink} onChange={(e) => setFormData((p) => ({ ...p, appleMusicLink: e.target.value }))} placeholder="Apple Music URL" className="bg-[#0F0F0F] border-gray-700 text-white" />
+              <Input value={formData.tidalLink} onChange={(e) => setFormData((p) => ({ ...p, tidalLink: e.target.value }))} placeholder="Tidal URL" className="bg-[#0F0F0F] border-gray-700 text-white" />
+              <Input value={formData.amazonMusicLink} onChange={(e) => setFormData((p) => ({ ...p, amazonMusicLink: e.target.value }))} placeholder="Amazon Music URL" className="bg-[#0F0F0F] border-gray-700 text-white" />
+            </div>
           </div>
           <div className="bg-[#0F0F0F] rounded-xl p-6 border border-gray-800 space-y-4">
             {imagePreview ? <img src={imagePreview} alt="Album cover" className="w-44 h-44 rounded-lg object-cover border border-gray-700" /> : null}

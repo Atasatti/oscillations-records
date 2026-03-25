@@ -27,6 +27,10 @@ interface Single {
   image?: string;
   audioFile: string;
   duration: number;
+  spotifyLink?: string;
+  appleMusicLink?: string;
+  tidalLink?: string;
+  amazonMusicLink?: string;
   primaryArtistIds: string[];
   featureArtistIds: string[];
   createdAt: string;
@@ -41,6 +45,10 @@ interface Album {
   featureArtistIds: string[];
   releaseDate?: string;
   description?: string;
+  spotifyLink?: string;
+  appleMusicLink?: string;
+  tidalLink?: string;
+  amazonMusicLink?: string;
   songIds: string[];
   songs?: Single[];
   createdAt: string;
@@ -247,6 +255,10 @@ export default function AlbumDetail() {
                       thumbnail: song.image,
                       audio: song.audioFile,
                       artist: undefined,
+                      spotifyLink: song.spotifyLink,
+                      appleMusicLink: song.appleMusicLink,
+                      tidalLink: song.tidalLink,
+                      amazonMusicLink: song.amazonMusicLink,
                     }}
                   />
                   <DropdownMenu>

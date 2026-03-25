@@ -31,6 +31,10 @@ export default function CreateSingle() {
     composer: "",
     lyricist: "",
     leadVocal: "",
+    spotifyLink: "",
+    appleMusicLink: "",
+    tidalLink: "",
+    amazonMusicLink: "",
     primaryArtistIds: [] as string[],
     featureArtistIds: [] as string[],
   });
@@ -278,6 +282,10 @@ export default function CreateSingle() {
           composer: formData.composer,
           lyricist: formData.lyricist,
           leadVocal: formData.leadVocal,
+          spotifyLink: formData.spotifyLink,
+          appleMusicLink: formData.appleMusicLink,
+          tidalLink: formData.tidalLink,
+          amazonMusicLink: formData.amazonMusicLink,
           primaryArtistIds: formData.primaryArtistIds,
           featureArtistIds: formData.featureArtistIds,
         }),
@@ -450,6 +458,16 @@ export default function CreateSingle() {
                       className="bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:border-gray-600"
                     />
                   </div>
+                </div>
+              </div>
+
+              <div className="bg-[#0F0F0F] rounded-xl p-6 border border-gray-800">
+                <h3 className="text-lg font-medium text-gray-200 mb-4">Streaming Links</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Input name="spotifyLink" value={formData.spotifyLink} onChange={handleInputChange} placeholder="Spotify URL" className="bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:border-gray-600" />
+                  <Input name="appleMusicLink" value={formData.appleMusicLink} onChange={handleInputChange} placeholder="Apple Music URL" className="bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:border-gray-600" />
+                  <Input name="tidalLink" value={formData.tidalLink} onChange={handleInputChange} placeholder="Tidal URL" className="bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:border-gray-600" />
+                  <Input name="amazonMusicLink" value={formData.amazonMusicLink} onChange={handleInputChange} placeholder="Amazon Music URL" className="bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:border-gray-600" />
                 </div>
               </div>
 

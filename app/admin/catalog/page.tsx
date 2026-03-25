@@ -42,6 +42,10 @@ interface Single {
   image?: string;
   audioFile: string;
   duration: number;
+  spotifyLink?: string;
+  appleMusicLink?: string;
+  tidalLink?: string;
+  amazonMusicLink?: string;
   primaryArtistIds: string[];
   featureArtistIds: string[];
   createdAt: string;
@@ -56,6 +60,10 @@ interface Album {
   featureArtistIds: string[];
   releaseDate?: string;
   description?: string;
+  spotifyLink?: string;
+  appleMusicLink?: string;
+  tidalLink?: string;
+  amazonMusicLink?: string;
   songIds: string[];
   songs?: Single[];
   createdAt: string;
@@ -69,6 +77,10 @@ interface EP {
   primaryArtistIds: string[];
   featureArtistIds: string[];
   description?: string;
+  spotifyLink?: string;
+  appleMusicLink?: string;
+  tidalLink?: string;
+  amazonMusicLink?: string;
   songIds: string[];
   songs?: Single[];
   createdAt: string;
@@ -448,7 +460,11 @@ export default function AdminCatalog() {
                       id: single.id,
                       name: single.name,
                       thumbnail: single.image,
-                      audio: single.audioFile
+                      audio: single.audioFile,
+                      spotifyLink: single.spotifyLink,
+                      appleMusicLink: single.appleMusicLink,
+                      tidalLink: single.tidalLink,
+                      amazonMusicLink: single.amazonMusicLink,
                     }}
                   />
                   <DropdownMenu>
@@ -512,6 +528,10 @@ export default function AdminCatalog() {
                         thumbnail: album.coverImage,
                         audio: null,
                         songCount: album.songIds.length,
+                        spotifyLink: album.spotifyLink,
+                        appleMusicLink: album.appleMusicLink,
+                        tidalLink: album.tidalLink,
+                        amazonMusicLink: album.amazonMusicLink,
                       }}
                     />
                   </Link>
@@ -589,6 +609,10 @@ export default function AdminCatalog() {
                         thumbnail: ep.coverImage,
                         audio: null,
                         songCount: ep.songIds.length,
+                        spotifyLink: ep.spotifyLink,
+                        appleMusicLink: ep.appleMusicLink,
+                        tidalLink: ep.tidalLink,
+                        amazonMusicLink: ep.amazonMusicLink,
                       }}
                     />
                   </Link>

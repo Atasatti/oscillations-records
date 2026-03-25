@@ -12,6 +12,10 @@ interface Song {
   backgroundImage: string;
   avatar?: string;
   audio?: string | null;
+  spotifyLink?: string | null;
+  appleMusicLink?: string | null;
+  tidalLink?: string | null;
+  amazonMusicLink?: string | null;
 }
 
 interface Single {
@@ -20,6 +24,10 @@ interface Single {
   image: string | null;
   audioFile: string;
   duration: number;
+  spotifyLink?: string | null;
+  appleMusicLink?: string | null;
+  tidalLink?: string | null;
+  amazonMusicLink?: string | null;
   artist: {
     id: string;
     name: string;
@@ -95,6 +103,10 @@ const NewMusicSection = () => {
             backgroundImage: single.image || "/new-music-img1.svg",
             avatar: single.artist!.profilePicture || undefined,
             audio: single.audioFile || null,
+            spotifyLink: single.spotifyLink || null,
+            appleMusicLink: single.appleMusicLink || null,
+            tidalLink: single.tidalLink || null,
+            amazonMusicLink: single.amazonMusicLink || null,
           }));
         setSongs(formattedSongs);
       }

@@ -18,7 +18,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { ArrowLeft, MoreVertical, Trash2 } from "lucide-react";
+import { ArrowLeft, MoreVertical, Trash2, Pencil } from "lucide-react";
+import Link from "next/link";
 
 interface Single {
   id: string;
@@ -26,6 +27,10 @@ interface Single {
   image?: string;
   audioFile: string;
   duration: number;
+  spotifyLink?: string;
+  appleMusicLink?: string;
+  tidalLink?: string;
+  amazonMusicLink?: string;
   primaryArtistIds: string[];
   featureArtistIds: string[];
   createdAt: string;
@@ -39,6 +44,10 @@ interface EP {
   primaryArtistIds: string[];
   featureArtistIds: string[];
   description?: string;
+  spotifyLink?: string;
+  appleMusicLink?: string;
+  tidalLink?: string;
+  amazonMusicLink?: string;
   songIds: string[];
   songs?: Single[];
   createdAt: string;
@@ -195,6 +204,12 @@ export default function EPDetail() {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="bg-[#0F0F0F] border-gray-800">
+                    <DropdownMenuItem asChild>
+                      <Link href={`/admin/catalog/edit/ep/${epId}`}>
+                        <Pencil className="w-4 h-4 mr-2" />
+                        Edit EP
+                      </Link>
+                    </DropdownMenuItem>
                     <DropdownMenuItem
                       variant="destructive"
                       onClick={handleDeleteClick}
@@ -228,6 +243,10 @@ export default function EPDetail() {
                       thumbnail: song.image,
                       audio: song.audioFile,
                       artist: undefined,
+                      spotifyLink: song.spotifyLink,
+                      appleMusicLink: song.appleMusicLink,
+                      tidalLink: song.tidalLink,
+                      amazonMusicLink: song.amazonMusicLink,
                     }}
                   />
                   <DropdownMenu>

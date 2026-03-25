@@ -4,6 +4,7 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import AdminNavbar from "@/components/local-ui/AdminNavbar";
 import MusicCardSm from "@/components/local-ui/MusicCardSm";
+import StreamingLinks from "@/components/local-ui/StreamingLinks";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -42,6 +43,10 @@ interface Single {
   image?: string;
   audioFile: string;
   duration: number;
+  spotifyLink?: string;
+  appleMusicLink?: string;
+  tidalLink?: string;
+  amazonMusicLink?: string;
   artistId: string;
   createdAt: string;
   updatedAt: string;
@@ -54,6 +59,10 @@ interface Album {
   artistId: string;
   releaseDate?: string;
   description?: string;
+  spotifyLink?: string;
+  appleMusicLink?: string;
+  tidalLink?: string;
+  amazonMusicLink?: string;
   songIds: string[];
   songs?: Single[];
   createdAt: string;
@@ -66,6 +75,10 @@ interface EP {
   coverImage: string;
   artistId: string;
   description?: string;
+  spotifyLink?: string;
+  appleMusicLink?: string;
+  tidalLink?: string;
+  amazonMusicLink?: string;
   songIds: string[];
   songs?: Single[];
   createdAt: string;
@@ -266,7 +279,11 @@ export default function ArtistDetail() {
                       id: single.id,
                       name: single.name,
                       thumbnail: single.image,
-                      audio: single.audioFile
+                      audio: single.audioFile,
+                      spotifyLink: single.spotifyLink,
+                      appleMusicLink: single.appleMusicLink,
+                      tidalLink: single.tidalLink,
+                      amazonMusicLink: single.amazonMusicLink,
                     }}
                   />
                   <DropdownMenu>
@@ -339,6 +356,13 @@ export default function ArtistDetail() {
                       <p className="text-sm text-gray-400">
                         {ep.songs?.length || ep.songIds.length} song{ep.songs?.length !== 1 || ep.songIds.length !== 1 ? 's' : ''}
                       </p>
+                      <StreamingLinks
+                        spotifyLink={ep.spotifyLink}
+                        appleMusicLink={ep.appleMusicLink}
+                        tidalLink={ep.tidalLink}
+                        amazonMusicLink={ep.amazonMusicLink}
+                        className="mt-2"
+                      />
                     </div>
                   </Link>
                   <DropdownMenu>
@@ -416,6 +440,13 @@ export default function ArtistDetail() {
                       <p className="text-sm text-gray-400">
                         {album.songs?.length || album.songIds.length} song{album.songs?.length !== 1 || album.songIds.length !== 1 ? 's' : ''}
                       </p>
+                      <StreamingLinks
+                        spotifyLink={album.spotifyLink}
+                        appleMusicLink={album.appleMusicLink}
+                        tidalLink={album.tidalLink}
+                        amazonMusicLink={album.amazonMusicLink}
+                        className="mt-2"
+                      />
                       {album.releaseDate && (
                         <p className="text-xs text-gray-500 mt-1">
                           {new Date(album.releaseDate).getFullYear()}

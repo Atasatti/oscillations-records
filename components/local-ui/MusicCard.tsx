@@ -4,6 +4,7 @@ import { Play } from "lucide-react";
 import { useMusic } from "@/contexts/music-context";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import StreamingLinks from "./StreamingLinks";
 
 interface Song {
   id: string | number;
@@ -13,6 +14,10 @@ interface Song {
   backgroundImage: string;
   avatar?: string;
   audio?: string | null;
+  spotifyLink?: string | null;
+  appleMusicLink?: string | null;
+  tidalLink?: string | null;
+  amazonMusicLink?: string | null;
 }
 
 const MusicCard: React.FC<{ song: Song }> = ({ song }) => {
@@ -49,12 +54,12 @@ const MusicCard: React.FC<{ song: Song }> = ({ song }) => {
         style={{ backgroundImage: `url(${song.backgroundImage})` }}
       />
 
-      {/* Transparent overlay on hover - no color */}
-      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+      {/* Transparent overlay on hover - keep bottom free for link clicks */}
+      <div className="absolute left-0 right-0 top-0 bottom-16 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
       {/* Play button - appears on hover */}
       {song.audio && (
-        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
+        <div className="absolute left-0 right-0 top-0 bottom-16 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
           <button
             onClick={handlePlay}
             className="h-16 w-16 rounded-full bg-[#dc2626] hover:bg-[#ef4444] active:bg-[#991b1b] flex items-center justify-center transition-all duration-200 shadow-lg hover:shadow-[0_0_20px_rgba(220,38,38,0.4)] active:scale-95"
@@ -80,6 +85,13 @@ const MusicCard: React.FC<{ song: Song }> = ({ song }) => {
             <span>{song.artist}</span>
             <span>{song.duration}</span>
           </div>
+          <StreamingLinks
+            spotifyLink={song.spotifyLink}
+            appleMusicLink={song.appleMusicLink}
+            tidalLink={song.tidalLink}
+            amazonMusicLink={song.amazonMusicLink}
+            className="mt-2"
+          />
         </div>
       </div>
     </div>

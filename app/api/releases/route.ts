@@ -62,6 +62,10 @@ export async function GET() {
           artist: primaryArtist?.name || 'Unknown Artist',
           artistId: primaryArtistId || '',
           releaseDate: album.releaseDate,
+          spotifyLink: album.spotifyLink || null,
+          appleMusicLink: album.appleMusicLink || null,
+          tidalLink: album.tidalLink || null,
+          amazonMusicLink: album.amazonMusicLink || null,
           createdAt: album.createdAt,
           year: album.releaseDate 
             ? new Date(album.releaseDate).getFullYear().toString()
@@ -83,6 +87,10 @@ export async function GET() {
           artist: primaryArtist?.name || 'Unknown Artist',
           artistId: primaryArtistId || '',
           releaseDate: null,
+          spotifyLink: ep.spotifyLink || null,
+          appleMusicLink: ep.appleMusicLink || null,
+          tidalLink: ep.tidalLink || null,
+          amazonMusicLink: ep.amazonMusicLink || null,
           createdAt: ep.createdAt,
           year: new Date(ep.createdAt).getFullYear().toString(),
           songCount: ep.songIds.length,

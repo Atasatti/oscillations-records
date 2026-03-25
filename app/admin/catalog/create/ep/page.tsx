@@ -12,6 +12,10 @@ interface Song {
   name: string;
   audioFile: File | null;
   duration: number;
+  spotifyLink?: string;
+  appleMusicLink?: string;
+  tidalLink?: string;
+  amazonMusicLink?: string;
 }
 
 interface Artist {
@@ -37,12 +41,16 @@ export default function CreateEP() {
     composer: "",
     lyricist: "",
     leadVocal: "",
+    spotifyLink: "",
+    appleMusicLink: "",
+    tidalLink: "",
+    amazonMusicLink: "",
     primaryArtistIds: [] as string[],
     featureArtistIds: [] as string[],
   });
   
   const [songs, setSongs] = useState<Song[]>([
-    { name: "", audioFile: null, duration: 0 }
+    { name: "", audioFile: null, duration: 0, spotifyLink: "", appleMusicLink: "", tidalLink: "", amazonMusicLink: "" }
   ]);
   
   const imageInputRef = useRef<HTMLInputElement>(null);
@@ -168,7 +176,7 @@ export default function CreateEP() {
   };
 
   const addSong = () => {
-    setSongs([...songs, { name: "", audioFile: null, duration: 0 }]);
+    setSongs([...songs, { name: "", audioFile: null, duration: 0, spotifyLink: "", appleMusicLink: "", tidalLink: "", amazonMusicLink: "" }]);
   };
 
   const removeSong = (index: number) => {
@@ -302,6 +310,10 @@ export default function CreateEP() {
         audioFile: uploadedAudioUrls[index],
         duration: song.duration,
         image: coverImageUrl,
+        spotifyLink: song.spotifyLink || "",
+        appleMusicLink: song.appleMusicLink || "",
+        tidalLink: song.tidalLink || "",
+        amazonMusicLink: song.amazonMusicLink || "",
       }));
 
       const songsResponse = await fetch(`/api/songs/bulk`, {
@@ -336,6 +348,10 @@ export default function CreateEP() {
           composer: formData.composer,
           lyricist: formData.lyricist,
           leadVocal: formData.leadVocal,
+          spotifyLink: formData.spotifyLink,
+          appleMusicLink: formData.appleMusicLink,
+          tidalLink: formData.tidalLink,
+          amazonMusicLink: formData.amazonMusicLink,
           songIds,
           primaryArtistIds: formData.primaryArtistIds,
           featureArtistIds: formData.featureArtistIds,
@@ -515,6 +531,16 @@ export default function CreateEP() {
               </div>
 
               <div className="bg-[#0F0F0F] rounded-xl p-6 border border-gray-800">
+                <h3 className="text-lg font-medium text-gray-200 mb-4">Streaming Links</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Input name="spotifyLink" value={formData.spotifyLink} onChange={handleInputChange} placeholder="Spotify URL" className="bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:border-gray-600" />
+                  <Input name="appleMusicLink" value={formData.appleMusicLink} onChange={handleInputChange} placeholder="Apple Music URL" className="bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:border-gray-600" />
+                  <Input name="tidalLink" value={formData.tidalLink} onChange={handleInputChange} placeholder="Tidal URL" className="bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:border-gray-600" />
+                  <Input name="amazonMusicLink" value={formData.amazonMusicLink} onChange={handleInputChange} placeholder="Amazon Music URL" className="bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:border-gray-600" />
+                </div>
+              </div>
+
+              <div className="bg-[#0F0F0F] rounded-xl p-6 border border-gray-800">
                 <h3 className="text-lg font-medium text-gray-200 mb-4">Artists *</h3>
                 {loadingArtists ? (
                   <p className="text-sm text-gray-400">Loading artists...</p>
@@ -588,6 +614,48 @@ export default function CreateEP() {
                           onChange={(e) => handleSongNameChange(index, e.target.value)}
                           className="bg-[#0F0F0F] border-gray-700 text-white placeholder-gray-500 mb-3 focus:border-gray-600"
                         />
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                          <Input
+                            placeholder="Song Spotify URL"
+                            value={song.spotifyLink || ""}
+                            onChange={(e) => {
+                              const newSongs = [...songs];
+                              newSongs[index].spotifyLink = e.target.value;
+                              setSongs(newSongs);
+                            }}
+                            className="bg-[#0F0F0F] border-gray-700 text-white placeholder-gray-500"
+                          />
+                          <Input
+                            placeholder="Song Apple Music URL"
+                            value={song.appleMusicLink || ""}
+                            onChange={(e) => {
+                              const newSongs = [...songs];
+                              newSongs[index].appleMusicLink = e.target.value;
+                              setSongs(newSongs);
+                            }}
+                            className="bg-[#0F0F0F] border-gray-700 text-white placeholder-gray-500"
+                          />
+                          <Input
+                            placeholder="Song Tidal URL"
+                            value={song.tidalLink || ""}
+                            onChange={(e) => {
+                              const newSongs = [...songs];
+                              newSongs[index].tidalLink = e.target.value;
+                              setSongs(newSongs);
+                            }}
+                            className="bg-[#0F0F0F] border-gray-700 text-white placeholder-gray-500"
+                          />
+                          <Input
+                            placeholder="Song Amazon Music URL"
+                            value={song.amazonMusicLink || ""}
+                            onChange={(e) => {
+                              const newSongs = [...songs];
+                              newSongs[index].amazonMusicLink = e.target.value;
+                              setSongs(newSongs);
+                            }}
+                            className="bg-[#0F0F0F] border-gray-700 text-white placeholder-gray-500"
+                          />
+                        </div>
                         <div className="flex items-center gap-4">
                           <input
                             ref={(el) => { audioInputRefs.current[index] = el; }}

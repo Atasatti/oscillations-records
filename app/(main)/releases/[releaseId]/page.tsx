@@ -12,6 +12,10 @@ interface Song {
   image: string | null;
   audioFile: string;
   duration: number;
+  spotifyLink?: string;
+  appleMusicLink?: string;
+  tidalLink?: string;
+  amazonMusicLink?: string;
   primaryArtistIds: string[];
   featureArtistIds: string[];
 }
@@ -214,6 +218,10 @@ export default function ReleaseDetail() {
                         backgroundImage: song.image || release.coverImage,
                         avatar: releasePrimaryArtist?.profilePicture || undefined,
                         audio: song.audioFile,
+                        spotifyLink: song.spotifyLink,
+                        appleMusicLink: song.appleMusicLink,
+                        tidalLink: song.tidalLink,
+                        amazonMusicLink: song.amazonMusicLink,
                       }}
                     />
                   );
