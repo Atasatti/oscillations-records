@@ -18,6 +18,8 @@ interface Song {
   appleMusicLink?: string | null;
   tidalLink?: string | null;
   amazonMusicLink?: string | null;
+  youtubeLink?: string | null;
+  soundcloudLink?: string | null;
 }
 
 const MusicCard: React.FC<{ song: Song }> = ({ song }) => {
@@ -90,6 +92,8 @@ const MusicCard: React.FC<{ song: Song }> = ({ song }) => {
             appleMusicLink={song.appleMusicLink}
             tidalLink={song.tidalLink}
             amazonMusicLink={song.amazonMusicLink}
+            youtubeLink={song.youtubeLink}
+            soundcloudLink={song.soundcloudLink}
             className="mt-2"
           />
         </div>

@@ -35,6 +35,8 @@ export default function EditEP() {
     appleMusicLink: "",
     tidalLink: "",
     amazonMusicLink: "",
+    youtubeLink: "",
+    soundcloudLink: "",
     primaryArtistIds: [] as string[],
     featureArtistIds: [] as string[],
     songIds: [] as string[],
@@ -68,6 +70,8 @@ export default function EditEP() {
           appleMusicLink: ep.appleMusicLink || "",
           tidalLink: ep.tidalLink || "",
           amazonMusicLink: ep.amazonMusicLink || "",
+          youtubeLink: ep.youtubeLink || "",
+          soundcloudLink: ep.soundcloudLink || "",
           primaryArtistIds: ep.primaryArtistIds || [],
           featureArtistIds: ep.featureArtistIds || [],
           songIds: ep.songIds || [],
@@ -122,6 +126,8 @@ export default function EditEP() {
           appleMusicLink: formData.appleMusicLink,
           tidalLink: formData.tidalLink,
           amazonMusicLink: formData.amazonMusicLink,
+          youtubeLink: formData.youtubeLink,
+          soundcloudLink: formData.soundcloudLink,
           primaryArtistIds: formData.primaryArtistIds,
           featureArtistIds: formData.featureArtistIds,
           songIds: formData.songIds,
@@ -170,6 +176,8 @@ export default function EditEP() {
               <div><label className="block text-sm font-medium text-gray-300 mb-2">Apple Music URL</label><Input value={formData.appleMusicLink} onChange={(e) => setFormData((p) => ({ ...p, appleMusicLink: e.target.value }))} placeholder="Apple Music URL" className="bg-[#0F0F0F] border-gray-700 text-white" /></div>
               <div><label className="block text-sm font-medium text-gray-300 mb-2">Tidal URL</label><Input value={formData.tidalLink} onChange={(e) => setFormData((p) => ({ ...p, tidalLink: e.target.value }))} placeholder="Tidal URL" className="bg-[#0F0F0F] border-gray-700 text-white" /></div>
               <div><label className="block text-sm font-medium text-gray-300 mb-2">Amazon Music URL</label><Input value={formData.amazonMusicLink} onChange={(e) => setFormData((p) => ({ ...p, amazonMusicLink: e.target.value }))} placeholder="Amazon Music URL" className="bg-[#0F0F0F] border-gray-700 text-white" /></div>
+              <div><label className="block text-sm font-medium text-gray-300 mb-2">YouTube URL</label><Input value={formData.youtubeLink} onChange={(e) => setFormData((p) => ({ ...p, youtubeLink: e.target.value }))} placeholder="YouTube URL" className="bg-[#0F0F0F] border-gray-700 text-white" /></div>
+              <div><label className="block text-sm font-medium text-gray-300 mb-2">SoundCloud URL</label><Input value={formData.soundcloudLink} onChange={(e) => setFormData((p) => ({ ...p, soundcloudLink: e.target.value }))} placeholder="SoundCloud URL" className="bg-[#0F0F0F] border-gray-700 text-white" /></div>
             </div>
           </div>
           <div className="bg-[#0F0F0F] rounded-xl p-6 border border-gray-800 space-y-4">

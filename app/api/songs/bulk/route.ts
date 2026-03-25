@@ -89,6 +89,8 @@ export async function POST(request: NextRequest) {
             appleMusicLink: song.appleMusicLink || null,
             tidalLink: song.tidalLink || null,
             amazonMusicLink: song.amazonMusicLink || null,
+            youtubeLink: song.youtubeLink || null,
+            soundcloudLink: song.soundcloudLink || null,
             primaryArtistIds,
             featureArtistIds: featureArtistIds || [],
           },

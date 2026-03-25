@@ -47,6 +47,8 @@ interface Single {
   appleMusicLink?: string;
   tidalLink?: string;
   amazonMusicLink?: string;
+  youtubeLink?: string;
+  soundcloudLink?: string;
   artistId: string;
   createdAt: string;
   updatedAt: string;
@@ -63,6 +65,8 @@ interface Album {
   appleMusicLink?: string;
   tidalLink?: string;
   amazonMusicLink?: string;
+  youtubeLink?: string;
+  soundcloudLink?: string;
   songIds: string[];
   songs?: Single[];
   createdAt: string;
@@ -79,6 +83,8 @@ interface EP {
   appleMusicLink?: string;
   tidalLink?: string;
   amazonMusicLink?: string;
+  youtubeLink?: string;
+  soundcloudLink?: string;
   songIds: string[];
   songs?: Single[];
   createdAt: string;
@@ -284,6 +290,8 @@ export default function ArtistDetail() {
                       appleMusicLink: single.appleMusicLink,
                       tidalLink: single.tidalLink,
                       amazonMusicLink: single.amazonMusicLink,
+                      youtubeLink: single.youtubeLink,
+                      soundcloudLink: single.soundcloudLink,
                     }}
                   />
                   <DropdownMenu>
@@ -361,6 +369,8 @@ export default function ArtistDetail() {
                         appleMusicLink={ep.appleMusicLink}
                         tidalLink={ep.tidalLink}
                         amazonMusicLink={ep.amazonMusicLink}
+                        youtubeLink={ep.youtubeLink}
+                        soundcloudLink={ep.soundcloudLink}
                         className="mt-2"
                       />
                     </div>
@@ -445,6 +455,8 @@ export default function ArtistDetail() {
                         appleMusicLink={album.appleMusicLink}
                         tidalLink={album.tidalLink}
                         amazonMusicLink={album.amazonMusicLink}
+                        youtubeLink={album.youtubeLink}
+                        soundcloudLink={album.soundcloudLink}
                         className="mt-2"
                       />
                       {album.releaseDate && (

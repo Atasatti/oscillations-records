@@ -36,6 +36,8 @@ export default function CreateSingle() {
     appleMusicLink: "",
     tidalLink: "",
     amazonMusicLink: "",
+    youtubeLink: "",
+    soundcloudLink: "",
     primaryArtistIds: [] as string[],
     featureArtistIds: [] as string[],
   });
@@ -288,6 +290,8 @@ export default function CreateSingle() {
           appleMusicLink: formData.appleMusicLink,
           tidalLink: formData.tidalLink,
           amazonMusicLink: formData.amazonMusicLink,
+          youtubeLink: formData.youtubeLink,
+          soundcloudLink: formData.soundcloudLink,
           primaryArtistIds: formData.primaryArtistIds,
           featureArtistIds: formData.featureArtistIds,
         }),
@@ -483,6 +487,8 @@ export default function CreateSingle() {
                   <Input name="appleMusicLink" value={formData.appleMusicLink} onChange={handleInputChange} placeholder="Apple Music URL" className="bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:border-gray-600" />
                   <Input name="tidalLink" value={formData.tidalLink} onChange={handleInputChange} placeholder="Tidal URL" className="bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:border-gray-600" />
                   <Input name="amazonMusicLink" value={formData.amazonMusicLink} onChange={handleInputChange} placeholder="Amazon Music URL" className="bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:border-gray-600" />
+                  <Input name="youtubeLink" value={formData.youtubeLink} onChange={handleInputChange} placeholder="YouTube URL" className="bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:border-gray-600" />
+                  <Input name="soundcloudLink" value={formData.soundcloudLink} onChange={handleInputChange} placeholder="SoundCloud URL" className="bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:border-gray-600" />
                 </div>
               </div>
 

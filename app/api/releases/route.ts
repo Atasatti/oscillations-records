@@ -66,6 +66,8 @@ export async function GET() {
           appleMusicLink: album.appleMusicLink || null,
           tidalLink: album.tidalLink || null,
           amazonMusicLink: album.amazonMusicLink || null,
+          youtubeLink: album.youtubeLink || null,
+          soundcloudLink: album.soundcloudLink || null,
           createdAt: album.createdAt,
           year: album.releaseDate 
             ? new Date(album.releaseDate).getFullYear().toString()
@@ -91,6 +93,8 @@ export async function GET() {
           appleMusicLink: ep.appleMusicLink || null,
           tidalLink: ep.tidalLink || null,
           amazonMusicLink: ep.amazonMusicLink || null,
+          youtubeLink: ep.youtubeLink || null,
+          soundcloudLink: ep.soundcloudLink || null,
           createdAt: ep.createdAt,
           year: new Date(ep.createdAt).getFullYear().toString(),
           songCount: ep.songIds.length,

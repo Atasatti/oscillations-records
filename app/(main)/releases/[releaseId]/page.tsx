@@ -16,6 +16,8 @@ interface Song {
   appleMusicLink?: string;
   tidalLink?: string;
   amazonMusicLink?: string;
+  youtubeLink?: string;
+  soundcloudLink?: string;
   primaryArtistIds: string[];
   featureArtistIds: string[];
 }
@@ -222,6 +224,8 @@ export default function ReleaseDetail() {
                         appleMusicLink: song.appleMusicLink,
                         tidalLink: song.tidalLink,
                         amazonMusicLink: song.amazonMusicLink,
+                        youtubeLink: song.youtubeLink,
+                        soundcloudLink: song.soundcloudLink,
                       }}
                     />
                   );

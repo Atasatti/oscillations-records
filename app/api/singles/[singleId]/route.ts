@@ -94,6 +94,8 @@ export async function PUT(
       appleMusicLink,
       tidalLink,
       amazonMusicLink,
+      youtubeLink,
+      soundcloudLink,
       primaryArtistIds,
       featureArtistIds,
     } = body;
@@ -163,6 +165,8 @@ export async function PUT(
         appleMusicLink: appleMusicLink || null,
         tidalLink: tidalLink || null,
         amazonMusicLink: amazonMusicLink || null,
+        youtubeLink: youtubeLink || null,
+        soundcloudLink: soundcloudLink || null,
         primaryArtistIds,
         featureArtistIds: featureArtistIds || [],
       },

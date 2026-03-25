@@ -17,6 +17,8 @@ interface Song {
   appleMusicLink?: string;
   tidalLink?: string;
   amazonMusicLink?: string;
+  youtubeLink?: string;
+  soundcloudLink?: string;
 }
 
 interface Artist {
@@ -45,12 +47,14 @@ export default function CreateAlbum() {
     appleMusicLink: "",
     tidalLink: "",
     amazonMusicLink: "",
+    youtubeLink: "",
+    soundcloudLink: "",
     primaryArtistIds: [] as string[],
     featureArtistIds: [] as string[],
   });
   
   const [songs, setSongs] = useState<Song[]>([
-    { name: "", audioFile: null, duration: 0, isrcCode: "", spotifyLink: "", appleMusicLink: "", tidalLink: "", amazonMusicLink: "" }
+    { name: "", audioFile: null, duration: 0, isrcCode: "", spotifyLink: "", appleMusicLink: "", tidalLink: "", amazonMusicLink: "", youtubeLink: "", soundcloudLink: "" }
   ]);
   
   const imageInputRef = useRef<HTMLInputElement>(null);
@@ -176,7 +180,7 @@ export default function CreateAlbum() {
   };
 
   const addSong = () => {
-    setSongs([...songs, { name: "", audioFile: null, duration: 0, isrcCode: "", spotifyLink: "", appleMusicLink: "", tidalLink: "", amazonMusicLink: "" }]);
+    setSongs([...songs, { name: "", audioFile: null, duration: 0, isrcCode: "", spotifyLink: "", appleMusicLink: "", tidalLink: "", amazonMusicLink: "", youtubeLink: "", soundcloudLink: "" }]);
   };
 
   const removeSong = (index: number) => {
@@ -315,6 +319,8 @@ export default function CreateAlbum() {
         appleMusicLink: song.appleMusicLink || "",
         tidalLink: song.tidalLink || "",
         amazonMusicLink: song.amazonMusicLink || "",
+        youtubeLink: song.youtubeLink || "",
+        soundcloudLink: song.soundcloudLink || "",
       }));
 
       const songsResponse = await fetch(`/api/songs/bulk`, {
@@ -352,6 +358,8 @@ export default function CreateAlbum() {
           appleMusicLink: formData.appleMusicLink,
           tidalLink: formData.tidalLink,
           amazonMusicLink: formData.amazonMusicLink,
+          youtubeLink: formData.youtubeLink,
+          soundcloudLink: formData.soundcloudLink,
           songIds,
           primaryArtistIds: formData.primaryArtistIds,
           featureArtistIds: formData.featureArtistIds,
@@ -514,6 +522,8 @@ export default function CreateAlbum() {
                     <Input name="appleMusicLink" value={formData.appleMusicLink} onChange={handleInputChange} placeholder="Apple Music URL" className="bg-[#0F0F0F] border-gray-700 text-white placeholder-gray-500 focus:border-gray-600" />
                     <Input name="tidalLink" value={formData.tidalLink} onChange={handleInputChange} placeholder="Tidal URL" className="bg-[#0F0F0F] border-gray-700 text-white placeholder-gray-500 focus:border-gray-600" />
                     <Input name="amazonMusicLink" value={formData.amazonMusicLink} onChange={handleInputChange} placeholder="Amazon Music URL" className="bg-[#0F0F0F] border-gray-700 text-white placeholder-gray-500 focus:border-gray-600" />
+                    <Input name="youtubeLink" value={formData.youtubeLink} onChange={handleInputChange} placeholder="YouTube URL" className="bg-[#0F0F0F] border-gray-700 text-white placeholder-gray-500 focus:border-gray-600" />
+                    <Input name="soundcloudLink" value={formData.soundcloudLink} onChange={handleInputChange} placeholder="SoundCloud URL" className="bg-[#0F0F0F] border-gray-700 text-white placeholder-gray-500 focus:border-gray-600" />
                   </div>
                 </div>
               </div>
@@ -639,6 +649,26 @@ export default function CreateAlbum() {
                             onChange={(e) => {
                               const newSongs = [...songs];
                               newSongs[index].amazonMusicLink = e.target.value;
+                              setSongs(newSongs);
+                            }}
+                            className="bg-[#0F0F0F] border-gray-700 text-white placeholder-gray-500"
+                          />
+                          <Input
+                            placeholder="Song YouTube URL"
+                            value={song.youtubeLink || ""}
+                            onChange={(e) => {
+                              const newSongs = [...songs];
+                              newSongs[index].youtubeLink = e.target.value;
+                              setSongs(newSongs);
+                            }}
+                            className="bg-[#0F0F0F] border-gray-700 text-white placeholder-gray-500"
+                          />
+                          <Input
+                            placeholder="Song SoundCloud URL"
+                            value={song.soundcloudLink || ""}
+                            onChange={(e) => {
+                              const newSongs = [...songs];
+                              newSongs[index].soundcloudLink = e.target.value;
                               setSongs(newSongs);
                             }}
                             className="bg-[#0F0F0F] border-gray-700 text-white placeholder-gray-500"

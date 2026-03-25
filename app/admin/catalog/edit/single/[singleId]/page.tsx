@@ -35,6 +35,8 @@ export default function EditSingle() {
     appleMusicLink: "",
     tidalLink: "",
     amazonMusicLink: "",
+    youtubeLink: "",
+    soundcloudLink: "",
     primaryArtistIds: [] as string[],
     featureArtistIds: [] as string[],
     duration: 0,
@@ -65,6 +67,8 @@ export default function EditSingle() {
           appleMusicLink: singleData.appleMusicLink || "",
           tidalLink: singleData.tidalLink || "",
           amazonMusicLink: singleData.amazonMusicLink || "",
+          youtubeLink: singleData.youtubeLink || "",
+          soundcloudLink: singleData.soundcloudLink || "",
           primaryArtistIds: singleData.primaryArtistIds || [],
           featureArtistIds: singleData.featureArtistIds || [],
           duration: singleData.duration || 0,
@@ -162,6 +166,8 @@ export default function EditSingle() {
           appleMusicLink: formData.appleMusicLink,
           tidalLink: formData.tidalLink,
           amazonMusicLink: formData.amazonMusicLink,
+          youtubeLink: formData.youtubeLink,
+          soundcloudLink: formData.soundcloudLink,
           primaryArtistIds: formData.primaryArtistIds,
           featureArtistIds: formData.featureArtistIds,
         }),
@@ -211,6 +217,8 @@ export default function EditSingle() {
               <div><label className="block text-sm font-medium text-gray-300 mb-2">Apple Music URL</label><Input value={formData.appleMusicLink} onChange={(e) => setFormData((p) => ({ ...p, appleMusicLink: e.target.value }))} placeholder="Apple Music URL" className="bg-[#0F0F0F] border-gray-700 text-white" /></div>
               <div><label className="block text-sm font-medium text-gray-300 mb-2">Tidal URL</label><Input value={formData.tidalLink} onChange={(e) => setFormData((p) => ({ ...p, tidalLink: e.target.value }))} placeholder="Tidal URL" className="bg-[#0F0F0F] border-gray-700 text-white" /></div>
               <div><label className="block text-sm font-medium text-gray-300 mb-2">Amazon Music URL</label><Input value={formData.amazonMusicLink} onChange={(e) => setFormData((p) => ({ ...p, amazonMusicLink: e.target.value }))} placeholder="Amazon Music URL" className="bg-[#0F0F0F] border-gray-700 text-white" /></div>
+              <div><label className="block text-sm font-medium text-gray-300 mb-2">YouTube URL</label><Input value={formData.youtubeLink} onChange={(e) => setFormData((p) => ({ ...p, youtubeLink: e.target.value }))} placeholder="YouTube URL" className="bg-[#0F0F0F] border-gray-700 text-white" /></div>
+              <div><label className="block text-sm font-medium text-gray-300 mb-2">SoundCloud URL</label><Input value={formData.soundcloudLink} onChange={(e) => setFormData((p) => ({ ...p, soundcloudLink: e.target.value }))} placeholder="SoundCloud URL" className="bg-[#0F0F0F] border-gray-700 text-white" /></div>
             </div>
             <div><label className="block text-sm font-medium text-gray-300 mb-2">Primary Artists *</label><MultiSelect options={artists.map((a) => ({ value: a.id, label: a.name }))} selected={formData.primaryArtistIds} onChange={(selected) => setFormData((p) => ({ ...p, primaryArtistIds: selected, featureArtistIds: p.featureArtistIds.filter((id) => !selected.includes(id)) }))} placeholder="Select primary artists..." /></div>
             <div><label className="block text-sm font-medium text-gray-300 mb-2">Feature Artists</label><MultiSelect options={artists.filter((a) => !formData.primaryArtistIds.includes(a.id)).map((a) => ({ value: a.id, label: a.name }))} selected={formData.featureArtistIds} onChange={(selected) => setFormData((p) => ({ ...p, featureArtistIds: selected }))} placeholder="Select feature artists..." /></div>

@@ -16,6 +16,8 @@ interface Song {
   appleMusicLink?: string | null;
   tidalLink?: string | null;
   amazonMusicLink?: string | null;
+  youtubeLink?: string | null;
+  soundcloudLink?: string | null;
 }
 
 interface Single {
@@ -28,6 +30,8 @@ interface Single {
   appleMusicLink?: string | null;
   tidalLink?: string | null;
   amazonMusicLink?: string | null;
+  youtubeLink?: string | null;
+  soundcloudLink?: string | null;
   artist: {
     id: string;
     name: string;
@@ -107,6 +111,8 @@ const NewMusicSection = () => {
             appleMusicLink: single.appleMusicLink || null,
             tidalLink: single.tidalLink || null,
             amazonMusicLink: single.amazonMusicLink || null,
+            youtubeLink: single.youtubeLink || null,
+            soundcloudLink: single.soundcloudLink || null,
           }));
         setSongs(formattedSongs);
       }

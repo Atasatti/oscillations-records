@@ -31,6 +31,8 @@ interface Single {
   appleMusicLink?: string;
   tidalLink?: string;
   amazonMusicLink?: string;
+  youtubeLink?: string;
+  soundcloudLink?: string;
   primaryArtistIds: string[];
   featureArtistIds: string[];
   createdAt: string;
@@ -48,6 +50,8 @@ interface EP {
   appleMusicLink?: string;
   tidalLink?: string;
   amazonMusicLink?: string;
+  youtubeLink?: string;
+  soundcloudLink?: string;
   songIds: string[];
   songs?: Single[];
   createdAt: string;
@@ -247,6 +251,8 @@ export default function EPDetail() {
                       appleMusicLink: song.appleMusicLink,
                       tidalLink: song.tidalLink,
                       amazonMusicLink: song.amazonMusicLink,
+                      youtubeLink: song.youtubeLink,
+                      soundcloudLink: song.soundcloudLink,
                     }}
                   />
                   <DropdownMenu>

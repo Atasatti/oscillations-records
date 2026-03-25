@@ -46,6 +46,8 @@ interface Single {
   appleMusicLink?: string;
   tidalLink?: string;
   amazonMusicLink?: string;
+  youtubeLink?: string;
+  soundcloudLink?: string;
   primaryArtistIds: string[];
   featureArtistIds: string[];
   createdAt: string;
@@ -64,6 +66,8 @@ interface Album {
   appleMusicLink?: string;
   tidalLink?: string;
   amazonMusicLink?: string;
+  youtubeLink?: string;
+  soundcloudLink?: string;
   songIds: string[];
   songs?: Single[];
   createdAt: string;
@@ -81,6 +85,8 @@ interface EP {
   appleMusicLink?: string;
   tidalLink?: string;
   amazonMusicLink?: string;
+  youtubeLink?: string;
+  soundcloudLink?: string;
   songIds: string[];
   songs?: Single[];
   createdAt: string;
@@ -465,6 +471,8 @@ export default function AdminCatalog() {
                       appleMusicLink: single.appleMusicLink,
                       tidalLink: single.tidalLink,
                       amazonMusicLink: single.amazonMusicLink,
+                      youtubeLink: single.youtubeLink,
+                      soundcloudLink: single.soundcloudLink,
                     }}
                   />
                   <DropdownMenu>
@@ -532,6 +540,8 @@ export default function AdminCatalog() {
                         appleMusicLink: album.appleMusicLink,
                         tidalLink: album.tidalLink,
                         amazonMusicLink: album.amazonMusicLink,
+                        youtubeLink: album.youtubeLink,
+                        soundcloudLink: album.soundcloudLink,
                       }}
                     />
                   </Link>
@@ -613,6 +623,8 @@ export default function AdminCatalog() {
                         appleMusicLink: ep.appleMusicLink,
                         tidalLink: ep.tidalLink,
                         amazonMusicLink: ep.amazonMusicLink,
+                        youtubeLink: ep.youtubeLink,
+                        soundcloudLink: ep.soundcloudLink,
                       }}
                     />
                   </Link>

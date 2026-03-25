@@ -16,6 +16,8 @@ interface Release {
   appleMusicLink?: string | null;
   tidalLink?: string | null;
   amazonMusicLink?: string | null;
+  youtubeLink?: string | null;
+  soundcloudLink?: string | null;
   createdAt: string;
   year: string;
   songCount: number;
@@ -131,6 +133,8 @@ const ReleasesSection = () => {
                   appleMusicLink: release.appleMusicLink,
                   tidalLink: release.tidalLink,
                   amazonMusicLink: release.amazonMusicLink,
+                  youtubeLink: release.youtubeLink,
+                  soundcloudLink: release.soundcloudLink,
                 }} 
               />
             </div>
