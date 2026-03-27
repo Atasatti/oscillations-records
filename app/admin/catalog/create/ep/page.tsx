@@ -13,6 +13,7 @@ interface Song {
   audioFile: File | null;
   duration: number;
   isrcCode?: string;
+  releaseDate?: string;
   spotifyLink?: string;
   appleMusicLink?: string;
   tidalLink?: string;
@@ -41,10 +42,12 @@ export default function CreateEP() {
     name: "",
     coverImageFile: null as File | null,
     description: "",
+    releaseDate: "",
     composer: "",
     lyricist: "",
     leadVocal: "",
     isrcCode: "",
+    isrcExplicit: false,
     spotifyLink: "",
     appleMusicLink: "",
     tidalLink: "",
@@ -56,7 +59,7 @@ export default function CreateEP() {
   });
   
   const [songs, setSongs] = useState<Song[]>([
-    { name: "", audioFile: null, duration: 0, isrcCode: "", spotifyLink: "", appleMusicLink: "", tidalLink: "", amazonMusicLink: "", youtubeLink: "", soundcloudLink: "" }
+    { name: "", audioFile: null, duration: 0, isrcCode: "", releaseDate: "", spotifyLink: "", appleMusicLink: "", tidalLink: "", amazonMusicLink: "", youtubeLink: "", soundcloudLink: "" }
   ]);
   
   const imageInputRef = useRef<HTMLInputElement>(null);
@@ -182,7 +185,7 @@ export default function CreateEP() {
   };
 
   const addSong = () => {
-    setSongs([...songs, { name: "", audioFile: null, duration: 0, isrcCode: "", spotifyLink: "", appleMusicLink: "", tidalLink: "", amazonMusicLink: "", youtubeLink: "", soundcloudLink: "" }]);
+    setSongs([...songs, { name: "", audioFile: null, duration: 0, isrcCode: "", releaseDate: "", spotifyLink: "", appleMusicLink: "", tidalLink: "", amazonMusicLink: "", youtubeLink: "", soundcloudLink: "" }]);
   };
 
   const removeSong = (index: number) => {
@@ -315,6 +318,7 @@ export default function CreateEP() {
         name: song.name,
         audioFile: uploadedAudioUrls[index],
         duration: song.duration,
+        releaseDate: song.releaseDate || null,
         image: coverImageUrl,
         isrcCode: song.isrcCode || "",
         spotifyLink: song.spotifyLink || "",
@@ -353,11 +357,13 @@ export default function CreateEP() {
         body: JSON.stringify({
           name: formData.name,
           coverImage: coverImageUrl,
+          releaseDate: formData.releaseDate || null,
           description: formData.description || null,
           composer: formData.composer,
           lyricist: formData.lyricist,
           leadVocal: formData.leadVocal,
           isrcCode: formData.isrcCode,
+          isrcExplicit: formData.isrcExplicit,
           spotifyLink: formData.spotifyLink,
           appleMusicLink: formData.appleMusicLink,
           tidalLink: formData.tidalLink,
@@ -494,6 +500,19 @@ export default function CreateEP() {
                       className="bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:border-gray-600 resize-none"
                     />
                   </div>
+                  <div>
+                    <label htmlFor="releaseDate" className="block text-sm font-medium text-gray-300 mb-2">
+                      Release Date
+                    </label>
+                    <Input
+                      id="releaseDate"
+                      name="releaseDate"
+                      type="date"
+                      value={formData.releaseDate}
+                      onChange={handleInputChange}
+                      className="bg-[#0F0F0F] border-gray-700 text-white placeholder-gray-500 focus:border-gray-600"
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -551,6 +570,15 @@ export default function CreateEP() {
                       placeholder="ISRC code"
                       className="bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:border-gray-600"
                     />
+                    <label className="mt-3 inline-flex items-center gap-2 text-sm text-gray-300">
+                      <input
+                        type="checkbox"
+                        checked={formData.isrcExplicit}
+                        onChange={(e) => setFormData((prev) => ({ ...prev, isrcExplicit: e.target.checked }))}
+                        className="h-4 w-4 rounded border-gray-600 bg-gray-900"
+                      />
+                      Explicit
+                    </label>
                   </div>
                 </div>
               </div>
@@ -647,6 +675,17 @@ export default function CreateEP() {
                           onChange={(e) => {
                             const newSongs = [...songs];
                             newSongs[index].isrcCode = e.target.value;
+                            setSongs(newSongs);
+                          }}
+                          className="bg-[#0F0F0F] border-gray-700 text-white placeholder-gray-500 mb-3"
+                        />
+                        <Input
+                          placeholder="Song release date"
+                          type="date"
+                          value={song.releaseDate || ""}
+                          onChange={(e) => {
+                            const newSongs = [...songs];
+                            newSongs[index].releaseDate = e.target.value;
                             setSongs(newSongs);
                           }}
                           className="bg-[#0F0F0F] border-gray-700 text-white placeholder-gray-500 mb-3"

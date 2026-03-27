@@ -13,6 +13,7 @@ interface Song {
   audioFile: File | null;
   duration: number;
   isrcCode?: string;
+  releaseDate?: string;
   spotifyLink?: string;
   appleMusicLink?: string;
   tidalLink?: string;
@@ -43,6 +44,7 @@ export default function CreateAlbum() {
     description: "",
     releaseDate: "",
     isrcCode: "",
+    isrcExplicit: false,
     spotifyLink: "",
     appleMusicLink: "",
     tidalLink: "",
@@ -54,7 +56,7 @@ export default function CreateAlbum() {
   });
   
   const [songs, setSongs] = useState<Song[]>([
-    { name: "", audioFile: null, duration: 0, isrcCode: "", spotifyLink: "", appleMusicLink: "", tidalLink: "", amazonMusicLink: "", youtubeLink: "", soundcloudLink: "" }
+    { name: "", audioFile: null, duration: 0, isrcCode: "", releaseDate: "", spotifyLink: "", appleMusicLink: "", tidalLink: "", amazonMusicLink: "", youtubeLink: "", soundcloudLink: "" }
   ]);
   
   const imageInputRef = useRef<HTMLInputElement>(null);
@@ -180,7 +182,7 @@ export default function CreateAlbum() {
   };
 
   const addSong = () => {
-    setSongs([...songs, { name: "", audioFile: null, duration: 0, isrcCode: "", spotifyLink: "", appleMusicLink: "", tidalLink: "", amazonMusicLink: "", youtubeLink: "", soundcloudLink: "" }]);
+    setSongs([...songs, { name: "", audioFile: null, duration: 0, isrcCode: "", releaseDate: "", spotifyLink: "", appleMusicLink: "", tidalLink: "", amazonMusicLink: "", youtubeLink: "", soundcloudLink: "" }]);
   };
 
   const removeSong = (index: number) => {
@@ -313,6 +315,7 @@ export default function CreateAlbum() {
         name: song.name,
         audioFile: uploadedAudioUrls[index],
         duration: song.duration,
+        releaseDate: song.releaseDate || null,
         image: coverImageUrl,
         isrcCode: song.isrcCode || "",
         spotifyLink: song.spotifyLink || "",
@@ -354,6 +357,7 @@ export default function CreateAlbum() {
           releaseDate: formData.releaseDate || null,
           description: formData.description || null,
           isrcCode: formData.isrcCode,
+          isrcExplicit: formData.isrcExplicit,
           spotifyLink: formData.spotifyLink,
           appleMusicLink: formData.appleMusicLink,
           tidalLink: formData.tidalLink,
@@ -516,6 +520,15 @@ export default function CreateAlbum() {
                       placeholder="ISRC code"
                       className="bg-[#0F0F0F] border-gray-700 text-white placeholder-gray-500 focus:border-gray-600"
                     />
+                    <label className="mt-3 inline-flex items-center gap-2 text-sm text-gray-300">
+                      <input
+                        type="checkbox"
+                        checked={formData.isrcExplicit}
+                        onChange={(e) => setFormData((prev) => ({ ...prev, isrcExplicit: e.target.checked }))}
+                        className="h-4 w-4 rounded border-gray-600 bg-gray-900"
+                      />
+                      Explicit
+                    </label>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <Input name="spotifyLink" value={formData.spotifyLink} onChange={handleInputChange} placeholder="Spotify URL" className="bg-[#0F0F0F] border-gray-700 text-white placeholder-gray-500 focus:border-gray-600" />
@@ -608,6 +621,17 @@ export default function CreateAlbum() {
                           onChange={(e) => {
                             const newSongs = [...songs];
                             newSongs[index].isrcCode = e.target.value;
+                            setSongs(newSongs);
+                          }}
+                          className="bg-[#0F0F0F] border-gray-700 text-white placeholder-gray-500 mb-3"
+                        />
+                        <Input
+                          placeholder="Song release date"
+                          type="date"
+                          value={song.releaseDate || ""}
+                          onChange={(e) => {
+                            const newSongs = [...songs];
+                            newSongs[index].releaseDate = e.target.value;
                             setSongs(newSongs);
                           }}
                           className="bg-[#0F0F0F] border-gray-700 text-white placeholder-gray-500 mb-3"

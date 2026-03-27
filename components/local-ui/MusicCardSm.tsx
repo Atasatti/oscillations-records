@@ -82,6 +82,11 @@ const MusicCardSm: React.FC<{ song: Song }> = ({ song }) => {
           <h3 className="text-lg font-medium mb-1 line-clamp-2 mt-1">
             {song.name}
           </h3>
+          {song.artist ? (
+            <p className="text-xs text-muted-foreground line-clamp-1">
+              {song.artist}
+            </p>
+          ) : null}
           <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
             {song.songCount !== undefined ? (
               <span>

@@ -28,10 +28,12 @@ export default function CreateSingle() {
     name: "",
     imageFile: null as File | null,
     audioFile: null as File | null,
+    releaseDate: "",
     composer: "",
     lyricist: "",
     leadVocal: "",
     isrcCode: "",
+    isrcExplicit: false,
     spotifyLink: "",
     appleMusicLink: "",
     tidalLink: "",
@@ -282,10 +284,12 @@ export default function CreateSingle() {
           image: imageUrl,
           audioFile: audioUrl,
           duration: audioDuration,
+          releaseDate: formData.releaseDate || null,
           composer: formData.composer,
           lyricist: formData.lyricist,
           leadVocal: formData.leadVocal,
           isrcCode: formData.isrcCode,
+          isrcExplicit: formData.isrcExplicit,
           spotifyLink: formData.spotifyLink,
           appleMusicLink: formData.appleMusicLink,
           tidalLink: formData.tidalLink,
@@ -419,6 +423,19 @@ export default function CreateSingle() {
                       className="bg-[#0F0F0F] border-gray-700 text-white placeholder-gray-500 focus:border-gray-600"
                     />
                   </div>
+                  <div>
+                    <label htmlFor="releaseDate" className="block text-sm font-medium text-gray-300 mb-2">
+                      Release Date
+                    </label>
+                    <Input
+                      id="releaseDate"
+                      name="releaseDate"
+                      type="date"
+                      value={formData.releaseDate}
+                      onChange={handleInputChange}
+                      className="bg-[#0F0F0F] border-gray-700 text-white placeholder-gray-500 focus:border-gray-600"
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -476,6 +493,15 @@ export default function CreateSingle() {
                       placeholder="ISRC code"
                       className="bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:border-gray-600"
                     />
+                    <label className="mt-3 inline-flex items-center gap-2 text-sm text-gray-300">
+                      <input
+                        type="checkbox"
+                        checked={formData.isrcExplicit}
+                        onChange={(e) => setFormData((prev) => ({ ...prev, isrcExplicit: e.target.checked }))}
+                        className="h-4 w-4 rounded border-gray-600 bg-gray-900"
+                      />
+                      Explicit
+                    </label>
                   </div>
                 </div>
               </div>

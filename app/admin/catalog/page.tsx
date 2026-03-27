@@ -391,7 +391,7 @@ export default function AdminCatalog() {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
               {artists.map((artist) => (
-                <div key={artist.id} className="relative group">
+                <div key={artist.id} className="relative group w-72 h-84">
                   <Link href={`/admin/catalog/artist/${artist.id}`}>
                     <ArtistCard artist={artist} />
                   </Link>

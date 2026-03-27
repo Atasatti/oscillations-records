@@ -32,7 +32,7 @@ interface Release {
   id: string;
   name: string;
   coverImage: string;
-  type: 'album' | 'ep';
+  type: 'single' | 'album' | 'ep';
   primaryArtistIds: string[];
   featureArtistIds: string[];
   artists: Artist[];
@@ -168,7 +168,7 @@ export default function ReleaseDetail() {
               />
               <div className="flex-1">
                 <p className="text-sm text-gray-400 uppercase tracking-wider mb-2">
-                  {release.type === 'album' ? 'Album' : 'EP'}
+                  {release.type === 'album' ? 'Album' : release.type === 'ep' ? 'EP' : 'Single'}
                 </p>
                 <h1 className="text-5xl font-light tracking-tighter mb-4">{release.name}</h1>
                 {/* <p className="text-xl text-gray-400 mb-2">{release.artist.name}</p> */}
@@ -201,7 +201,20 @@ export default function ReleaseDetail() {
                   const primaryArtist = primaryArtistId 
                     ? release.artists.find(a => a.id === primaryArtistId)
                     : null;
-                  const artistName = primaryArtist?.name || 'Unknown Artist';
+                  const primaryName = primaryArtist?.name || 'Unknown Artist';
+
+                  const featureArtistNames = Array.from(
+                    new Set(
+                      song.featureArtistIds
+                        .map((id) => release.artists.find((a) => a.id === id)?.name)
+                        .filter((name): name is string => Boolean(name))
+                    )
+                  );
+
+                  const artistName =
+                    featureArtistNames.length > 0
+                      ? `${primaryName} ft ${featureArtistNames.join(", ")}`
+                      : primaryName;
                   
                   // Get primary artist for release (for avatar)
                   const releasePrimaryArtistId = release.primaryArtistIds[0];

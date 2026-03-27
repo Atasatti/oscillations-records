@@ -8,7 +8,7 @@ interface Release {
   name: string;
   thumbnail?: string | null;
   audio?: string | null;
-  type: 'album' | 'ep';
+  type: 'single' | 'album' | 'ep';
   artist: string;
   artistId: string;
   releaseDate: string | null;

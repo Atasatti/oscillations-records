@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
-// GET /api/releases/[releaseId] - Get a single release (album or EP) by ID with songs
+// GET /api/releases/[releaseId] - Get a single release (single, album or EP) by ID
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ releaseId: string }> }
@@ -13,7 +13,39 @@ export async function GET(
   try {
     const { releaseId } = await params;
 
-    // Try to find as album first
+    // Try to find as single first
+    const single = await prisma.single.findUnique({
+      where: { id: releaseId },
+    });
+
+    if (single) {
+      const allArtistIds = [...single.primaryArtistIds, ...single.featureArtistIds];
+      const artists = await prisma.artist.findMany({
+        where: {
+          id: { in: allArtistIds },
+        },
+        select: {
+          id: true,
+          name: true,
+          profilePicture: true,
+        }
+      });
+
+      return NextResponse.json({
+        id: single.id,
+        name: single.name,
+        coverImage: single.image,
+        type: "single",
+        primaryArtistIds: single.primaryArtistIds,
+        featureArtistIds: single.featureArtistIds,
+        description: null,
+        releaseDate: single.releaseDate,
+        artists,
+        songs: [single],
+      });
+    }
+
+    // Try to find as album
     const album = await prisma.album.findUnique({
       where: { id: releaseId },
     });

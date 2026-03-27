@@ -103,10 +103,12 @@ model Single {
   image            String?
   audioFile        String
   duration         Int      // Duration in seconds
+  releaseDate      DateTime?
   composer         String?
   lyricist         String?
   leadVocal        String?
   isrcCode         String?
+  isrcExplicit     Boolean  @default(false)
   spotifyLink      String?
   appleMusicLink   String?
   tidalLink        String?
@@ -128,6 +130,7 @@ model Album {
   releaseDate      DateTime?
   description      String?
   isrcCode         String?
+  isrcExplicit     Boolean  @default(false)
   spotifyLink      String?
   appleMusicLink   String?
   tidalLink        String?
@@ -146,10 +149,12 @@ model Ep {
   primaryArtistIds String[] @db.ObjectId
   featureArtistIds String[] @db.ObjectId
   description      String?
+  releaseDate      DateTime?
   composer         String?
   lyricist         String?
   leadVocal        String?
   isrcCode         String?
+  isrcExplicit     Boolean  @default(false)
   spotifyLink      String?
   appleMusicLink   String?
   tidalLink        String?

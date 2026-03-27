@@ -1,9 +1,7 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import ArtistCard from "../local-ui/ArtistCard";
-
-const dateFilters = ["All", "2024", "2025", "2023", "2022"];
 
 interface Artist {
   id: string;
@@ -47,10 +45,27 @@ const ArtistsSection = () => {
     }
   };
 
-  // Filter artists by year if needed (you can implement this logic based on createdAt)
+  // Build year filters from actual artist `createdAt` values.
+  const availableYears = useMemo(() => {
+    const years = new Set<string>();
+    artists.forEach((artist) => {
+      if (!artist.createdAt) return;
+      const d = new Date(artist.createdAt);
+      if (Number.isNaN(d.getTime())) return;
+      years.add(d.getFullYear().toString());
+    });
+    return Array.from(years).sort((a, b) => parseInt(b, 10) - parseInt(a, 10));
+  }, [artists]);
+
+  const dateFilters = useMemo(() => ["All", ...availableYears], [availableYears]);
+
+  // Filter artists by year (based on `createdAt`)
   const filteredArtists = artists.filter(artist => {
     if (selectedFilter === "All") return true;
-    const year = new Date(artist.createdAt).getFullYear().toString();
+    if (!artist.createdAt) return false;
+    const d = new Date(artist.createdAt);
+    if (Number.isNaN(d.getTime())) return false;
+    const year = d.getFullYear().toString();
     return year === selectedFilter;
   });
 
@@ -67,8 +82,10 @@ const ArtistsSection = () => {
           <button
             key={filter}
             onClick={() => setSelectedFilter(filter)}
-            className={`text-sm font-medium transition-colors duration-200 text-muted-foreground cursor-pointer ${
-              selectedFilter === filter && "text-primary"
+            className={`text-sm font-medium transition-colors duration-200 cursor-pointer ${
+              selectedFilter === filter
+                ? "text-white"
+                : "text-muted-foreground hover:text-white"
             }`}
           >
             {filter}

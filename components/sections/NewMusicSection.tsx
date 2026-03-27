@@ -163,8 +163,15 @@ const NewMusicSection = () => {
               className="flex min-w-0 flex-1 gap-4 overflow-x-auto scrollbar-hide scroll-smooth"
               style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
             >
-              {songs.map((song) => (
-                <MusicCard key={song.id} song={song} />
+              {songs.map((song, index) => (
+                <div key={song.id} className="relative">
+                  {index === 0 ? (
+                    <span className="absolute left-3 top-3 z-20 rounded-full bg-red-600 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-white">
+                      New
+                    </span>
+                  ) : null}
+                  <MusicCard song={song} />
+                </div>
               ))}
             </div>
             {canScrollRight ? (

@@ -8,7 +8,7 @@ export default function AboutSection2() {
     >
 
       {/* Top right image */}
-      <div className="absolute top-12 right-18 transform rotate-12 hover:rotate-0 transition-transform duration-300">
+      <div className="hidden lg:block absolute top-12 right-18 transform rotate-12 hover:rotate-0 transition-transform duration-300">
         <Image
           src="/about-section2-side2.svg?height=200&width=200"
           alt="Music album cover"
@@ -19,7 +19,7 @@ export default function AboutSection2() {
       </div>
 
       {/* Center left image */}
-      <div className="absolute top-0 left-18  transform -translate-y-1/2 rotate-6 hover:rotate-0 transition-transform duration-300">
+      <div className="hidden lg:block absolute top-0 left-18  transform -translate-y-1/2 rotate-6 hover:rotate-0 transition-transform duration-300">
         <Image
           src="/about-section2-side1.svg?height=200&width=200"
           alt="Music album cover"
@@ -30,7 +30,7 @@ export default function AboutSection2() {
       </div>
 
       {/* Bottom right image */}
-      <div className="absolute bottom-20 right-18 transform -rotate-6 hover:rotate-0 transition-transform duration-300">
+      <div className="hidden lg:block absolute bottom-20 right-18 transform -rotate-6 hover:rotate-0 transition-transform duration-300">
         <Image
           src="/about-section2-side1.svg?height=200&width=200"
           alt="Music album cover"
@@ -41,7 +41,7 @@ export default function AboutSection2() {
       </div>
 
       {/* Bottom left image */}
-      <div className="absolute -bottom-20 left-18 transform rotate-12 hover:rotate-0 transition-transform duration-300">
+      <div className="hidden lg:block absolute -bottom-20 left-18 transform rotate-12 hover:rotate-0 transition-transform duration-300">
         <Image
           src="/about-section2-side3.svg?height=200&width=200"
           alt="Music album cover"

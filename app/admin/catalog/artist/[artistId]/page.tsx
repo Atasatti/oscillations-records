@@ -4,7 +4,6 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import AdminNavbar from "@/components/local-ui/AdminNavbar";
 import MusicCardSm from "@/components/local-ui/MusicCardSm";
-import StreamingLinks from "@/components/local-ui/StreamingLinks";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -349,31 +348,26 @@ export default function ArtistDetail() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {eps.map((ep) => (
-                <div key={ep.id} className="relative group">
+                <div key={ep.id} className="relative group w-72 h-84 mx-auto">
                   <Link 
                     href={`/admin/catalog/artist/${artistId}/ep/${ep.id}`}
-                    className="bg-[#0F0F0F] rounded-xl overflow-hidden hover:bg-[#1a1a1a] transition-colors cursor-pointer block"
+                    className="block w-full h-full"
                   >
-                    <img
-                      src={ep.coverImage}
-                      alt={ep.name}
-                      className="w-full h-48 object-cover"
+                    <MusicCardSm
+                      song={{
+                        id: ep.id,
+                        name: ep.name,
+                        thumbnail: ep.coverImage,
+                        audio: null,
+                        songCount: ep.songIds.length,
+                        spotifyLink: ep.spotifyLink,
+                        appleMusicLink: ep.appleMusicLink,
+                        tidalLink: ep.tidalLink,
+                        amazonMusicLink: ep.amazonMusicLink,
+                        youtubeLink: ep.youtubeLink,
+                        soundcloudLink: ep.soundcloudLink,
+                      }}
                     />
-                    <div className="p-4">
-                      <h3 className="text-lg font-medium mb-1">{ep.name}</h3>
-                      <p className="text-sm text-gray-400">
-                        {ep.songs?.length || ep.songIds.length} song{ep.songs?.length !== 1 || ep.songIds.length !== 1 ? 's' : ''}
-                      </p>
-                      <StreamingLinks
-                        spotifyLink={ep.spotifyLink}
-                        appleMusicLink={ep.appleMusicLink}
-                        tidalLink={ep.tidalLink}
-                        amazonMusicLink={ep.amazonMusicLink}
-                        youtubeLink={ep.youtubeLink}
-                        soundcloudLink={ep.soundcloudLink}
-                        className="mt-2"
-                      />
-                    </div>
                   </Link>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -435,36 +429,26 @@ export default function ArtistDetail() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {albums.map((album) => (
-                <div key={album.id} className="relative group">
+                <div key={album.id} className="relative group w-72 h-84 mx-auto">
                   <Link 
                     href={`/admin/catalog/artist/${artistId}/album/${album.id}`}
-                    className="bg-[#0F0F0F] rounded-xl overflow-hidden hover:bg-[#1a1a1a] transition-colors cursor-pointer block"
+                    className="block w-full h-full"
                   >
-                    <img
-                      src={album.coverImage}
-                      alt={album.name}
-                      className="w-full h-48 object-cover"
+                    <MusicCardSm
+                      song={{
+                        id: album.id,
+                        name: album.name,
+                        thumbnail: album.coverImage,
+                        audio: null,
+                        songCount: album.songIds.length,
+                        spotifyLink: album.spotifyLink,
+                        appleMusicLink: album.appleMusicLink,
+                        tidalLink: album.tidalLink,
+                        amazonMusicLink: album.amazonMusicLink,
+                        youtubeLink: album.youtubeLink,
+                        soundcloudLink: album.soundcloudLink,
+                      }}
                     />
-                    <div className="p-4">
-                      <h3 className="text-lg font-medium mb-1">{album.name}</h3>
-                      <p className="text-sm text-gray-400">
-                        {album.songs?.length || album.songIds.length} song{album.songs?.length !== 1 || album.songIds.length !== 1 ? 's' : ''}
-                      </p>
-                      <StreamingLinks
-                        spotifyLink={album.spotifyLink}
-                        appleMusicLink={album.appleMusicLink}
-                        tidalLink={album.tidalLink}
-                        amazonMusicLink={album.amazonMusicLink}
-                        youtubeLink={album.youtubeLink}
-                        soundcloudLink={album.soundcloudLink}
-                        className="mt-2"
-                      />
-                      {album.releaseDate && (
-                        <p className="text-xs text-gray-500 mt-1">
-                          {new Date(album.releaseDate).getFullYear()}
-                        </p>
-                      )}
-                    </div>
                   </Link>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
