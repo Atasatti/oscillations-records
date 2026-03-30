@@ -10,6 +10,8 @@ interface Song {
   id: string | number;
   title: string;
   artist: string;
+  primaryArtistName?: string;
+  featureArtistNames?: string[];
   duration: string;
   backgroundImage: string;
   avatar?: string;
@@ -42,7 +44,13 @@ const MusicCard: React.FC<{ song: Song }> = ({ song }) => {
       playSong({
         id: String(song.id),
         title: song.title,
-        artist: song.artist,
+        artist:
+          song.artist ||
+          (song.primaryArtistName
+            ? song.featureArtistNames?.length
+              ? `${song.primaryArtistName} ft ${song.featureArtistNames.join(", ")}`
+              : song.primaryArtistName
+            : "Unknown Artist"),
         image: song.backgroundImage,
         audio: song.audio,
       });
@@ -83,8 +91,21 @@ const MusicCard: React.FC<{ song: Song }> = ({ song }) => {
           <h3 className="text-lg font-medium mb-1 line-clamp-2 mt-1">
             {song.title}
           </h3>
+          {song.primaryArtistName ? (
+            <>
+              <p className="text-xs text-white/90 line-clamp-2">
+                {song.primaryArtistName}
+              </p>
+              {song.featureArtistNames && song.featureArtistNames.length > 0 ? (
+                <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">
+                  ft {song.featureArtistNames.join(", ")}
+                </p>
+              ) : null}
+            </>
+          ) : (
+            <p className="text-xs text-muted-foreground line-clamp-2">{song.artist}</p>
+          )}
           <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-            <span>{song.artist}</span>
             <span>{song.duration}</span>
           </div>
           <StreamingLinks

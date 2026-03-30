@@ -40,14 +40,36 @@ export async function GET(request: NextRequest) {
 
     const artistMap = new Map(artists.map(a => [a.id, a]));
 
-    // Add artist info to each single (using primary artist for display)
+    const featureIdsExcludingPrimary = (
+      featureIds: string[],
+      primaryIds: string[]
+    ) => {
+      const primarySet = new Set(primaryIds.map(String));
+      return featureIds.filter((id) => !primarySet.has(String(id)));
+    };
+
+    // Add artist info to each single (primary + feature names for cards)
     const singlesWithArtists = singles.map(single => {
-      const primaryArtistId = single.primaryArtistIds[0];
+      const primaryIds = single.primaryArtistIds || [];
+      const primaryArtistId = primaryIds[0];
       const primaryArtist = primaryArtistId ? artistMap.get(primaryArtistId) : null;
-      
+      const primaryArtistName = primaryIds
+        .map((id) => artistMap.get(id)?.name)
+        .filter((name): name is string => Boolean(name))
+        .join(", ") || "Unknown Artist";
+      const featureArtistNames = Array.from(
+        new Set(
+          featureIdsExcludingPrimary(single.featureArtistIds || [], primaryIds)
+            .map((id) => artistMap.get(id)?.name)
+            .filter((name): name is string => Boolean(name))
+        )
+      );
+
       return {
         ...single,
         artist: primaryArtist || null,
+        primaryArtistName,
+        featureArtistNames,
       };
     });
 

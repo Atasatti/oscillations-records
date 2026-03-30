@@ -8,6 +8,8 @@ interface Song {
   id: string;
   title: string;
   artist: string;
+  primaryArtistName?: string;
+  featureArtistNames?: string[];
   duration: string;
   backgroundImage: string;
   avatar?: string;
@@ -37,6 +39,8 @@ interface Single {
     name: string;
     profilePicture: string | null;
   } | null;
+  primaryArtistName?: string;
+  featureArtistNames?: string[];
 }
 
 const SCROLL_GAP_PX = 16; // matches gap-4
@@ -103,6 +107,8 @@ const NewMusicSection = () => {
             id: single.id,
             title: single.name,
             artist: single.artist!.name,
+            primaryArtistName: single.primaryArtistName || single.artist!.name,
+            featureArtistNames: single.featureArtistNames || [],
             duration: formatDuration(single.duration),
             backgroundImage: single.image || "/new-music-img1.svg",
             avatar: single.artist!.profilePicture || undefined,

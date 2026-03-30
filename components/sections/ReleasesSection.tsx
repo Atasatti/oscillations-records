@@ -9,6 +9,11 @@ interface Release {
   thumbnail?: string | null;
   audio?: string | null;
   type: 'single' | 'album' | 'ep';
+  /** Primary artist(s) display name */
+  primaryArtistName?: string;
+  /** Resolved feature artist names (same order as API) */
+  featureArtistNames?: string[];
+  /** Combined "Primary ft A, B" for backwards compatibility / player */
   artist: string;
   artistId: string;
   releaseDate: string | null;
@@ -127,6 +132,8 @@ const ReleasesSection = () => {
                   name: release.name,
                   thumbnail: release.thumbnail,
                   audio: release.audio,
+                  primaryArtistName: release.primaryArtistName,
+                  featureArtistNames: release.featureArtistNames,
                   artist: release.artist,
                   songCount: release.songCount,
                   spotifyLink: release.spotifyLink,

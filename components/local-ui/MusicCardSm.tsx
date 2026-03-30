@@ -11,7 +11,11 @@ interface Song {
   name: string;
   thumbnail?: string | null;
   audio?: string | null;
+  /** Full display line, e.g. "Primary ft A, B" — used for player + fallback label */
   artist?: string;
+  /** When set with featureArtistNames, primary shows first then "ft …" on the next line */
+  primaryArtistName?: string;
+  featureArtistNames?: string[];
   songCount?: number;
   spotifyLink?: string | null;
   appleMusicLink?: string | null;
@@ -41,7 +45,13 @@ const MusicCardSm: React.FC<{ song: Song }> = ({ song }) => {
       playSong({
         id: String(song.id),
         title: song.name,
-        artist: song.artist || "Unknown Artist",
+        artist:
+          song.artist ||
+          (song.primaryArtistName
+            ? song.featureArtistNames?.length
+              ? `${song.primaryArtistName} ft ${song.featureArtistNames.join(", ")}`
+              : song.primaryArtistName
+            : "Unknown Artist"),
         image: song.thumbnail || null,
         audio: song.audio,
       });
@@ -82,8 +92,20 @@ const MusicCardSm: React.FC<{ song: Song }> = ({ song }) => {
           <h3 className="text-lg font-medium mb-1 line-clamp-2 mt-1">
             {song.name}
           </h3>
-          {song.artist ? (
-            <p className="text-xs text-muted-foreground line-clamp-1">
+          {song.primaryArtistName != null &&
+          song.primaryArtistName !== "" ? (
+            <>
+              <p className="text-xs text-white/90 line-clamp-2">
+                {song.primaryArtistName}
+              </p>
+              {song.featureArtistNames && song.featureArtistNames.length > 0 ? (
+                <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">
+                  ft {song.featureArtistNames.join(", ")}
+                </p>
+              ) : null}
+            </>
+          ) : song.artist ? (
+            <p className="text-xs text-muted-foreground line-clamp-2">
               {song.artist}
             </p>
           ) : null}

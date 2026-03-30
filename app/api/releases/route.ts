@@ -70,6 +70,22 @@ export async function GET() {
       return unique.length > 0 ? `${primaryName} ft ${unique.join(", ")}` : primaryName;
     };
 
+    /** Feature IDs that are not also listed as primary (avoid dupes / bad data). */
+    const featureIdsExcludingPrimary = (
+      featureIds: string[],
+      primaryIds: string[]
+    ) => {
+      const primarySet = new Set(primaryIds.map(String));
+      return featureIds.filter((id) => !primarySet.has(String(id)));
+    };
+
+    const primaryNamesFromIds = (ids: string[]) => {
+      const names = ids
+        .map((id) => artistMap.get(String(id))?.name)
+        .filter((n): n is string => Boolean(n));
+      return names.length ? names.join(", ") : "Unknown Artist";
+    };
+
     // Exclude tracks already included in albums/EPs from singles section
     const usedSongIds = new Set<string>();
     albums.forEach((album) =>
@@ -82,11 +98,12 @@ export async function GET() {
       ...singles
         .filter((single) => !usedSongIds.has(single.id))
         .map(single => {
-          const primaryArtistId = single.primaryArtistIds[0];
-          const primaryArtist = primaryArtistId
-            ? artistMap.get(String(primaryArtistId))
-            : null;
-          const featureArtistIds = single.featureArtistIds || [];
+          const primaryIds = single.primaryArtistIds || [];
+          const primaryArtistId = primaryIds[0];
+          const featureArtistIds = featureIdsExcludingPrimary(
+            single.featureArtistIds || [],
+            primaryIds
+          );
           const featureArtistNames = Array.from(
             new Set(
               featureArtistIds
@@ -94,7 +111,7 @@ export async function GET() {
                 .filter((name): name is string => Boolean(name))
             )
           );
-          const primaryName = primaryArtist?.name || 'Unknown Artist';
+          const primaryName = primaryNamesFromIds(primaryIds);
           const singleReleaseDate = getOptionalDate(
             (single as unknown as Record<string, unknown>).releaseDate
           );
@@ -105,6 +122,7 @@ export async function GET() {
             thumbnail: single.image,
             audio: single.audioFile,
             type: 'single' as const,
+            primaryArtistName: primaryName,
             artist: formatArtistLine(primaryName, featureArtistNames),
             artistId: primaryArtistId ? String(primaryArtistId) : '',
             featureArtistIds,
@@ -124,12 +142,12 @@ export async function GET() {
           };
         }),
       ...albums.map(album => {
-        // Get primary artist (first one) for display
-        const primaryArtistId = album.primaryArtistIds[0];
-        const primaryArtist = primaryArtistId
-          ? artistMap.get(String(primaryArtistId))
-          : null;
-        const featureArtistIds = album.featureArtistIds || [];
+        const primaryIds = album.primaryArtistIds || [];
+        const primaryArtistId = primaryIds[0];
+        const featureArtistIds = featureIdsExcludingPrimary(
+          album.featureArtistIds || [],
+          primaryIds
+        );
         const featureArtistNames = Array.from(
           new Set(
             featureArtistIds
@@ -137,7 +155,7 @@ export async function GET() {
               .filter((name): name is string => Boolean(name))
           )
         );
-        const primaryName = primaryArtist?.name || 'Unknown Artist';
+        const primaryName = primaryNamesFromIds(primaryIds);
         
         return {
           id: album.id,
@@ -145,6 +163,7 @@ export async function GET() {
           thumbnail: album.coverImage,
           audio: null, // Albums don't have a single audio file
           type: 'album' as const,
+          primaryArtistName: primaryName,
           artist: formatArtistLine(primaryName, featureArtistNames),
           artistId: primaryArtistId ? String(primaryArtistId) : '',
           featureArtistIds,
@@ -164,12 +183,12 @@ export async function GET() {
         };
       }),
       ...eps.map(ep => {
-        // Get primary artist (first one) for display
-        const primaryArtistId = ep.primaryArtistIds[0];
-        const primaryArtist = primaryArtistId
-          ? artistMap.get(String(primaryArtistId))
-          : null;
-        const featureArtistIds = ep.featureArtistIds || [];
+        const primaryIds = ep.primaryArtistIds || [];
+        const primaryArtistId = primaryIds[0];
+        const featureArtistIds = featureIdsExcludingPrimary(
+          ep.featureArtistIds || [],
+          primaryIds
+        );
         const featureArtistNames = Array.from(
           new Set(
             featureArtistIds
@@ -177,7 +196,7 @@ export async function GET() {
               .filter((name): name is string => Boolean(name))
           )
         );
-        const primaryName = primaryArtist?.name || 'Unknown Artist';
+        const primaryName = primaryNamesFromIds(primaryIds);
         const epReleaseDate = getOptionalDate(
           (ep as unknown as Record<string, unknown>).releaseDate
         );
@@ -188,6 +207,7 @@ export async function GET() {
           thumbnail: ep.coverImage,
           audio: null, // EPs don't have a single audio file
           type: 'ep' as const,
+          primaryArtistName: primaryName,
           artist: formatArtistLine(primaryName, featureArtistNames),
           artistId: primaryArtistId ? String(primaryArtistId) : '',
           featureArtistIds,

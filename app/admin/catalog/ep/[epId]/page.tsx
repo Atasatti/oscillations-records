@@ -58,12 +58,18 @@ interface EP {
   updatedAt: string;
 }
 
+interface ArtistSummary {
+  id: string;
+  name: string;
+}
+
 export default function EPDetail() {
   const params = useParams();
   const router = useRouter();
   const epId = params.epId as string;
 
   const [ep, setEp] = useState<EP | null>(null);
+  const [allArtists, setAllArtists] = useState<ArtistSummary[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -80,6 +86,11 @@ export default function EPDetail() {
       if (response.ok) {
         const epData = await response.json();
         setEp(epData);
+        const artistsResponse = await fetch("/api/artists");
+        if (artistsResponse.ok) {
+          const artistsData: ArtistSummary[] = await artistsResponse.json();
+          setAllArtists(artistsData);
+        }
       } else {
         if (response.status === 404) {
           setError("EP not found");
@@ -93,6 +104,31 @@ export default function EPDetail() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const getArtistNames = (ids: string[] = []) =>
+    ids
+      .map((id) => allArtists.find((item) => item.id === id)?.name)
+      .filter((name): name is string => Boolean(name));
+
+  const getPrimaryArtistName = (primaryArtistIds: string[] = []) => {
+    const names = getArtistNames(primaryArtistIds);
+    return names.length > 0 ? names.join(", ") : "Unknown Artist";
+  };
+
+  const getFeatureArtistNames = (
+    featureArtistIds: string[] = [],
+    primaryArtistIds: string[] = []
+  ) => {
+    const primarySet = new Set(primaryArtistIds);
+    return Array.from(
+      new Set(
+        featureArtistIds
+          .filter((id) => !primarySet.has(id))
+          .map((id) => allArtists.find((item) => item.id === id)?.name)
+          .filter((name): name is string => Boolean(name))
+      )
+    );
   };
 
   const handleDeleteClick = () => {
@@ -246,7 +282,11 @@ export default function EPDetail() {
                       name: song.name,
                       thumbnail: song.image,
                       audio: song.audioFile,
-                      artist: undefined,
+                      primaryArtistName: getPrimaryArtistName(song.primaryArtistIds),
+                      featureArtistNames: getFeatureArtistNames(
+                        song.featureArtistIds,
+                        song.primaryArtistIds
+                      ),
                       spotifyLink: song.spotifyLink,
                       appleMusicLink: song.appleMusicLink,
                       tidalLink: song.tidalLink,

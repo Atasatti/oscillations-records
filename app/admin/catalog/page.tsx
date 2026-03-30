@@ -129,6 +129,31 @@ export default function AdminCatalog() {
   const [isCreatingUpcoming, setIsCreatingUpcoming] = useState(false);
   const [isUploadingUpcomingImage, setIsUploadingUpcomingImage] = useState(false);
 
+  const getArtistNames = (ids: string[] = []) =>
+    ids
+      .map((id) => artists.find((artist) => artist.id === id)?.name)
+      .filter((name): name is string => Boolean(name));
+
+  const getPrimaryArtistName = (primaryArtistIds: string[] = []) => {
+    const names = getArtistNames(primaryArtistIds);
+    return names.length > 0 ? names.join(", ") : "Unknown Artist";
+  };
+
+  const getFeatureArtistNames = (
+    featureArtistIds: string[] = [],
+    primaryArtistIds: string[] = []
+  ) => {
+    const primarySet = new Set(primaryArtistIds);
+    return Array.from(
+      new Set(
+        featureArtistIds
+          .filter((id) => !primarySet.has(id))
+          .map((id) => artists.find((artist) => artist.id === id)?.name)
+          .filter((name): name is string => Boolean(name))
+      )
+    );
+  };
+
   useEffect(() => {
     fetchAllData();
   }, []);
@@ -467,6 +492,11 @@ export default function AdminCatalog() {
                       name: single.name,
                       thumbnail: single.image,
                       audio: single.audioFile,
+                      primaryArtistName: getPrimaryArtistName(single.primaryArtistIds),
+                      featureArtistNames: getFeatureArtistNames(
+                        single.featureArtistIds,
+                        single.primaryArtistIds
+                      ),
                       spotifyLink: single.spotifyLink,
                       appleMusicLink: single.appleMusicLink,
                       tidalLink: single.tidalLink,
@@ -535,6 +565,11 @@ export default function AdminCatalog() {
                         name: album.name,
                         thumbnail: album.coverImage,
                         audio: null,
+                        primaryArtistName: getPrimaryArtistName(album.primaryArtistIds),
+                        featureArtistNames: getFeatureArtistNames(
+                          album.featureArtistIds,
+                          album.primaryArtistIds
+                        ),
                         songCount: album.songIds.length,
                         spotifyLink: album.spotifyLink,
                         appleMusicLink: album.appleMusicLink,
@@ -618,6 +653,11 @@ export default function AdminCatalog() {
                         name: ep.name,
                         thumbnail: ep.coverImage,
                         audio: null,
+                        primaryArtistName: getPrimaryArtistName(ep.primaryArtistIds),
+                        featureArtistNames: getFeatureArtistNames(
+                          ep.featureArtistIds,
+                          ep.primaryArtistIds
+                        ),
                         songCount: ep.songIds.length,
                         spotifyLink: ep.spotifyLink,
                         appleMusicLink: ep.appleMusicLink,

@@ -36,6 +36,11 @@ interface Artist {
   updatedAt: string;
 }
 
+interface ArtistSummary {
+  id: string;
+  name: string;
+}
+
 interface Single {
   id: string;
   name: string;
@@ -48,7 +53,8 @@ interface Single {
   amazonMusicLink?: string;
   youtubeLink?: string;
   soundcloudLink?: string;
-  artistId: string;
+  primaryArtistIds: string[];
+  featureArtistIds: string[];
   createdAt: string;
   updatedAt: string;
 }
@@ -57,7 +63,8 @@ interface Album {
   id: string;
   name: string;
   coverImage: string;
-  artistId: string;
+  primaryArtistIds: string[];
+  featureArtistIds: string[];
   releaseDate?: string;
   description?: string;
   spotifyLink?: string;
@@ -76,7 +83,8 @@ interface EP {
   id: string;
   name: string;
   coverImage: string;
-  artistId: string;
+  primaryArtistIds: string[];
+  featureArtistIds: string[];
   description?: string;
   spotifyLink?: string;
   appleMusicLink?: string;
@@ -96,6 +104,7 @@ export default function ArtistDetail() {
   const artistId = params.artistId as string;
   
   const [artist, setArtist] = useState<Artist | null>(null);
+  const [allArtists, setAllArtists] = useState<ArtistSummary[]>([]);
   const [singles, setSingles] = useState<Single[]>([]);
   const [albums, setAlbums] = useState<Album[]>([]);
   const [eps, setEps] = useState<EP[]>([]);
@@ -134,6 +143,12 @@ export default function ArtistDetail() {
         fetch(`/api/artists/${artistId}/eps`),
       ]);
 
+      const artistsResponse = await fetch("/api/artists");
+      if (artistsResponse.ok) {
+        const artistsData: ArtistSummary[] = await artistsResponse.json();
+        setAllArtists(artistsData);
+      }
+
       if (singlesResponse.ok) {
         const singlesData = await singlesResponse.json();
         setSingles(singlesData);
@@ -154,6 +169,31 @@ export default function ArtistDetail() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const getArtistNames = (ids: string[] = []) =>
+    ids
+      .map((id) => allArtists.find((item) => item.id === id)?.name)
+      .filter((name): name is string => Boolean(name));
+
+  const getPrimaryArtistName = (primaryArtistIds: string[] = []) => {
+    const names = getArtistNames(primaryArtistIds);
+    return names.length > 0 ? names.join(", ") : artist?.name || "Unknown Artist";
+  };
+
+  const getFeatureArtistNames = (
+    featureArtistIds: string[] = [],
+    primaryArtistIds: string[] = []
+  ) => {
+    const primarySet = new Set(primaryArtistIds);
+    return Array.from(
+      new Set(
+        featureArtistIds
+          .filter((id) => !primarySet.has(id))
+          .map((id) => allArtists.find((item) => item.id === id)?.name)
+          .filter((name): name is string => Boolean(name))
+      )
+    );
   };
 
 
@@ -285,6 +325,11 @@ export default function ArtistDetail() {
                       name: single.name,
                       thumbnail: single.image,
                       audio: single.audioFile,
+                      primaryArtistName: getPrimaryArtistName(single.primaryArtistIds),
+                      featureArtistNames: getFeatureArtistNames(
+                        single.featureArtistIds,
+                        single.primaryArtistIds
+                      ),
                       spotifyLink: single.spotifyLink,
                       appleMusicLink: single.appleMusicLink,
                       tidalLink: single.tidalLink,
@@ -359,6 +404,11 @@ export default function ArtistDetail() {
                         name: ep.name,
                         thumbnail: ep.coverImage,
                         audio: null,
+                        primaryArtistName: getPrimaryArtistName(ep.primaryArtistIds),
+                        featureArtistNames: getFeatureArtistNames(
+                          ep.featureArtistIds,
+                          ep.primaryArtistIds
+                        ),
                         songCount: ep.songIds.length,
                         spotifyLink: ep.spotifyLink,
                         appleMusicLink: ep.appleMusicLink,
@@ -440,6 +490,11 @@ export default function ArtistDetail() {
                         name: album.name,
                         thumbnail: album.coverImage,
                         audio: null,
+                        primaryArtistName: getPrimaryArtistName(album.primaryArtistIds),
+                        featureArtistNames: getFeatureArtistNames(
+                          album.featureArtistIds,
+                          album.primaryArtistIds
+                        ),
                         songCount: album.songIds.length,
                         spotifyLink: album.spotifyLink,
                         appleMusicLink: album.appleMusicLink,
