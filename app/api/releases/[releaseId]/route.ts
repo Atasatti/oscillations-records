@@ -1,122 +1,74 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { prismaKindToApi, serializeTrack } from "@/lib/release-format";
 
-// Force dynamic rendering - prevent static generation
-export const dynamic = 'force-dynamic';
-export const runtime = 'nodejs';
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
-// GET /api/releases/[releaseId] - Get a single release (single, album or EP) by ID
+// GET /api/releases/[releaseId]
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ releaseId: string }> }
 ) {
   try {
     const { releaseId } = await params;
 
-    // Try to find as single first
-    const single = await prisma.single.findUnique({
+    const release = await prisma.release.findUnique({
       where: { id: releaseId },
+      include: {
+        tracks: { orderBy: { sortOrder: "asc" } },
+      },
     });
 
-    if (single) {
-      const allArtistIds = [...single.primaryArtistIds, ...single.featureArtistIds];
-      const artists = await prisma.artist.findMany({
-        where: {
-          id: { in: allArtistIds },
-        },
-        select: {
-          id: true,
-          name: true,
-          profilePicture: true,
-        }
-      });
-
-      return NextResponse.json({
-        id: single.id,
-        name: single.name,
-        coverImage: single.image,
-        type: "single",
-        primaryArtistIds: single.primaryArtistIds,
-        featureArtistIds: single.featureArtistIds,
-        description: null,
-        releaseDate: single.releaseDate,
-        artists,
-        songs: [single],
-      });
+    if (!release) {
+      return NextResponse.json({ error: "Release not found" }, { status: 404 });
     }
 
-    // Try to find as album
-    const album = await prisma.album.findUnique({
-      where: { id: releaseId },
+    const allArtistIds = [
+      ...release.primaryArtistIds,
+      ...release.featureArtistIds,
+    ];
+    release.tracks.forEach((t) => {
+      t.primaryArtistIds.forEach((id) => allArtistIds.push(id));
+      t.featureArtistIds.forEach((id) => allArtistIds.push(id));
     });
 
-    if (album) {
-      // Fetch primary and feature artists
-      const allArtistIds = [...album.primaryArtistIds, ...album.featureArtistIds];
-      const artists = await prisma.artist.findMany({
-        where: {
-          id: { in: allArtistIds },
-        },
-        select: {
-          id: true,
-          name: true,
-          profilePicture: true,
-        }
-      });
-
-      // Populate song details
-      const songs = await prisma.single.findMany({
-        where: {
-          id: { in: album.songIds },
-        },
-      });
-
-      return NextResponse.json({
-        ...album,
-        type: 'album',
-        artists,
-        songs,
-      });
-    }
-
-    // Try to find as EP
-    const ep = await prisma.ep.findUnique({
-      where: { id: releaseId },
+    const artists = await prisma.artist.findMany({
+      where: { id: { in: [...new Set(allArtistIds.map(String))] } },
+      select: { id: true, name: true, profilePicture: true },
     });
 
-    if (ep) {
-      // Fetch primary and feature artists
-      const allArtistIds = [...ep.primaryArtistIds, ...ep.featureArtistIds];
-      const artists = await prisma.artist.findMany({
-        where: {
-          id: { in: allArtistIds },
-        },
-        select: {
-          id: true,
-          name: true,
-          profilePicture: true,
-        }
-      });
+    const tracks = release.tracks.map(serializeTrack);
 
-      // Populate song details
-      const songs = await prisma.single.findMany({
-        where: {
-          id: { in: ep.songIds },
-        },
-      });
-
-      return NextResponse.json({
-        ...ep,
-        type: 'ep',
-        artists,
-        songs,
-      });
-    }
-
-    return NextResponse.json(
-      { error: "Release not found" },
-      { status: 404 }
-    );
+    return NextResponse.json({
+      id: release.id,
+      name: release.name,
+      coverImage: release.coverImage,
+      kind: release.kind,
+      type: prismaKindToApi(release.kind),
+      primaryArtistIds: release.primaryArtistIds,
+      featureArtistIds: release.featureArtistIds,
+      description: release.description,
+      releaseDate: release.releaseDate,
+      composer: release.composer,
+      lyricist: release.lyricist,
+      leadVocal: release.leadVocal,
+      isrcCode: release.isrcCode,
+      isrcExplicit: release.isrcExplicit,
+      spotifyLink: release.spotifyLink,
+      appleMusicLink: release.appleMusicLink,
+      tidalLink: release.tidalLink,
+      amazonMusicLink: release.amazonMusicLink,
+      youtubeLink: release.youtubeLink,
+      soundcloudLink: release.soundcloudLink,
+      sortOrder: release.sortOrder,
+      showLatestOnHome: release.showLatestOnHome,
+      artists,
+      tracks,
+      songs: tracks,
+      createdAt: release.createdAt,
+      updatedAt: release.updatedAt,
+    });
   } catch (error) {
     console.error("Error fetching release:", error);
     return NextResponse.json(
@@ -126,4 +78,365 @@ export async function GET(
   }
 }
 
+function parseTrackInput(
+  t: Record<string, unknown>,
+  index: number,
+  isNew: boolean
+): {
+  id?: string;
+  name: string;
+  image: string | null;
+  audioFile: string;
+  duration: number;
+  releaseDate: Date | null;
+  composer: string | null;
+  lyricist: string | null;
+  leadVocal: string | null;
+  isrcCode: string | null;
+  isrcExplicit: boolean;
+  spotifyLink: string | null;
+  appleMusicLink: string | null;
+  tidalLink: string | null;
+  amazonMusicLink: string | null;
+  youtubeLink: string | null;
+  soundcloudLink: string | null;
+  primaryArtistIds: string[];
+  featureArtistIds: string[];
+  sortOrder: number;
+} {
+  const id = t.id ? String(t.id) : undefined;
+  const name = String(t.name || "").trim();
+  const audioFile = String(t.audioFile || "").trim();
+  const duration = parseInt(String(t.duration ?? 0), 10);
+  if (!name) {
+    throw new Error(`Track ${index + 1}: name is required`);
+  }
+  if (isNew && (!audioFile || !Number.isFinite(duration) || duration < 0)) {
+    throw new Error(
+      `Track ${index + 1}: audioFile and duration are required for new tracks`
+    );
+  }
+  const primaryArtistIds = Array.isArray(t.primaryArtistIds)
+    ? (t.primaryArtistIds as string[])
+    : [];
+  if (primaryArtistIds.length === 0) {
+    throw new Error(`Track ${index + 1}: at least one primary artist is required`);
+  }
+  return {
+    id,
+    name,
+    image: t.image !== undefined && t.image !== null ? String(t.image) : null,
+    audioFile,
+    duration: Number.isFinite(duration) ? duration : 0,
+    releaseDate: t.releaseDate ? new Date(String(t.releaseDate)) : null,
+    composer: t.composer ? String(t.composer) : null,
+    lyricist: t.lyricist ? String(t.lyricist) : null,
+    leadVocal: t.leadVocal ? String(t.leadVocal) : null,
+    isrcCode: t.isrcCode ? String(t.isrcCode) : null,
+    isrcExplicit: Boolean(t.isrcExplicit),
+    spotifyLink: t.spotifyLink ? String(t.spotifyLink) : null,
+    appleMusicLink: t.appleMusicLink ? String(t.appleMusicLink) : null,
+    tidalLink: t.tidalLink ? String(t.tidalLink) : null,
+    amazonMusicLink: t.amazonMusicLink ? String(t.amazonMusicLink) : null,
+    youtubeLink: t.youtubeLink ? String(t.youtubeLink) : null,
+    soundcloudLink: t.soundcloudLink ? String(t.soundcloudLink) : null,
+    primaryArtistIds,
+    featureArtistIds: Array.isArray(t.featureArtistIds)
+      ? (t.featureArtistIds as string[])
+      : [],
+    sortOrder: typeof t.sortOrder === "number" ? t.sortOrder : index,
+  };
+}
 
+// PATCH /api/releases/[releaseId]
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ releaseId: string }> }
+) {
+  try {
+    const { releaseId } = await params;
+    const existing = await prisma.release.findUnique({
+      where: { id: releaseId },
+      include: { tracks: true },
+    });
+    if (!existing) {
+      return NextResponse.json({ error: "Release not found" }, { status: 404 });
+    }
+
+    const body = await request.json();
+    const {
+      name,
+      coverImage,
+      releaseDate,
+      description,
+      composer,
+      lyricist,
+      leadVocal,
+      isrcCode,
+      isrcExplicit,
+      spotifyLink,
+      appleMusicLink,
+      tidalLink,
+      amazonMusicLink,
+      youtubeLink,
+      soundcloudLink,
+      sortOrder,
+      showLatestOnHome,
+      primaryArtistIds,
+      featureArtistIds,
+      tracks: tracksRaw,
+    } = body;
+
+    if (primaryArtistIds !== undefined) {
+      if (!Array.isArray(primaryArtistIds) || primaryArtistIds.length === 0) {
+        return NextResponse.json(
+          { error: "At least one primary artist is required" },
+          { status: 400 }
+        );
+      }
+      const primaryArtists = await prisma.artist.findMany({
+        where: { id: { in: primaryArtistIds } },
+      });
+      if (primaryArtists.length !== primaryArtistIds.length) {
+        return NextResponse.json(
+          { error: "One or more primary artists not found" },
+          { status: 404 }
+        );
+      }
+    }
+
+    const featIds =
+      featureArtistIds !== undefined ? featureArtistIds : undefined;
+    if (featIds && featIds.length > 0) {
+      const featureArtists = await prisma.artist.findMany({
+        where: { id: { in: featIds } },
+      });
+      if (featureArtists.length !== featIds.length) {
+        return NextResponse.json(
+          { error: "One or more feature artists not found" },
+          { status: 404 }
+        );
+      }
+    }
+
+    let parsedTracks: ReturnType<typeof parseTrackInput>[] | undefined;
+    let clearAllTracks = false;
+    if (tracksRaw !== undefined) {
+      if (!Array.isArray(tracksRaw)) {
+        return NextResponse.json(
+          { error: "tracks must be an array when provided" },
+          { status: 400 }
+        );
+      }
+      if (tracksRaw.length === 0) {
+        clearAllTracks = true;
+      } else {
+        try {
+          parsedTracks = tracksRaw.map((t: Record<string, unknown>, i: number) =>
+            parseTrackInput(t, i, !t.id)
+          );
+        } catch (e) {
+          return NextResponse.json(
+            { error: e instanceof Error ? e.message : "Invalid tracks" },
+            { status: 400 }
+          );
+        }
+
+        const allTrackArtistIds = new Set<string>();
+        parsedTracks.forEach((t) => {
+          t.primaryArtistIds.forEach((id) => allTrackArtistIds.add(id));
+          t.featureArtistIds.forEach((id) => allTrackArtistIds.add(id));
+        });
+        const trackArtists = await prisma.artist.findMany({
+          where: { id: { in: Array.from(allTrackArtistIds) } },
+        });
+        if (trackArtists.length !== allTrackArtistIds.size) {
+          return NextResponse.json(
+            { error: "One or more track artists not found" },
+            { status: 404 }
+          );
+        }
+      }
+    }
+
+    await prisma.$transaction(async (tx) => {
+      await tx.release.update({
+        where: { id: releaseId },
+        data: {
+          ...(name !== undefined && { name: String(name) }),
+          ...(coverImage !== undefined && { coverImage: String(coverImage) }),
+          ...(releaseDate !== undefined && {
+            releaseDate: releaseDate ? new Date(releaseDate) : null,
+          }),
+          ...(description !== undefined && {
+            description: description ? String(description) : null,
+          }),
+          ...(composer !== undefined && {
+            composer: composer ? String(composer) : null,
+          }),
+          ...(lyricist !== undefined && {
+            lyricist: lyricist ? String(lyricist) : null,
+          }),
+          ...(leadVocal !== undefined && {
+            leadVocal: leadVocal ? String(leadVocal) : null,
+          }),
+          ...(isrcCode !== undefined && {
+            isrcCode: isrcCode ? String(isrcCode) : null,
+          }),
+          ...(isrcExplicit !== undefined && {
+            isrcExplicit: Boolean(isrcExplicit),
+          }),
+          ...(spotifyLink !== undefined && { spotifyLink: spotifyLink || null }),
+          ...(appleMusicLink !== undefined && {
+            appleMusicLink: appleMusicLink || null,
+          }),
+          ...(tidalLink !== undefined && { tidalLink: tidalLink || null }),
+          ...(amazonMusicLink !== undefined && {
+            amazonMusicLink: amazonMusicLink || null,
+          }),
+          ...(youtubeLink !== undefined && { youtubeLink: youtubeLink || null }),
+          ...(soundcloudLink !== undefined && {
+            soundcloudLink: soundcloudLink || null,
+          }),
+          ...(sortOrder !== undefined && {
+            sortOrder:
+              typeof sortOrder === "number" && Number.isFinite(sortOrder)
+                ? Math.trunc(sortOrder)
+                : 0,
+          }),
+          ...(showLatestOnHome !== undefined && {
+            showLatestOnHome: Boolean(showLatestOnHome),
+          }),
+          ...(primaryArtistIds !== undefined && { primaryArtistIds }),
+          ...(featIds !== undefined && { featureArtistIds: featIds }),
+        },
+      });
+
+      if (clearAllTracks) {
+        await tx.track.deleteMany({ where: { releaseId } });
+      } else if (parsedTracks) {
+        const existingIds = new Set(existing.tracks.map((t) => String(t.id)));
+        const keepIds = new Set(
+          parsedTracks.filter((t) => t.id).map((t) => String(t.id))
+        );
+        const toRemove = [...existingIds].filter((id) => !keepIds.has(id));
+        if (toRemove.length) {
+          await tx.track.deleteMany({
+            where: { id: { in: toRemove }, releaseId },
+          });
+        }
+
+        for (const t of parsedTracks) {
+          if (t.id && existingIds.has(String(t.id))) {
+            const prev = existing.tracks.find((x) => x.id === t.id)!;
+            const nextAudio = t.audioFile || prev.audioFile;
+            const nextDuration = t.audioFile ? t.duration : prev.duration;
+            await tx.track.update({
+              where: { id: t.id },
+              data: {
+                name: t.name,
+                image: t.image,
+                audioFile: nextAudio,
+                duration: nextDuration,
+                releaseDate: t.releaseDate,
+                composer: t.composer,
+                lyricist: t.lyricist,
+                leadVocal: t.leadVocal,
+                isrcCode: t.isrcCode,
+                isrcExplicit: t.isrcExplicit,
+                spotifyLink: t.spotifyLink,
+                appleMusicLink: t.appleMusicLink,
+                tidalLink: t.tidalLink,
+                amazonMusicLink: t.amazonMusicLink,
+                youtubeLink: t.youtubeLink,
+                soundcloudLink: t.soundcloudLink,
+                primaryArtistIds: t.primaryArtistIds,
+                featureArtistIds: t.featureArtistIds,
+                sortOrder: t.sortOrder,
+              },
+            });
+          } else {
+            await tx.track.create({
+              data: {
+                releaseId,
+                name: t.name,
+                image: t.image,
+                audioFile: t.audioFile,
+                duration: t.duration,
+                releaseDate: t.releaseDate,
+                composer: t.composer,
+                lyricist: t.lyricist,
+                leadVocal: t.leadVocal,
+                isrcCode: t.isrcCode,
+                isrcExplicit: t.isrcExplicit,
+                spotifyLink: t.spotifyLink,
+                appleMusicLink: t.appleMusicLink,
+                tidalLink: t.tidalLink,
+                amazonMusicLink: t.amazonMusicLink,
+                youtubeLink: t.youtubeLink,
+                soundcloudLink: t.soundcloudLink,
+                primaryArtistIds: t.primaryArtistIds,
+                featureArtistIds: t.featureArtistIds,
+                sortOrder: t.sortOrder,
+              },
+            });
+          }
+        }
+      }
+    });
+
+    const release = await prisma.release.findUnique({
+      where: { id: releaseId },
+      include: { tracks: { orderBy: { sortOrder: "asc" } } },
+    });
+
+    const allArtistIds = [
+      ...(release?.primaryArtistIds || []),
+      ...(release?.featureArtistIds || []),
+    ];
+    release?.tracks.forEach((t) => {
+      t.primaryArtistIds.forEach((id) => allArtistIds.push(id));
+      t.featureArtistIds.forEach((id) => allArtistIds.push(id));
+    });
+
+    const artists = await prisma.artist.findMany({
+      where: { id: { in: [...new Set(allArtistIds.map(String))] } },
+      select: { id: true, name: true, profilePicture: true },
+    });
+
+    const tracks = release?.tracks.map(serializeTrack) || [];
+
+    return NextResponse.json({
+      ...release,
+      type: release ? prismaKindToApi(release.kind) : undefined,
+      songs: tracks,
+      tracks,
+      artists,
+    });
+  } catch (error) {
+    console.error("Error updating release:", error);
+    return NextResponse.json({ error: "Failed to update release" }, { status: 500 });
+  }
+}
+
+// DELETE /api/releases/[releaseId]
+export async function DELETE(
+  _request: NextRequest,
+  { params }: { params: Promise<{ releaseId: string }> }
+) {
+  try {
+    const { releaseId } = await params;
+    const existing = await prisma.release.findUnique({ where: { id: releaseId } });
+    if (!existing) {
+      return NextResponse.json({ error: "Release not found" }, { status: 404 });
+    }
+    await prisma.release.delete({ where: { id: releaseId } });
+    return NextResponse.json({ message: "Release deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting release:", error);
+    return NextResponse.json(
+      { error: "Failed to delete release" },
+      { status: 500 }
+    );
+  }
+}

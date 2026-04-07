@@ -97,12 +97,55 @@ model Artist {
   updatedAt     DateTime @updatedAt
 }
 
-model Single {
+enum ReleaseKind {
+  SINGLE
+  EP
+  ALBUM
+}
+
+/// A release (Single, EP, or Album) — same metadata shape; `kind` distinguishes presentation.
+model Release {
+  id               String       @id @default(auto()) @map("_id") @db.ObjectId
+  kind             ReleaseKind
+  name             String
+  coverImage       String
+  primaryArtistIds String[]     @db.ObjectId
+  featureArtistIds String[]     @db.ObjectId
+  releaseDate      DateTime?
+  description      String?
+  composer         String?
+  lyricist         String?
+  leadVocal        String?
+  isrcCode         String?
+  isrcExplicit     Boolean      @default(false)
+  spotifyLink      String?
+  appleMusicLink   String?
+  tidalLink        String?
+  amazonMusicLink  String?
+  youtubeLink      String?
+  soundcloudLink   String?
+  /// Catalog / public listing order (lower = earlier).
+  sortOrder        Int          @default(0)
+  /// When true, home New Music carousel shows a Latest pill on this release's featured track.
+  showLatestOnHome Boolean      @default(false)
+  tracks           Track[]
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  @@index([kind])
+  @@index([sortOrder])
+}
+
+/// A playable track (song file). Former `Single` fields live here.
+model Track {
   id               String   @id @default(auto()) @map("_id") @db.ObjectId
+  releaseId        String   @db.ObjectId
+  release          Release  @relation(fields: [releaseId], references: [id], onDelete: Cascade)
+  sortOrder        Int      @default(0)
   name             String
   image            String?
   audioFile        String
-  duration         Int      // Duration in seconds
+  duration         Int
   releaseDate      DateTime?
   composer         String?
   lyricist         String?
@@ -119,63 +162,27 @@ model Single {
   featureArtistIds String[] @db.ObjectId
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
-}
 
-model Album {
-  id               String   @id @default(auto()) @map("_id") @db.ObjectId
-  name             String
-  coverImage       String
-  primaryArtistIds String[] @db.ObjectId
-  featureArtistIds String[] @db.ObjectId
-  releaseDate      DateTime?
-  description      String?
-  isrcCode         String?
-  isrcExplicit     Boolean  @default(false)
-  spotifyLink      String?
-  appleMusicLink   String?
-  tidalLink        String?
-  amazonMusicLink  String?
-  youtubeLink      String?
-  soundcloudLink   String?
-  songIds          String[] @db.ObjectId // Array of Single IDs
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-}
-
-model Ep {
-  id               String   @id @default(auto()) @map("_id") @db.ObjectId
-  name             String
-  coverImage       String
-  primaryArtistIds String[] @db.ObjectId
-  featureArtistIds String[] @db.ObjectId
-  description      String?
-  releaseDate      DateTime?
-  composer         String?
-  lyricist         String?
-  leadVocal        String?
-  isrcCode         String?
-  isrcExplicit     Boolean  @default(false)
-  spotifyLink      String?
-  appleMusicLink   String?
-  tidalLink        String?
-  amazonMusicLink  String?
-  youtubeLink      String?
-  soundcloudLink   String?
-  songIds          String[] @db.ObjectId // Array of Single IDs
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  @@index([releaseId])
 }
 
 model UpcomingRelease {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  name        String
-  type        String   // "single" | "ep" | "album"
-  image       String
-  releaseDate DateTime
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id               String    @id @default(auto()) @map("_id") @db.ObjectId
+  name             String
+  type             String // "single" | "ep" | "album"
+  image            String
+  releaseDate      DateTime
+  /// Display order on the site (lower = earlier). Admin drag-and-drop.
+  sortOrder        Int       @default(0)
+  /// Pre-smart link target (e.g. Ditto pre-save URL)
+  preSmartLinkUrl  String?
+  primaryArtist    String?
+  featureArtist    String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 
   @@index([releaseDate])
+  @@index([sortOrder])
 }
 
 // Analytics Models
@@ -198,15 +205,31 @@ model SiteSettings {
   stackedHeroImage1 String
   stackedHeroImage2 String
   stackedHeroImage3 String
-  updatedAt         DateTime @updatedAt
+  footerXLink          String?
+  footerTiktokLink     String?
+  footerYoutubeLink    String?
+  footerInstagramLink  String?
+  footerFacebookLink   String?
+  footerSpotifyLink    String?
+  footerSoundcloudLink String?
+  updatedAt            DateTime @updatedAt
+}
+
+/// Marketing / footer newsletter signups (public email capture).
+model NewsletterSubscriber {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  email     String   @unique
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
 }
 
 model PlayEvent {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
   userId      String   @db.ObjectId
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  contentType String   // "single", "album", "ep"
-  contentId   String   @db.ObjectId // ID of the single, album, or EP
+  contentType String   // "track" (audio play), "release" (detail view), legacy: "single"|"album"|"ep"
+  contentId   String   @db.ObjectId
   contentName String   // Name of the content for quick reference
   artistId    String?  @db.ObjectId
   artistName  String?  // Artist name for quick reference

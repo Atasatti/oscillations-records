@@ -1,53 +1,40 @@
 "use client";
 import React, { useRef, useState, useEffect, useCallback } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import IconButton from "../local-ui/IconButton";
-import MusicCard from "../local-ui/MusicCard";
+import ReleaseCardSm from "../local-ui/ReleaseCardSm";
 
-interface Song {
-  id: string;
-  title: string;
-  artist: string;
-  primaryArtistName?: string;
-  featureArtistNames?: string[];
-  duration: string;
-  backgroundImage: string;
-  avatar?: string;
-  audio?: string | null;
-  spotifyLink?: string | null;
-  appleMusicLink?: string | null;
-  tidalLink?: string | null;
-  amazonMusicLink?: string | null;
-  youtubeLink?: string | null;
-  soundcloudLink?: string | null;
-}
-
-interface Single {
+interface HomeRelease {
   id: string;
   name: string;
-  image: string | null;
-  audioFile: string;
-  duration: number;
+  thumbnail?: string | null;
+  audio?: string | null;
+  type: "single" | "ep" | "album";
+  primaryArtistName?: string;
+  featureArtistNames?: string[];
+  artist: string;
+  songCount: number;
   spotifyLink?: string | null;
   appleMusicLink?: string | null;
   tidalLink?: string | null;
   amazonMusicLink?: string | null;
   youtubeLink?: string | null;
   soundcloudLink?: string | null;
-  artist: {
-    id: string;
-    name: string;
-    profilePicture: string | null;
-  } | null;
-  primaryArtistName?: string;
-  featureArtistNames?: string[];
+  isrcExplicit?: boolean;
+  showLatestOnHome?: boolean;
 }
 
 const SCROLL_GAP_PX = 16; // matches gap-4
 
 const NewMusicSection = () => {
+  const pathname = usePathname();
+  const router = useRouter();
+  const isReleasesListingPage =
+    pathname === "/releases" || pathname === "/releases/";
+
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const [songs, setSongs] = useState<Song[]>([]);
+  const [releases, setReleases] = useState<HomeRelease[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
@@ -75,7 +62,7 @@ const NewMusicSection = () => {
 
   useEffect(() => {
     const el = scrollContainerRef.current;
-    if (!el || songs.length === 0) return;
+    if (!el || releases.length === 0) return;
 
     updateScrollArrows();
 
@@ -90,49 +77,28 @@ const NewMusicSection = () => {
       el.removeEventListener("scroll", updateScrollArrows);
       ro.disconnect();
     };
-  }, [songs, updateScrollArrows]);
+  }, [releases, updateScrollArrows]);
 
-  useEffect(() => {
-    fetchLatestSongs();
-  }, []);
-
-  const fetchLatestSongs = async () => {
+  const fetchReleases = useCallback(async () => {
     try {
-      const response = await fetch("/api/songs/latest?limit=8");
+      const response = await fetch("/api/releases?limit=8");
       if (response.ok) {
-        const data: Single[] = await response.json();
-        const formattedSongs: Song[] = data
-          .filter((single) => single.artist !== null) // Filter out songs without artists
-          .map((single) => ({
-            id: single.id,
-            title: single.name,
-            artist: single.artist!.name,
-            primaryArtistName: single.primaryArtistName || single.artist!.name,
-            featureArtistNames: single.featureArtistNames || [],
-            duration: formatDuration(single.duration),
-            backgroundImage: single.image || "/new-music-img1.svg",
-            avatar: single.artist!.profilePicture || undefined,
-            audio: single.audioFile || null,
-            spotifyLink: single.spotifyLink || null,
-            appleMusicLink: single.appleMusicLink || null,
-            tidalLink: single.tidalLink || null,
-            amazonMusicLink: single.amazonMusicLink || null,
-            youtubeLink: single.youtubeLink || null,
-            soundcloudLink: single.soundcloudLink || null,
-          }));
-        setSongs(formattedSongs);
+        const data: HomeRelease[] = await response.json();
+        setReleases(Array.isArray(data) ? data : []);
       }
     } catch (error) {
-      console.error("Error fetching latest songs:", error);
+      console.error("Error fetching releases:", error);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  const formatDuration = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  useEffect(() => {
+    fetchReleases();
+  }, [fetchReleases]);
+
+  const handleReleaseClick = (release: HomeRelease) => {
+    router.push(`/releases/${release.id}`);
   };
 
   return (
@@ -142,23 +108,25 @@ const NewMusicSection = () => {
         From underground hits to future anthems, our releases are about pushing
         boundaries and setting trends.
       </p>
-      <div className="flex justify-center md:justify-end mt-4 sm:mt-6">
-        <IconButton text="Listen Now" />
-      </div>
+      {!isReleasesListingPage ? (
+        <div className="flex justify-center md:justify-end mt-4 sm:mt-6">
+          <IconButton text="Listen Now" href="/releases" />
+        </div>
+      ) : null}
       <div className="relative">
         {isLoading ? (
           <div className="flex justify-center items-center mt-10 py-20">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
           </div>
-        ) : songs.length === 0 ? (
-          <p className="text-center text-muted-foreground mt-10">No songs available yet.</p>
+        ) : releases.length === 0 ? (
+          <p className="text-center text-muted-foreground mt-10">No releases available yet.</p>
         ) : (
           <div className="flex items-center gap-2 sm:gap-3 mt-8 sm:mt-10 min-w-0">
             {canScrollLeft ? (
               <button
                 type="button"
                 onClick={() => scrollByCard("prev")}
-                aria-label="Previous release"
+                aria-label="Previous releases"
                 className="flex-shrink-0 flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-full border border-white/15 bg-black/50 text-white backdrop-blur-sm transition-colors hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/40"
               >
                 <ChevronLeft className="h-5 w-5 sm:h-6 sm:w-6" aria-hidden />
@@ -169,14 +137,50 @@ const NewMusicSection = () => {
               className="flex min-w-0 flex-1 gap-4 overflow-x-auto scrollbar-hide scroll-smooth"
               style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
             >
-              {songs.map((song, index) => (
-                <div key={song.id} className="relative">
-                  {index === 0 ? (
-                    <span className="absolute left-3 top-3 z-20 rounded-full bg-red-600 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-white">
-                      New
+              {releases.map((release) => (
+                <div
+                  key={release.id}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => handleReleaseClick(release)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      handleReleaseClick(release);
+                    }
+                  }}
+                  className="cursor-pointer relative group w-72 h-84 shrink-0"
+                >
+                  {release.showLatestOnHome ? (
+                    <span className="absolute right-3 top-3 z-30 rounded-full bg-red-600 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-white pointer-events-none">
+                      Latest
                     </span>
                   ) : null}
-                  <MusicCard song={song} />
+                  <ReleaseCardSm
+                    release={{
+                      id: release.id,
+                      name: release.name,
+                      thumbnail: release.thumbnail,
+                      audio: release.audio,
+                      primaryArtistName: release.primaryArtistName,
+                      featureArtistNames: release.featureArtistNames,
+                      artist: release.artist,
+                      songCount: release.songCount,
+                      kindLabel:
+                        release.type === "album"
+                          ? "Album"
+                          : release.type === "ep"
+                            ? "EP"
+                            : "Single",
+                      spotifyLink: release.spotifyLink,
+                      appleMusicLink: release.appleMusicLink,
+                      tidalLink: release.tidalLink,
+                      amazonMusicLink: release.amazonMusicLink,
+                      youtubeLink: release.youtubeLink,
+                      soundcloudLink: release.soundcloudLink,
+                      isrcExplicit: release.isrcExplicit,
+                    }}
+                  />
                 </div>
               ))}
             </div>
@@ -184,7 +188,7 @@ const NewMusicSection = () => {
               <button
                 type="button"
                 onClick={() => scrollByCard("next")}
-                aria-label="Next release"
+                aria-label="Next releases"
                 className="flex-shrink-0 flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-full border border-white/15 bg-black/50 text-white backdrop-blur-sm transition-colors hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/40"
               >
                 <ChevronRight className="h-5 w-5 sm:h-6 sm:w-6" aria-hidden />

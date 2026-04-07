@@ -125,86 +125,65 @@ export async function DELETE(
       );
     }
 
-    // Remove artist from all singles, albums, and EPs that reference it
-    // Get all singles, albums, and EPs that reference this artist
-    const [singles, albums, eps] = await Promise.all([
-      prisma.single.findMany({
-        where: {
-          OR: [
-            { primaryArtistIds: { has: artistId } },
-            { featureArtistIds: { has: artistId } }
-          ]
-        }
-      }),
-      prisma.album.findMany({
-        where: {
-          OR: [
-            { primaryArtistIds: { has: artistId } },
-            { featureArtistIds: { has: artistId } }
-          ]
-        }
-      }),
-      prisma.ep.findMany({
-        where: {
-          OR: [
-            { primaryArtistIds: { has: artistId } },
-            { featureArtistIds: { has: artistId } }
-          ]
-        }
-      })
-    ]);
+    const tracks = await prisma.track.findMany({
+      where: {
+        OR: [
+          { primaryArtistIds: { has: artistId } },
+          { featureArtistIds: { has: artistId } },
+        ],
+      },
+    });
 
-    // Update singles to remove artist from arrays
-    for (const single of singles) {
-      const updatedPrimary = single.primaryArtistIds.filter(id => id !== artistId);
-      const updatedFeature = single.featureArtistIds.filter(id => id !== artistId);
-      
-      // If no primary artists left, delete the single
+    for (const track of tracks) {
+      const updatedPrimary = track.primaryArtistIds.filter((id) => id !== artistId);
+      const updatedFeature = track.featureArtistIds.filter((id) => id !== artistId);
       if (updatedPrimary.length === 0) {
-        await prisma.single.delete({ where: { id: single.id } });
+        const count = await prisma.track.count({
+          where: { releaseId: track.releaseId },
+        });
+        if (count <= 1) {
+          await prisma.release.delete({ where: { id: track.releaseId } });
+        } else {
+          await prisma.track.delete({ where: { id: track.id } });
+        }
       } else {
-        await prisma.single.update({
-          where: { id: single.id },
+        await prisma.track.update({
+          where: { id: track.id },
           data: {
             primaryArtistIds: updatedPrimary,
-            featureArtistIds: updatedFeature
-          }
+            featureArtistIds: updatedFeature,
+          },
         });
       }
     }
 
-    // Update albums to remove artist from arrays
-    for (const album of albums) {
-      const updatedPrimary = album.primaryArtistIds.filter(id => id !== artistId);
-      const updatedFeature = album.featureArtistIds.filter(id => id !== artistId);
-      
-      if (updatedPrimary.length === 0) {
-        await prisma.album.delete({ where: { id: album.id } });
-      } else {
-        await prisma.album.update({
-          where: { id: album.id },
-          data: {
-            primaryArtistIds: updatedPrimary,
-            featureArtistIds: updatedFeature
-          }
-        });
-      }
-    }
+    const releases = await prisma.release.findMany({
+      where: {
+        OR: [
+          { primaryArtistIds: { has: artistId } },
+          { featureArtistIds: { has: artistId } },
+        ],
+      },
+    });
 
-    // Update EPs to remove artist from arrays
-    for (const ep of eps) {
-      const updatedPrimary = ep.primaryArtistIds.filter(id => id !== artistId);
-      const updatedFeature = ep.featureArtistIds.filter(id => id !== artistId);
-      
+    for (const release of releases) {
+      const stillThere = await prisma.release.findUnique({
+        where: { id: release.id },
+      });
+      if (!stillThere) continue;
+
+      const updatedPrimary = release.primaryArtistIds.filter((id) => id !== artistId);
+      const updatedFeature = release.featureArtistIds.filter((id) => id !== artistId);
+
       if (updatedPrimary.length === 0) {
-        await prisma.ep.delete({ where: { id: ep.id } });
+        await prisma.release.delete({ where: { id: release.id } });
       } else {
-        await prisma.ep.update({
-          where: { id: ep.id },
+        await prisma.release.update({
+          where: { id: release.id },
           data: {
             primaryArtistIds: updatedPrimary,
-            featureArtistIds: updatedFeature
-          }
+            featureArtistIds: updatedFeature,
+          },
         });
       }
     }

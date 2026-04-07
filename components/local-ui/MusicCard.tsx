@@ -1,11 +1,7 @@
 "use client";
-import React from "react";
-import { Play } from "lucide-react";
-import { useMusic } from "@/contexts/music-context";
-import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
-import StreamingLinks from "./StreamingLinks";
+import TrackCard, { type TrackCardTrack } from "./TrackCard";
 
+/** @deprecated Use `TrackCard` — same component; prop name `song` kept for compatibility */
 interface Song {
   id: string | number;
   title: string;
@@ -22,105 +18,29 @@ interface Song {
   amazonMusicLink?: string | null;
   youtubeLink?: string | null;
   soundcloudLink?: string | null;
+  isrcExplicit?: boolean;
 }
 
 const MusicCard: React.FC<{ song: Song }> = ({ song }) => {
-  const { playSong } = useMusic();
-  const { data: session, status } = useSession();
-  const router = useRouter();
-
-  const handlePlay = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    
-    // Check if user is authenticated
-    if (status === "unauthenticated" || !session) {
-      // Redirect to login with callback URL
-      const currentPath = window.location.pathname;
-      router.push(`/login?callbackUrl=${encodeURIComponent(currentPath)}`);
-      return;
-    }
-
-    if (song.audio) {
-      playSong({
-        id: String(song.id),
-        title: song.title,
-        artist:
-          song.artist ||
-          (song.primaryArtistName
-            ? song.featureArtistNames?.length
-              ? `${song.primaryArtistName} ft ${song.featureArtistNames.join(", ")}`
-              : song.primaryArtistName
-            : "Unknown Artist"),
-        image: song.backgroundImage,
-        audio: song.audio,
-      });
-    }
+  const track: TrackCardTrack = {
+    id: song.id,
+    title: song.title,
+    artist: song.artist,
+    primaryArtistName: song.primaryArtistName,
+    featureArtistNames: song.featureArtistNames,
+    duration: song.duration,
+    backgroundImage: song.backgroundImage,
+    avatar: song.avatar,
+    audio: song.audio,
+    spotifyLink: song.spotifyLink,
+    appleMusicLink: song.appleMusicLink,
+    tidalLink: song.tidalLink,
+    amazonMusicLink: song.amazonMusicLink,
+    youtubeLink: song.youtubeLink,
+    soundcloudLink: song.soundcloudLink,
+    isrcExplicit: song.isrcExplicit,
   };
-
-  return (
-    <div className="relative flex-shrink-0 w-84 h-100 rounded-2xl overflow-hidden group cursor-pointer">
-      <div
-        className="absolute inset-0 bg-cover bg-center transition-transform duration-300 group-hover:scale-105"
-        style={{ backgroundImage: `url(${song.backgroundImage})` }}
-      />
-
-      {/* Transparent overlay on hover - keep bottom free for link clicks */}
-      <div className="absolute left-0 right-0 top-0 bottom-16 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-
-      {/* Play button - appears on hover */}
-      {song.audio && (
-        <div className="absolute left-0 right-0 top-0 bottom-16 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
-          <button
-            onClick={handlePlay}
-            className="h-16 w-16 rounded-full bg-[#dc2626] hover:bg-[#ef4444] active:bg-[#991b1b] flex items-center justify-center transition-all duration-200 shadow-lg hover:shadow-[0_0_20px_rgba(220,38,38,0.4)] active:scale-95"
-            aria-label="Play song"
-          >
-            <Play className="w-6 h-6 text-white fill-white ml-1" />
-          </button>
-        </div>
-      )}
-
-      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-      <div className="absolute inset-0 p-4 flex flex-col justify-end z-0">
-        <div className="text-white">
-          <img
-            src={song.avatar || "/placeholder.svg"}
-            alt={song.artist}
-            className="w-8 h-8 rounded-md"
-          />
-          <h3 className="text-lg font-medium mb-1 line-clamp-2 mt-1">
-            {song.title}
-          </h3>
-          {song.primaryArtistName ? (
-            <>
-              <p className="text-xs text-white/90 line-clamp-2">
-                {song.primaryArtistName}
-              </p>
-              {song.featureArtistNames && song.featureArtistNames.length > 0 ? (
-                <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">
-                  ft {song.featureArtistNames.join(", ")}
-                </p>
-              ) : null}
-            </>
-          ) : (
-            <p className="text-xs text-muted-foreground line-clamp-2">{song.artist}</p>
-          )}
-          <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-            <span>{song.duration}</span>
-          </div>
-          <StreamingLinks
-            spotifyLink={song.spotifyLink}
-            appleMusicLink={song.appleMusicLink}
-            tidalLink={song.tidalLink}
-            amazonMusicLink={song.amazonMusicLink}
-            youtubeLink={song.youtubeLink}
-            soundcloudLink={song.soundcloudLink}
-            className="mt-2"
-          />
-        </div>
-      </div>
-    </div>
-  );
+  return <TrackCard track={track} />;
 };
 
 export default MusicCard;

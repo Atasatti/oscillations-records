@@ -1,79 +1,87 @@
 import { NextRequest, NextResponse } from "next/server";
+import type { Track } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { featureIdsExcludingPrimary } from "@/lib/release-format";
 
-// Force dynamic rendering - prevent static generation
-export const dynamic = 'force-dynamic';
-export const runtime = 'nodejs';
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
-// GET /api/songs/latest - Get latest songs (singles) with artist info
+// GET /api/songs/latest — one playable track per release, in catalog `sortOrder` (home carousel)
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const limit = parseInt(searchParams.get("limit") || "8", 10);
 
-    // Get latest singles
-    const singles = await prisma.single.findMany({
-      take: limit,
-      orderBy: {
-        createdAt: 'desc'
-      }
-    });
-
-    // Get all unique artist IDs
-    const allArtistIds = new Set<string>();
-    singles.forEach(single => {
-      single.primaryArtistIds.forEach(id => allArtistIds.add(id));
-      single.featureArtistIds.forEach(id => allArtistIds.add(id));
-    });
-
-    // Fetch all artists
-    const artists = await prisma.artist.findMany({
-      where: {
-        id: { in: Array.from(allArtistIds) },
+    const releases = await prisma.release.findMany({
+      orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
+      include: {
+        tracks: { orderBy: { sortOrder: "asc" } },
       },
+    });
+
+    const trackReleasePairs: {
+      track: Track;
+      showLatestOnHome: boolean;
+    }[] = [];
+
+    for (const r of releases) {
+      const track = r.tracks.find(
+        (t) => t.audioFile && String(t.audioFile).trim() !== ""
+      );
+      if (!track) continue;
+      trackReleasePairs.push({
+        track,
+        showLatestOnHome: r.showLatestOnHome,
+      });
+      if (trackReleasePairs.length >= limit) break;
+    }
+
+    const allArtistIds = new Set<string>();
+    trackReleasePairs.forEach(({ track: t }) => {
+      t.primaryArtistIds.forEach((id) => allArtistIds.add(String(id)));
+      t.featureArtistIds.forEach((id) => allArtistIds.add(String(id)));
+    });
+
+    const artists = await prisma.artist.findMany({
+      where: { id: { in: Array.from(allArtistIds) } },
       select: {
         id: true,
         name: true,
         profilePicture: true,
-      }
+      },
     });
 
-    const artistMap = new Map(artists.map(a => [a.id, a]));
+    const artistMap = new Map(artists.map((a) => [a.id, a]));
 
-    const featureIdsExcludingPrimary = (
-      featureIds: string[],
-      primaryIds: string[]
-    ) => {
-      const primarySet = new Set(primaryIds.map(String));
-      return featureIds.filter((id) => !primarySet.has(String(id)));
-    };
-
-    // Add artist info to each single (primary + feature names for cards)
-    const singlesWithArtists = singles.map(single => {
-      const primaryIds = single.primaryArtistIds || [];
+    const rows = trackReleasePairs.map(({ track, showLatestOnHome }) => {
+      const primaryIds = track.primaryArtistIds || [];
       const primaryArtistId = primaryIds[0];
-      const primaryArtist = primaryArtistId ? artistMap.get(primaryArtistId) : null;
-      const primaryArtistName = primaryIds
-        .map((id) => artistMap.get(id)?.name)
-        .filter((name): name is string => Boolean(name))
-        .join(", ") || "Unknown Artist";
+      const primaryArtist = primaryArtistId
+        ? artistMap.get(primaryArtistId)
+        : null;
+      const primaryArtistName =
+        primaryIds
+          .map((id) => artistMap.get(id)?.name)
+          .filter((name): name is string => Boolean(name))
+          .join(", ") || "Unknown Artist";
       const featureArtistNames = Array.from(
         new Set(
-          featureIdsExcludingPrimary(single.featureArtistIds || [], primaryIds)
+          featureIdsExcludingPrimary(track.featureArtistIds || [], primaryIds)
             .map((id) => artistMap.get(id)?.name)
             .filter((name): name is string => Boolean(name))
         )
       );
 
       return {
-        ...single,
+        ...track,
         artist: primaryArtist || null,
         primaryArtistName,
         featureArtistNames,
+        showLatestOnHome,
       };
     });
 
-    return NextResponse.json(singlesWithArtists);
+    return NextResponse.json(rows);
   } catch (error) {
     console.error("Error fetching latest songs:", error);
     return NextResponse.json(
@@ -82,5 +90,3 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-
-

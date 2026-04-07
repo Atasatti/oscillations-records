@@ -35,6 +35,7 @@ interface Single {
   soundcloudLink?: string;
   primaryArtistIds: string[];
   featureArtistIds: string[];
+  isrcExplicit?: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -316,6 +317,7 @@ export default function EPDetail() {
                         amazonMusicLink: song.amazonMusicLink,
                         youtubeLink: song.youtubeLink,
                         soundcloudLink: song.soundcloudLink,
+                        isrcExplicit: song.isrcExplicit,
                       }}
                     />
                     <DropdownMenu>

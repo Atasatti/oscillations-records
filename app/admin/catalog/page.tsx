@@ -3,12 +3,15 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import AdminNavbar from "@/components/local-ui/AdminNavbar";
 import ArtistCard from "@/components/local-ui/ArtistCard";
-import MusicCardSm from "@/components/local-ui/MusicCardSm";
+import CatalogReleasesSortableList from "@/components/admin/CatalogReleasesSortableList";
+import UpcomingReleasesSortableList from "@/components/admin/UpcomingReleasesSortableList";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
@@ -19,7 +22,20 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Plus, Users, MoreVertical, Trash2, Pencil, Image as ImageIcon, Loader2 } from "lucide-react";
+import {
+  Plus,
+  Users,
+  MoreVertical,
+  Trash2,
+  Pencil,
+  Image as ImageIcon,
+  Loader2,
+  ChevronDown,
+  Disc3,
+  Layers,
+  Library,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface Artist {
   id: string;
@@ -36,61 +52,25 @@ interface Artist {
   updatedAt: string;
 }
 
-interface Single {
+interface CatalogRelease {
   id: string;
   name: string;
-  image?: string;
-  audioFile: string;
-  duration: number;
-  spotifyLink?: string;
-  appleMusicLink?: string;
-  tidalLink?: string;
-  amazonMusicLink?: string;
-  youtubeLink?: string;
-  soundcloudLink?: string;
-  primaryArtistIds: string[];
-  featureArtistIds: string[];
-  createdAt: string;
-  updatedAt: string;
-}
-
-interface Album {
-  id: string;
-  name: string;
-  coverImage: string;
-  primaryArtistIds: string[];
-  featureArtistIds: string[];
-  releaseDate?: string;
-  description?: string;
-  spotifyLink?: string;
-  appleMusicLink?: string;
-  tidalLink?: string;
-  amazonMusicLink?: string;
-  youtubeLink?: string;
-  soundcloudLink?: string;
-  songIds: string[];
-  songs?: Single[];
-  createdAt: string;
-  updatedAt: string;
-}
-
-interface EP {
-  id: string;
-  name: string;
-  coverImage: string;
-  primaryArtistIds: string[];
-  featureArtistIds: string[];
-  description?: string;
-  spotifyLink?: string;
-  appleMusicLink?: string;
-  tidalLink?: string;
-  amazonMusicLink?: string;
-  youtubeLink?: string;
-  soundcloudLink?: string;
-  songIds: string[];
-  songs?: Single[];
-  createdAt: string;
-  updatedAt: string;
+  thumbnail?: string | null;
+  audio?: string | null;
+  type: "single" | "ep" | "album";
+  primaryArtistName?: string;
+  featureArtistNames?: string[];
+  artist: string;
+  songCount: number;
+  spotifyLink?: string | null;
+  appleMusicLink?: string | null;
+  tidalLink?: string | null;
+  amazonMusicLink?: string | null;
+  youtubeLink?: string | null;
+  soundcloudLink?: string | null;
+  isrcExplicit?: boolean;
+  sortOrder?: number;
+  showLatestOnHome?: boolean;
 }
 
 interface UpcomingRelease {
@@ -99,15 +79,89 @@ interface UpcomingRelease {
   type: "single" | "ep" | "album";
   image: string;
   releaseDate: string;
+  sortOrder?: number;
+  preSmartLinkUrl?: string | null;
+  primaryArtist?: string | null;
+  featureArtist?: string | null;
   createdAt: string;
   updatedAt: string;
 }
 
+function NewReleaseDropdown({
+  align = "end",
+  className,
+}: {
+  align?: "start" | "center" | "end";
+  className?: string;
+}) {
+  const itemClass =
+    "flex w-full cursor-pointer items-start gap-3 rounded-sm px-2 py-2.5 text-left outline-none";
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          type="button"
+          className={cn(
+            "gap-2 bg-white text-black shadow-sm hover:bg-gray-200 sm:min-w-[11rem]",
+            "w-full justify-center sm:w-auto",
+            className
+          )}
+        >
+          <Plus className="h-4 w-4 shrink-0" aria-hidden />
+          <span>New release</span>
+          <ChevronDown className="h-4 w-4 shrink-0 opacity-70" aria-hidden />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent
+        align={align}
+        className="w-[min(100vw-2rem,20rem)] border-gray-800 bg-[#141414] p-1 text-gray-100 shadow-xl"
+      >
+        <DropdownMenuLabel className="px-2 py-1.5 text-xs font-normal text-gray-500">
+          Choose a release type
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator className="bg-gray-800" />
+        <DropdownMenuItem asChild className="p-0 focus:bg-white/10">
+          <Link href="/admin/catalog/create/single" className={itemClass}>
+            <Disc3 className="mt-0.5 h-4 w-4 shrink-0 text-red-500" aria-hidden />
+            <span className="flex min-w-0 flex-col gap-0.5">
+              <span className="text-sm font-medium text-white">Single</span>
+              <span className="text-xs leading-snug text-gray-500">
+                One main track — typical for a single drop
+              </span>
+            </span>
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild className="p-0 focus:bg-white/10">
+          <Link href="/admin/catalog/create/ep" className={itemClass}>
+            <Layers className="mt-0.5 h-4 w-4 shrink-0 text-amber-500/90" aria-hidden />
+            <span className="flex min-w-0 flex-col gap-0.5">
+              <span className="text-sm font-medium text-white">EP</span>
+              <span className="text-xs leading-snug text-gray-500">
+                A short multi-track release
+              </span>
+            </span>
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild className="p-0 focus:bg-white/10">
+          <Link href="/admin/catalog/create/album" className={itemClass}>
+            <Library className="mt-0.5 h-4 w-4 shrink-0 text-sky-400/90" aria-hidden />
+            <span className="flex min-w-0 flex-col gap-0.5">
+              <span className="text-sm font-medium text-white">Album</span>
+              <span className="text-xs leading-snug text-gray-500">
+                Full-length release with multiple tracks
+              </span>
+            </span>
+          </Link>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
 export default function AdminCatalog() {
   const [artists, setArtists] = useState<Artist[]>([]);
-  const [singles, setSingles] = useState<Single[]>([]);
-  const [albums, setAlbums] = useState<Album[]>([]);
-  const [eps, setEps] = useState<EP[]>([]);
+  const [releases, setReleases] = useState<CatalogRelease[]>([]);
   const [upcomingReleases, setUpcomingReleases] = useState<UpcomingRelease[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -117,42 +171,33 @@ export default function AdminCatalog() {
   const [contentToDelete, setContentToDelete] = useState<{
     id: string;
     name: string;
-    type: "single" | "album" | "ep";
   } | null>(null);
   const [upcomingForm, setUpcomingForm] = useState({
     name: "",
     type: "single" as "single" | "ep" | "album",
     releaseDate: "",
+    preSmartLinkUrl: "",
+    primaryArtist: "",
+    featureArtist: "",
     imageFile: null as File | null,
   });
   const [upcomingImagePreview, setUpcomingImagePreview] = useState<string | null>(null);
   const [isCreatingUpcoming, setIsCreatingUpcoming] = useState(false);
   const [isUploadingUpcomingImage, setIsUploadingUpcomingImage] = useState(false);
-
-  const getArtistNames = (ids: string[] = []) =>
-    ids
-      .map((id) => artists.find((artist) => artist.id === id)?.name)
-      .filter((name): name is string => Boolean(name));
-
-  const getPrimaryArtistName = (primaryArtistIds: string[] = []) => {
-    const names = getArtistNames(primaryArtistIds);
-    return names.length > 0 ? names.join(", ") : "Unknown Artist";
-  };
-
-  const getFeatureArtistNames = (
-    featureArtistIds: string[] = [],
-    primaryArtistIds: string[] = []
-  ) => {
-    const primarySet = new Set(primaryArtistIds);
-    return Array.from(
-      new Set(
-        featureArtistIds
-          .filter((id) => !primarySet.has(id))
-          .map((id) => artists.find((artist) => artist.id === id)?.name)
-          .filter((name): name is string => Boolean(name))
-      )
-    );
-  };
+  const [upcomingEditOpen, setUpcomingEditOpen] = useState(false);
+  const [upcomingEditingId, setUpcomingEditingId] = useState<string | null>(null);
+  const [upcomingEditForm, setUpcomingEditForm] = useState({
+    name: "",
+    type: "single" as "single" | "ep" | "album",
+    releaseDate: "",
+    preSmartLinkUrl: "",
+    primaryArtist: "",
+    featureArtist: "",
+    imageFile: null as File | null,
+    existingImageUrl: "",
+  });
+  const [upcomingEditImagePreview, setUpcomingEditImagePreview] = useState<string | null>(null);
+  const [isSavingUpcomingEdit, setIsSavingUpcomingEdit] = useState(false);
 
   useEffect(() => {
     fetchAllData();
@@ -160,11 +205,9 @@ export default function AdminCatalog() {
 
   const fetchAllData = async () => {
     try {
-      const [artistsRes, singlesRes, albumsRes, epsRes, upcomingRes] = await Promise.all([
+      const [artistsRes, releasesRes, upcomingRes] = await Promise.all([
         fetch("/api/artists"),
-        fetch("/api/singles"),
-        fetch("/api/albums"),
-        fetch("/api/eps"),
+        fetch("/api/releases"),
         fetch("/api/upcoming-releases"),
       ]);
 
@@ -173,19 +216,9 @@ export default function AdminCatalog() {
         setArtists(data);
       }
 
-      if (singlesRes.ok) {
-        const data = await singlesRes.json();
-        setSingles(data);
-      }
-
-      if (albumsRes.ok) {
-        const data = await albumsRes.json();
-        setAlbums(data);
-      }
-
-      if (epsRes.ok) {
-        const data = await epsRes.json();
-        setEps(data);
+      if (releasesRes.ok) {
+        const data = await releasesRes.json();
+        setReleases(data);
       }
 
       if (upcomingRes.ok) {
@@ -242,27 +275,18 @@ export default function AdminCatalog() {
     }
   };
 
-  const handleContentDeleteClick = (
-    type: "single" | "album" | "ep",
-    id: string,
-    name: string
-  ) => {
-    setContentToDelete({ type, id, name });
+  const handleContentDeleteClick = (id: string, name: string) => {
+    setContentToDelete({ id, name });
     setContentDeleteDialogOpen(true);
   };
 
   const handleContentDeleteConfirm = async () => {
     if (!contentToDelete) return;
 
-    const endpoint =
-      contentToDelete.type === "single"
-        ? `/api/singles/${contentToDelete.id}`
-        : contentToDelete.type === "album"
-          ? `/api/albums/${contentToDelete.id}`
-          : `/api/eps/${contentToDelete.id}`;
-
     try {
-      const response = await fetch(endpoint, { method: "DELETE" });
+      const response = await fetch(`/api/releases/${contentToDelete.id}`, {
+        method: "DELETE",
+      });
       if (response.ok) {
         setContentDeleteDialogOpen(false);
         setContentToDelete(null);
@@ -272,8 +296,8 @@ export default function AdminCatalog() {
         alert(`Error: ${error.error}`);
       }
     } catch (error) {
-      console.error(`Error deleting ${contentToDelete.type}:`, error);
-      alert(`Failed to delete ${contentToDelete.type}`);
+      console.error("Error deleting release:", error);
+      alert("Failed to delete release");
     }
   };
 
@@ -299,6 +323,87 @@ export default function AdminCatalog() {
     if (!file) return;
     setUpcomingForm((prev) => ({ ...prev, imageFile: file }));
     setUpcomingImagePreview(URL.createObjectURL(file));
+  };
+
+  const openUpcomingEdit = (release: UpcomingRelease) => {
+    setUpcomingEditingId(release.id);
+    const d = new Date(release.releaseDate);
+    const releaseDateStr = Number.isNaN(d.getTime())
+      ? ""
+      : d.toISOString().slice(0, 10);
+    setUpcomingEditForm({
+      name: release.name,
+      type: release.type,
+      releaseDate: releaseDateStr,
+      preSmartLinkUrl: release.preSmartLinkUrl ?? "",
+      primaryArtist: release.primaryArtist ?? "",
+      featureArtist: release.featureArtist ?? "",
+      imageFile: null,
+      existingImageUrl: release.image,
+    });
+    setUpcomingEditImagePreview(release.image);
+    setUpcomingEditOpen(true);
+  };
+
+  const handleUpcomingEditImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUpcomingEditForm((prev) => ({ ...prev, imageFile: file }));
+    setUpcomingEditImagePreview(URL.createObjectURL(file));
+  };
+
+  const handleSaveUpcomingEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!upcomingEditingId) return;
+    if (!upcomingEditForm.name.trim() || !upcomingEditForm.releaseDate) {
+      alert("Name and release date are required");
+      return;
+    }
+
+    setIsSavingUpcomingEdit(true);
+    try {
+      let imageUrl = upcomingEditForm.existingImageUrl;
+      if (upcomingEditForm.imageFile) {
+        setIsUploadingUpcomingImage(true);
+        const presigned = await getUpcomingPresignedUrl(upcomingEditForm.imageFile);
+        const uploadRes = await fetch(presigned.uploadURL, {
+          method: "PUT",
+          body: upcomingEditForm.imageFile,
+          headers: { "Content-Type": upcomingEditForm.imageFile.type },
+        });
+        if (!uploadRes.ok) throw new Error("Failed to upload image");
+        imageUrl = presigned.fileURL;
+        setIsUploadingUpcomingImage(false);
+      }
+
+      const patchRes = await fetch(`/api/upcoming-releases/${upcomingEditingId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: upcomingEditForm.name.trim(),
+          type: upcomingEditForm.type,
+          image: imageUrl,
+          releaseDate: upcomingEditForm.releaseDate,
+          preSmartLinkUrl: upcomingEditForm.preSmartLinkUrl.trim() || null,
+          primaryArtist: upcomingEditForm.primaryArtist.trim() || null,
+          featureArtist: upcomingEditForm.featureArtist.trim() || null,
+        }),
+      });
+      if (!patchRes.ok) {
+        const err = await patchRes.json();
+        throw new Error(err.error || "Failed to update upcoming release");
+      }
+
+      setUpcomingEditOpen(false);
+      setUpcomingEditingId(null);
+      fetchAllData();
+    } catch (error) {
+      console.error("Error updating upcoming release:", error);
+      alert(error instanceof Error ? error.message : "Failed to update upcoming release");
+    } finally {
+      setIsUploadingUpcomingImage(false);
+      setIsSavingUpcomingEdit(false);
+    }
   };
 
   const handleCreateUpcomingRelease = async (e: React.FormEvent) => {
@@ -328,6 +433,9 @@ export default function AdminCatalog() {
           type: upcomingForm.type,
           image: presigned.fileURL,
           releaseDate: upcomingForm.releaseDate,
+          preSmartLinkUrl: upcomingForm.preSmartLinkUrl.trim() || undefined,
+          primaryArtist: upcomingForm.primaryArtist.trim() || undefined,
+          featureArtist: upcomingForm.featureArtist.trim() || undefined,
         }),
       });
       if (!createRes.ok) {
@@ -339,6 +447,9 @@ export default function AdminCatalog() {
         name: "",
         type: "single",
         releaseDate: "",
+        preSmartLinkUrl: "",
+        primaryArtist: "",
+        featureArtist: "",
         imageFile: null,
       });
       setUpcomingImagePreview(null);
@@ -367,6 +478,82 @@ export default function AdminCatalog() {
     } catch (error) {
       console.error("Error deleting upcoming release:", error);
       alert(error instanceof Error ? error.message : "Failed to delete upcoming release");
+    }
+  };
+
+  const handleCatalogReorderSave = async (
+    ordered: CatalogRelease[]
+  ) => {
+    try {
+      const res = await fetch("/api/admin/releases/reorder", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderedIds: ordered.map((r) => r.id) }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        const msg =
+          typeof err.error === "string" ? err.error : "Failed to save order";
+        alert(msg);
+        throw new Error(msg);
+      }
+      setReleases(ordered);
+    } catch (e) {
+      if (e instanceof TypeError) {
+        alert("Network error — could not save order.");
+      }
+      throw e;
+    }
+  };
+
+  const handleReleaseLatestChange = async (id: string, checked: boolean) => {
+    const prev = [...releases];
+    setReleases((list) =>
+      list.map((x) =>
+        x.id === id ? { ...x, showLatestOnHome: checked } : x
+      )
+    );
+    try {
+      const res = await fetch(`/api/releases/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ showLatestOnHome: checked }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        alert(
+          typeof err.error === "string"
+            ? err.error
+            : "Failed to update Latest flag"
+        );
+        setReleases(prev);
+      }
+    } catch {
+      setReleases(prev);
+      alert("Failed to update Latest flag");
+    }
+  };
+
+  const handleUpcomingReorderSave = async (ordered: UpcomingRelease[]) => {
+    try {
+      const res = await fetch("/api/admin/upcoming-releases/reorder", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderedIds: ordered.map((r) => r.id) }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        const msg =
+          typeof err.error === "string" ? err.error : "Failed to save order";
+        alert(msg);
+        throw new Error(msg);
+      }
+      setUpcomingReleases(ordered);
+    } catch (e) {
+      if (e instanceof TypeError) {
+        alert("Network error — could not save order.");
+      }
+      throw e;
     }
   };
 
@@ -466,251 +653,39 @@ export default function AdminCatalog() {
           )}
         </div>
 
-        {/* Singles Section */}
+        {/* Releases (Single / EP / Album) */}
         <div className="mb-12 md:mb-16">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4 md:mb-6">
-            <h2 className="text-xl md:text-2xl font-light tracking-tighter">Manage Singles</h2>
-            <Link href="/admin/catalog/create/single">
-              <Button className="bg-white text-black hover:bg-gray-200 text-sm md:text-base w-full sm:w-auto">
-                <Plus className="w-4 h-4 mr-2" />
-                Create Single
-              </Button>
-            </Link>
+          <div className="mb-4 flex flex-col gap-4 sm:mb-6 sm:flex-row sm:items-end sm:justify-between">
+            <div className="min-w-0 space-y-1">
+              <h2 className="text-xl font-light tracking-tighter md:text-2xl">
+                Manage releases
+              </h2>
+              <p className="max-w-xl text-sm text-gray-500">
+                Drag releases to set public order (home carousel and releases page).
+                Check <span className="text-gray-400">Latest on home</span> to show
+                the red &quot;Latest&quot; pill on that release&apos;s track in New Music.
+              </p>
+            </div>
+            <NewReleaseDropdown />
           </div>
-          {singles.length === 0 ? (
-            <div className="text-center py-20 bg-[#0F0F0F] rounded-xl">
-              <p className="text-gray-400 text-lg mb-4">No singles found</p>
-              <p className="text-gray-500 mb-6">Create your first single</p>
+          {releases.length === 0 ? (
+            <div className="rounded-xl border border-dashed border-gray-700 bg-[#0F0F0F]/80 px-6 py-16 text-center">
+              <p className="mb-1 text-lg text-gray-300">No releases yet</p>
+              <p className="mx-auto mb-8 max-w-md text-sm text-gray-500">
+                Start with a single, EP, or album — you can add as many tracks as you need after
+                creating the release.
+              </p>
+              <div className="flex justify-center">
+                <NewReleaseDropdown align="center" />
+              </div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
-              {singles.map((single) => (
-                <div key={single.id} className="relative group w-full sm:w-72 h-84">
-                  <MusicCardSm
-                    song={{
-                      id: single.id,
-                      name: single.name,
-                      thumbnail: single.image,
-                      audio: single.audioFile,
-                      primaryArtistName: getPrimaryArtistName(single.primaryArtistIds),
-                      featureArtistNames: getFeatureArtistNames(
-                        single.featureArtistIds,
-                        single.primaryArtistIds
-                      ),
-                      spotifyLink: single.spotifyLink,
-                      appleMusicLink: single.appleMusicLink,
-                      tidalLink: single.tidalLink,
-                      amazonMusicLink: single.amazonMusicLink,
-                      youtubeLink: single.youtubeLink,
-                      soundcloudLink: single.soundcloudLink,
-                    }}
-                  />
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10 h-8 w-8"
-                      >
-                        <MoreVertical className="w-4 h-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="bg-[#0F0F0F] border-gray-800">
-                      <DropdownMenuItem asChild>
-                        <Link href={`/admin/catalog/edit/single/${single.id}`}>
-                          <Pencil className="w-4 h-4 mr-2" />
-                          Edit Single
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        variant="destructive"
-                        onClick={() => handleContentDeleteClick("single", single.id, single.name)}
-                        className="text-red-400 focus:text-red-300 focus:bg-red-950/20"
-                      >
-                        <Trash2 className="w-4 h-4 mr-2" />
-                        Delete Single
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Albums Section */}
-        <div className="mb-12 md:mb-16">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4 md:mb-6">
-            <h2 className="text-xl md:text-2xl font-light tracking-tighter">Manage Albums</h2>
-            <Link href="/admin/catalog/create/album">
-              <Button className="bg-white text-black hover:bg-gray-200 text-sm md:text-base w-full sm:w-auto">
-                <Plus className="w-4 h-4 mr-2" />
-                Create Album
-              </Button>
-            </Link>
-          </div>
-          {albums.length === 0 ? (
-            <div className="text-center py-20 bg-[#0F0F0F] rounded-xl">
-              <p className="text-gray-400 text-lg mb-4">No albums found</p>
-              <p className="text-gray-500 mb-6">Create your first album</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
-              {albums.map((album) => (
-                <div key={album.id} className="relative group w-full sm:w-72 h-84">
-                  <Link href={`/admin/catalog/album/${album.id}`}>
-                    <MusicCardSm
-                      song={{
-                        id: album.id,
-                        name: album.name,
-                        thumbnail: album.coverImage,
-                        audio: null,
-                        primaryArtistName: getPrimaryArtistName(album.primaryArtistIds),
-                        featureArtistNames: getFeatureArtistNames(
-                          album.featureArtistIds,
-                          album.primaryArtistIds
-                        ),
-                        songCount: album.songIds.length,
-                        spotifyLink: album.spotifyLink,
-                        appleMusicLink: album.appleMusicLink,
-                        tidalLink: album.tidalLink,
-                        amazonMusicLink: album.amazonMusicLink,
-                        youtubeLink: album.youtubeLink,
-                        soundcloudLink: album.soundcloudLink,
-                      }}
-                    />
-                  </Link>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10 h-8 w-8"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                        }}
-                      >
-                        <MoreVertical className="w-4 h-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="bg-[#0F0F0F] border-gray-800">
-                      <DropdownMenuItem asChild>
-                        <Link
-                          href={`/admin/catalog/edit/album/${album.id}`}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                          }}
-                        >
-                          <Pencil className="w-4 h-4 mr-2" />
-                          Edit Album
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        variant="destructive"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          handleContentDeleteClick("album", album.id, album.name);
-                        }}
-                        className="text-red-400 focus:text-red-300 focus:bg-red-950/20"
-                      >
-                        <Trash2 className="w-4 h-4 mr-2" />
-                        Delete Album
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* EPs Section */}
-        <div className="mb-12 md:mb-16">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4 md:mb-6">
-            <h2 className="text-xl md:text-2xl font-light tracking-tighter">Manage EPs</h2>
-            <Link href="/admin/catalog/create/ep">
-              <Button className="bg-white text-black hover:bg-gray-200 text-sm md:text-base w-full sm:w-auto">
-                <Plus className="w-4 h-4 mr-2" />
-                Create EP
-              </Button>
-            </Link>
-          </div>
-          {eps.length === 0 ? (
-            <div className="text-center py-20 bg-[#0F0F0F] rounded-xl">
-              <p className="text-gray-400 text-lg mb-4">No EPs found</p>
-              <p className="text-gray-500 mb-6">Create your first EP</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
-              {eps.map((ep) => (
-                <div key={ep.id} className="relative group w-full sm:w-72 h-84">
-                  <Link href={`/admin/catalog/ep/${ep.id}`}>
-                    <MusicCardSm
-                      song={{
-                        id: ep.id,
-                        name: ep.name,
-                        thumbnail: ep.coverImage,
-                        audio: null,
-                        primaryArtistName: getPrimaryArtistName(ep.primaryArtistIds),
-                        featureArtistNames: getFeatureArtistNames(
-                          ep.featureArtistIds,
-                          ep.primaryArtistIds
-                        ),
-                        songCount: ep.songIds.length,
-                        spotifyLink: ep.spotifyLink,
-                        appleMusicLink: ep.appleMusicLink,
-                        tidalLink: ep.tidalLink,
-                        amazonMusicLink: ep.amazonMusicLink,
-                        youtubeLink: ep.youtubeLink,
-                        soundcloudLink: ep.soundcloudLink,
-                      }}
-                    />
-                  </Link>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10 h-8 w-8"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                        }}
-                      >
-                        <MoreVertical className="w-4 h-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="bg-[#0F0F0F] border-gray-800">
-                      <DropdownMenuItem asChild>
-                        <Link
-                          href={`/admin/catalog/edit/ep/${ep.id}`}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                          }}
-                        >
-                          <Pencil className="w-4 h-4 mr-2" />
-                          Edit EP
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        variant="destructive"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          handleContentDeleteClick("ep", ep.id, ep.name);
-                        }}
-                        className="text-red-400 focus:text-red-300 focus:bg-red-950/20"
-                      >
-                        <Trash2 className="w-4 h-4 mr-2" />
-                        Delete EP
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-              ))}
-            </div>
+            <CatalogReleasesSortableList
+              releases={releases}
+              onReorderSave={handleCatalogReorderSave}
+              onLatestChange={handleReleaseLatestChange}
+              onDeleteClick={handleContentDeleteClick}
+            />
           )}
         </div>
 
@@ -764,6 +739,31 @@ export default function AdminCatalog() {
                 className="w-full bg-black border border-gray-700 rounded-md px-3 py-2 text-white"
                 required
               />
+              <input
+                value={upcomingForm.preSmartLinkUrl}
+                onChange={(e) =>
+                  setUpcomingForm((prev) => ({ ...prev, preSmartLinkUrl: e.target.value }))
+                }
+                placeholder="Pre-smart link URL (e.g. https://ditto.fm/...)"
+                type="url"
+                className="w-full bg-black border border-gray-700 rounded-md px-3 py-2 text-white"
+              />
+              <input
+                value={upcomingForm.primaryArtist}
+                onChange={(e) =>
+                  setUpcomingForm((prev) => ({ ...prev, primaryArtist: e.target.value }))
+                }
+                placeholder="Primary artist"
+                className="w-full bg-black border border-gray-700 rounded-md px-3 py-2 text-white"
+              />
+              <input
+                value={upcomingForm.featureArtist}
+                onChange={(e) =>
+                  setUpcomingForm((prev) => ({ ...prev, featureArtist: e.target.value }))
+                }
+                placeholder="Featured artist (optional)"
+                className="w-full bg-black border border-gray-700 rounded-md px-3 py-2 text-white"
+              />
               <Button type="submit" className="bg-white text-black hover:bg-gray-200" disabled={isCreatingUpcoming}>
                 {isCreatingUpcoming ? (
                   <>
@@ -780,33 +780,20 @@ export default function AdminCatalog() {
             </form>
 
             <div className="bg-[#0F0F0F] border border-gray-800 rounded-xl p-5">
-              <h3 className="text-lg mb-4">Scheduled</h3>
+              <h3 className="text-lg mb-1">Scheduled</h3>
+              <p className="text-xs text-gray-500 mb-4">
+                Drag the grip to set the order shown on the public home page. Order
+                saves automatically.
+              </p>
               {upcomingReleases.length === 0 ? (
                 <p className="text-gray-400">No upcoming releases scheduled.</p>
               ) : (
-                <div className="space-y-3">
-                  {upcomingReleases.map((release) => (
-                    <div key={release.id} className="flex items-center justify-between gap-3 bg-black/40 border border-gray-800 rounded-lg p-3">
-                      <div className="flex items-center gap-3">
-                        <img src={release.image} alt={release.name} className="w-14 h-14 rounded object-cover" />
-                        <div>
-                          <p className="text-sm font-medium">{release.name}</p>
-                          <p className="text-xs text-gray-400 uppercase">
-                            {release.type} • {new Date(release.releaseDate).toLocaleDateString()}
-                          </p>
-                        </div>
-                      </div>
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => handleDeleteUpcomingRelease(release.id)}
-                      >
-                        <Trash2 className="w-4 h-4 mr-1" />
-                        Delete
-                      </Button>
-                    </div>
-                  ))}
-                </div>
+                <UpcomingReleasesSortableList
+                  releases={upcomingReleases}
+                  onReorderSave={handleUpcomingReorderSave}
+                  onEdit={openUpcomingEdit}
+                  onDelete={handleDeleteUpcomingRelease}
+                />
               )}
             </div>
           </div>
@@ -842,17 +829,125 @@ export default function AdminCatalog() {
           </DialogContent>
         </Dialog>
 
+        <Dialog
+          open={upcomingEditOpen}
+          onOpenChange={(open) => {
+            setUpcomingEditOpen(open);
+            if (!open) {
+              setUpcomingEditingId(null);
+            }
+          }}
+        >
+          <DialogContent className="bg-[#0F0F0F] border-gray-800 text-white max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Edit upcoming release</DialogTitle>
+              <DialogDescription className="text-gray-400">
+                Update cover art, pre-smart link, artists, and release details.
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleSaveUpcomingEdit} className="space-y-4">
+              <div>
+                <p className="text-xs text-gray-500 mb-1">Cover image — leave unchanged or pick a new file</p>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleUpcomingEditImageChange}
+                  className="block w-full text-sm text-gray-300 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:bg-white file:text-black hover:file:bg-gray-200"
+                />
+                {upcomingEditImagePreview ? (
+                  <img
+                    src={upcomingEditImagePreview}
+                    alt="Preview"
+                    className="w-24 h-24 rounded-md object-cover border border-gray-700 mt-2"
+                  />
+                ) : null}
+              </div>
+              <input
+                value={upcomingEditForm.name}
+                onChange={(e) => setUpcomingEditForm((prev) => ({ ...prev, name: e.target.value }))}
+                placeholder="Release name"
+                className="w-full bg-black border border-gray-700 rounded-md px-3 py-2 text-white"
+                required
+              />
+              <select
+                value={upcomingEditForm.type}
+                onChange={(e) =>
+                  setUpcomingEditForm((prev) => ({
+                    ...prev,
+                    type: e.target.value as "single" | "ep" | "album",
+                  }))
+                }
+                className="w-full bg-black border border-gray-700 rounded-md px-3 py-2 text-white"
+              >
+                <option value="single">Single</option>
+                <option value="ep">EP</option>
+                <option value="album">Album</option>
+              </select>
+              <input
+                type="date"
+                value={upcomingEditForm.releaseDate}
+                onChange={(e) =>
+                  setUpcomingEditForm((prev) => ({ ...prev, releaseDate: e.target.value }))
+                }
+                className="w-full bg-black border border-gray-700 rounded-md px-3 py-2 text-white"
+                required
+              />
+              <input
+                value={upcomingEditForm.preSmartLinkUrl}
+                onChange={(e) =>
+                  setUpcomingEditForm((prev) => ({ ...prev, preSmartLinkUrl: e.target.value }))
+                }
+                placeholder="Pre-smart link URL (e.g. https://ditto.fm/...)"
+                type="url"
+                className="w-full bg-black border border-gray-700 rounded-md px-3 py-2 text-white"
+              />
+              <input
+                value={upcomingEditForm.primaryArtist}
+                onChange={(e) =>
+                  setUpcomingEditForm((prev) => ({ ...prev, primaryArtist: e.target.value }))
+                }
+                placeholder="Primary artist"
+                className="w-full bg-black border border-gray-700 rounded-md px-3 py-2 text-white"
+              />
+              <input
+                value={upcomingEditForm.featureArtist}
+                onChange={(e) =>
+                  setUpcomingEditForm((prev) => ({ ...prev, featureArtist: e.target.value }))
+                }
+                placeholder="Featured artist (optional)"
+                className="w-full bg-black border border-gray-700 rounded-md px-3 py-2 text-white"
+              />
+              <DialogFooter className="gap-2 sm:gap-0">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="border-gray-700"
+                  onClick={() => setUpcomingEditOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" className="bg-white text-black hover:bg-gray-200" disabled={isSavingUpcomingEdit}>
+                  {isSavingUpcomingEdit ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      {isUploadingUpcomingImage ? "Uploading..." : "Saving..."}
+                    </>
+                  ) : (
+                    "Save changes"
+                  )}
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
+
         <Dialog open={contentDeleteDialogOpen} onOpenChange={setContentDeleteDialogOpen}>
           <DialogContent className="bg-[#0F0F0F] border-gray-800 text-white">
             <DialogHeader>
-              <DialogTitle>
-                Delete {contentToDelete?.type === "single" ? "Single" : contentToDelete?.type === "album" ? "Album" : "EP"}
-              </DialogTitle>
+              <DialogTitle>Delete release</DialogTitle>
               <DialogDescription className="text-gray-400">
                 Are you sure you want to delete &quot;{contentToDelete?.name}&quot;?
-                {contentToDelete?.type === "single"
-                  ? " This action cannot be undone."
-                  : " This will remove it but keep the songs. This action cannot be undone."}
+                This removes the release and all of its tracks. This action cannot be undone.
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>

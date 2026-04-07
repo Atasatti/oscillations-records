@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useMusic } from "@/contexts/music-context";
 import { Play, Pause, X } from "lucide-react";
+import ExplicitBadge from "./ExplicitBadge";
 
 export function MusicPlayer() {
   const { currentSong, isPlaying, currentTime, duration, pauseSong, resumeSong, closeSong, seek } = useMusic();
@@ -82,8 +83,15 @@ export function MusicPlayer() {
               />
               <div className="absolute inset-0 rounded-md shadow-inner border border-[#dc2626]/10" />
             </div>
-            <div className="min-w-0">
-              <p className="text-white font-medium text-sm truncate leading-tight">{currentSong.title}</p>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2 min-w-0">
+                <p className="text-white font-medium text-sm truncate leading-tight min-w-0">
+                  {currentSong.title}
+                </p>
+                {currentSong.isExplicit ? (
+                  <ExplicitBadge size="md" className="flex-shrink-0" />
+                ) : null}
+              </div>
               <p className="text-gray-500 text-xs truncate leading-tight mt-0.5">{currentSong.artist}</p>
             </div>
           </div>

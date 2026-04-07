@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import AdminNavbar from "@/components/local-ui/AdminNavbar";
-import MusicCardSm from "@/components/local-ui/MusicCardSm";
+import ReleaseCardSm from "@/components/local-ui/ReleaseCardSm";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -26,12 +26,6 @@ interface Artist {
   name: string;
   biography: string;
   profilePicture?: string;
-  xLink?: string;
-  tiktokLink?: string;
-  spotifyLink?: string;
-  instagramLink?: string;
-  youtubeLink?: string;
-  facebookLink?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -41,144 +35,71 @@ interface ArtistSummary {
   name: string;
 }
 
-interface Single {
+interface ReleaseRow {
   id: string;
   name: string;
-  image?: string;
-  audioFile: string;
-  duration: number;
-  spotifyLink?: string;
-  appleMusicLink?: string;
-  tidalLink?: string;
-  amazonMusicLink?: string;
-  youtubeLink?: string;
-  soundcloudLink?: string;
-  primaryArtistIds: string[];
-  featureArtistIds: string[];
-  createdAt: string;
-  updatedAt: string;
-}
-
-interface Album {
-  id: string;
-  name: string;
+  kind: "SINGLE" | "EP" | "ALBUM";
   coverImage: string;
   primaryArtistIds: string[];
   featureArtistIds: string[];
-  releaseDate?: string;
-  description?: string;
-  spotifyLink?: string;
-  appleMusicLink?: string;
-  tidalLink?: string;
-  amazonMusicLink?: string;
-  youtubeLink?: string;
-  soundcloudLink?: string;
-  songIds: string[];
-  songs?: Single[];
-  createdAt: string;
-  updatedAt: string;
+  tracks: { id: string }[];
+  spotifyLink?: string | null;
+  appleMusicLink?: string | null;
+  tidalLink?: string | null;
+  amazonMusicLink?: string | null;
+  youtubeLink?: string | null;
+  soundcloudLink?: string | null;
+  isrcExplicit?: boolean;
 }
 
-interface EP {
-  id: string;
-  name: string;
-  coverImage: string;
-  primaryArtistIds: string[];
-  featureArtistIds: string[];
-  description?: string;
-  spotifyLink?: string;
-  appleMusicLink?: string;
-  tidalLink?: string;
-  amazonMusicLink?: string;
-  youtubeLink?: string;
-  soundcloudLink?: string;
-  songIds: string[];
-  songs?: Single[];
-  createdAt: string;
-  updatedAt: string;
-}
-
-export default function ArtistDetail() {
+export default function AdminArtistDetail() {
   const params = useParams();
   const router = useRouter();
   const artistId = params.artistId as string;
-  
+
   const [artist, setArtist] = useState<Artist | null>(null);
   const [allArtists, setAllArtists] = useState<ArtistSummary[]>([]);
-  const [singles, setSingles] = useState<Single[]>([]);
-  const [albums, setAlbums] = useState<Album[]>([]);
-  const [eps, setEps] = useState<EP[]>([]);
+  const [releases, setReleases] = useState<ReleaseRow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
-  // Delete dialog states
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [deleteType, setDeleteType] = useState<"single" | "album" | "ep" | null>(null);
-  const [itemToDelete, setItemToDelete] = useState<{ id: string; name: string } | null>(null);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [toDelete, setToDelete] = useState<{ id: string; name: string } | null>(
+    null
+  );
 
   useEffect(() => {
-    fetchArtistData();
-  }, [artistId]);
-
-  const fetchArtistData = async () => {
-    try {
-      // Fetch artist details
-      const artistResponse = await fetch(`/api/artists/${artistId}`);
-      if (artistResponse.ok) {
-        const artistData = await artistResponse.json();
-        setArtist(artistData);
-      } else {
-        if (artistResponse.status === 404) {
-          setError("Artist not found");
-        } else {
-          setError("Failed to fetch artist");
+    (async () => {
+      try {
+        const ar = await fetch(`/api/artists/${artistId}`);
+        if (!ar.ok) {
+          setError(ar.status === 404 ? "Artist not found" : "Failed to load");
+          return;
         }
-        return;
-      }
+        setArtist(await ar.json());
 
-      // Fetch all data in parallel
-      const [singlesResponse, albumsResponse, epsResponse] = await Promise.all([
-        fetch(`/api/artists/${artistId}/singles`),
-        fetch(`/api/artists/${artistId}/albums`),
-        fetch(`/api/artists/${artistId}/eps`),
-      ]);
-
-      const artistsResponse = await fetch("/api/artists");
-      if (artistsResponse.ok) {
-        const artistsData: ArtistSummary[] = await artistsResponse.json();
-        setAllArtists(artistsData);
+        const [relRes, allRes] = await Promise.all([
+          fetch(`/api/artists/${artistId}/releases`),
+          fetch("/api/artists"),
+        ]);
+        if (allRes.ok) setAllArtists(await allRes.json());
+        if (relRes.ok) setReleases(await relRes.json());
+      } catch (e) {
+        console.error(e);
+        setError("Failed to load");
+      } finally {
+        setIsLoading(false);
       }
-
-      if (singlesResponse.ok) {
-        const singlesData = await singlesResponse.json();
-        setSingles(singlesData);
-      }
-
-      if (albumsResponse.ok) {
-        const albumsData = await albumsResponse.json();
-        setAlbums(albumsData);
-      }
-
-      if (epsResponse.ok) {
-        const epsData = await epsResponse.json();
-        setEps(epsData);
-      }
-    } catch (error) {
-      console.error("Error fetching data:", error);
-      setError("Failed to fetch data");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    })();
+  }, [artistId]);
 
   const getArtistNames = (ids: string[] = []) =>
     ids
-      .map((id) => allArtists.find((item) => item.id === id)?.name)
-      .filter((name): name is string => Boolean(name));
+      .map((id) => allArtists.find((a) => a.id === id)?.name)
+      .filter((n): n is string => Boolean(n));
 
   const getPrimaryArtistName = (primaryArtistIds: string[] = []) => {
     const names = getArtistNames(primaryArtistIds);
-    return names.length > 0 ? names.join(", ") : artist?.name || "Unknown Artist";
+    return names.length ? names.join(", ") : artist?.name || "Unknown Artist";
   };
 
   const getFeatureArtistNames = (
@@ -190,70 +111,38 @@ export default function ArtistDetail() {
       new Set(
         featureArtistIds
           .filter((id) => !primarySet.has(id))
-          .map((id) => allArtists.find((item) => item.id === id)?.name)
-          .filter((name): name is string => Boolean(name))
+          .map((id) => allArtists.find((a) => a.id === id)?.name)
+          .filter((n): n is string => Boolean(n))
       )
     );
   };
 
-
-  const handleDeleteClick = (type: "single" | "album" | "ep", id: string, name: string) => {
-    setDeleteType(type);
-    setItemToDelete({ id, name });
-    setDeleteDialogOpen(true);
-  };
-
-  const handleDeleteConfirm = async () => {
-    if (!itemToDelete || !deleteType) return;
-
-    let endpoint = "";
-    if (deleteType === "single") {
-      endpoint = `/api/artists/${artistId}/singles/${itemToDelete.id}`;
-    } else if (deleteType === "album") {
-      endpoint = `/api/artists/${artistId}/albums/${itemToDelete.id}`;
-    } else if (deleteType === "ep") {
-      endpoint = `/api/artists/${artistId}/eps/${itemToDelete.id}`;
-    }
-
+  const confirmDelete = async () => {
+    if (!toDelete) return;
     try {
-      const response = await fetch(endpoint, {
+      const res = await fetch(`/api/releases/${toDelete.id}`, {
         method: "DELETE",
       });
-
-      if (response.ok) {
-        setDeleteDialogOpen(false);
-        setItemToDelete(null);
-        setDeleteType(null);
-        fetchArtistData();
+      if (res.ok) {
+        setDeleteOpen(false);
+        setToDelete(null);
+        setReleases((prev) => prev.filter((r) => r.id !== toDelete.id));
       } else {
-        const error = await response.json();
-        alert(`Error: ${error.error}`);
+        const err = await res.json();
+        alert(err.error || "Failed");
       }
-    } catch (error) {
-      console.error(`Error deleting ${deleteType}:`, error);
-      alert(`Failed to delete ${deleteType}`);
+    } catch (e) {
+      console.error(e);
+      alert("Failed to delete");
     }
-  };
-
-  const getDeleteMessage = () => {
-    if (!deleteType || !itemToDelete) return "";
-    
-    if (deleteType === "single") {
-      return `Are you sure you want to delete "${itemToDelete.name}"? This action cannot be undone.`;
-    } else if (deleteType === "album") {
-      return `Are you sure you want to delete "${itemToDelete.name}"? This will remove the album but keep the songs. This action cannot be undone.`;
-    } else if (deleteType === "ep") {
-      return `Are you sure you want to delete "${itemToDelete.name}"? This will remove the EP but keep the songs. This action cannot be undone.`;
-    }
-    return "";
   };
 
   if (isLoading) {
     return (
-      <div className="min-h-screen  text-white">
+      <div className="min-h-screen text-white">
         <AdminNavbar />
-        <div className="flex justify-center items-center py-20">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
+        <div className="flex justify-center py-20">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white" />
         </div>
       </div>
     );
@@ -261,161 +150,82 @@ export default function ArtistDetail() {
 
   if (error || !artist) {
     return (
-      <div className="min-h-screen  text-white">
+      <div className="min-h-screen text-white">
         <AdminNavbar />
-        <div className="px-[10%] py-14">
-          <div className="text-center py-20">
-            <p className="text-red-400 mb-4">{error || "Artist not found"}</p>
-            <Button onClick={() => router.back()} variant="outline" className="border-gray-700">
-              Go Back
-            </Button>
-          </div>
+        <div className="px-[10%] py-14 text-center">
+          <p className="text-red-400 mb-4">{error}</p>
+          <Button variant="outline" className="border-gray-700" onClick={() => router.back()}>
+            Back
+          </Button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen  text-white">
+    <div className="min-h-screen text-white">
       <AdminNavbar />
-      
       <div className="px-[10%] py-14">
-        {/* Header */}
-        <div className="mb-8">
-          <Button
-            variant="ghost"
-            onClick={() => router.back()}
-            className="mb-4 text-gray-400 hover:text-white"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Catalog
-          </Button>
-          
-          <h1 className="text-4xl font-light tracking-tighter">{artist.name}</h1>
-          <p className="text-gray-400 mt-2">{artist.biography}</p>
-          <div className="mt-4">
+        <Button
+          variant="ghost"
+          onClick={() => router.push("/admin/catalog")}
+          className="mb-6 text-gray-400 hover:text-white"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Catalog
+        </Button>
+
+        <div className="flex flex-col md:flex-row gap-8 mb-12">
+          {artist.profilePicture ? (
+            <img
+              src={artist.profilePicture}
+              alt={artist.name}
+              className="w-48 h-48 rounded-2xl object-cover"
+            />
+          ) : null}
+          <div>
+            <h1 className="text-4xl font-light tracking-tighter mb-2">{artist.name}</h1>
+            <p className="text-gray-400 max-w-3xl mb-4">{artist.biography}</p>
             <Link href={`/admin/catalog/edit/artist/${artistId}`}>
-              <Button variant="outline" className="border-gray-700 text-gray-300 hover:bg-[#1a1a1a]">
+              <Button variant="outline" size="sm" className="border-gray-700">
                 <Pencil className="w-4 h-4 mr-2" />
-                Edit Artist
+                Edit artist
               </Button>
             </Link>
           </div>
         </div>
 
-        {/* Singles Section */}
-        <div className="mb-12">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-light tracking-tighter">Singles</h2>
-          </div>
-
-          {singles.length === 0 ? (
-            <div className="text-center py-20 bg-[#0F0F0F] rounded-xl">
-              <p className="text-gray-400 text-lg mb-4">No singles found</p>
-              <p className="text-gray-500 mb-6">Create your first single for this artist</p>
-            
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {singles.map((single) => (
-                <div key={single.id} className="relative group w-72 h-84">
-                  <MusicCardSm
-                    song={{
-                      id: single.id,
-                      name: single.name,
-                      thumbnail: single.image,
-                      audio: single.audioFile,
-                      primaryArtistName: getPrimaryArtistName(single.primaryArtistIds),
-                      featureArtistNames: getFeatureArtistNames(
-                        single.featureArtistIds,
-                        single.primaryArtistIds
-                      ),
-                      spotifyLink: single.spotifyLink,
-                      appleMusicLink: single.appleMusicLink,
-                      tidalLink: single.tidalLink,
-                      amazonMusicLink: single.amazonMusicLink,
-                      youtubeLink: single.youtubeLink,
-                      soundcloudLink: single.soundcloudLink,
-                    }}
-                  />
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10 h-8 w-8"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                        }}
-                      >
-                        <MoreVertical className="w-4 h-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="bg-[#0F0F0F] border-gray-800">
-                      <DropdownMenuItem asChild>
-                        <Link href={`/admin/catalog/edit/single/${single.id}`}>
-                          <Pencil className="w-4 h-4 mr-2" />
-                          Edit Single
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        variant="destructive"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          handleDeleteClick("single", single.id, single.name);
-                        }}
-                        className="text-red-400 focus:text-red-300 focus:bg-red-950/20"
-                      >
-                        <Trash2 className="w-4 h-4 mr-2" />
-                        Delete Single
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* EP Section */}
-        <div className="mb-12">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-light tracking-tighter">EP</h2>
-          </div>
-
-          {eps.length === 0 ? (
-            <div className="text-center py-20 bg-[#0F0F0F] rounded-xl">
-              <p className="text-gray-400 text-lg mb-4">No EPs found</p>
-              <p className="text-gray-500 mb-6">Create your first EP for this artist</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {eps.map((ep) => (
-                <div key={ep.id} className="relative group w-72 h-84 mx-auto">
-                  <Link 
-                    href={`/admin/catalog/artist/${artistId}/ep/${ep.id}`}
-                    className="block w-full h-full"
-                  >
-                    <MusicCardSm
-                      song={{
-                        id: ep.id,
-                        name: ep.name,
-                        thumbnail: ep.coverImage,
+        <h2 className="text-2xl font-light mb-6">Releases</h2>
+        {releases.length === 0 ? (
+          <p className="text-gray-500">No releases for this artist yet.</p>
+        ) : (
+          <div className="flex flex-wrap gap-6">
+            {releases.map((rel) => {
+              const kindLabel =
+                rel.kind === "ALBUM" ? "Album" : rel.kind === "EP" ? "EP" : "Single";
+              return (
+                <div key={rel.id} className="relative group w-72 h-84">
+                  <Link href={`/admin/catalog/release/${rel.id}`}>
+                    <ReleaseCardSm
+                      release={{
+                        id: rel.id,
+                        name: rel.name,
+                        thumbnail: rel.coverImage,
                         audio: null,
-                        primaryArtistName: getPrimaryArtistName(ep.primaryArtistIds),
+                        primaryArtistName: getPrimaryArtistName(rel.primaryArtistIds),
                         featureArtistNames: getFeatureArtistNames(
-                          ep.featureArtistIds,
-                          ep.primaryArtistIds
+                          rel.featureArtistIds,
+                          rel.primaryArtistIds
                         ),
-                        songCount: ep.songIds.length,
-                        spotifyLink: ep.spotifyLink,
-                        appleMusicLink: ep.appleMusicLink,
-                        tidalLink: ep.tidalLink,
-                        amazonMusicLink: ep.amazonMusicLink,
-                        youtubeLink: ep.youtubeLink,
-                        soundcloudLink: ep.soundcloudLink,
+                        songCount: rel.tracks?.length ?? 0,
+                        kindLabel,
+                        spotifyLink: rel.spotifyLink,
+                        appleMusicLink: rel.appleMusicLink,
+                        tidalLink: rel.tidalLink,
+                        amazonMusicLink: rel.amazonMusicLink,
+                        youtubeLink: rel.youtubeLink,
+                        soundcloudLink: rel.soundcloudLink,
+                        isrcExplicit: rel.isrcExplicit,
                       }}
                     />
                   </Link>
@@ -424,7 +234,7 @@ export default function ArtistDetail() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10 h-8 w-8"
+                        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 z-10 h-8 w-8"
                         onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
@@ -433,151 +243,46 @@ export default function ArtistDetail() {
                         <MoreVertical className="w-4 h-4" />
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="bg-[#0F0F0F] border-gray-800">
+                    <DropdownMenuContent className="bg-[#0F0F0F] border-gray-800">
                       <DropdownMenuItem asChild>
-                        <Link
-                          href={`/admin/catalog/edit/ep/${ep.id}`}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                          }}
-                        >
+                        <Link href={`/admin/catalog/edit/release/${rel.id}`}>
                           <Pencil className="w-4 h-4 mr-2" />
-                          Edit EP
+                          Edit
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         variant="destructive"
+                        className="text-red-400"
                         onClick={(e) => {
                           e.preventDefault();
-                          e.stopPropagation();
-                          handleDeleteClick("ep", ep.id, ep.name);
+                          setToDelete({ id: rel.id, name: rel.name });
+                          setDeleteOpen(true);
                         }}
-                        className="text-red-400 focus:text-red-300 focus:bg-red-950/20"
                       >
                         <Trash2 className="w-4 h-4 mr-2" />
-                        Delete EP
+                        Delete
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Albums Section */}
-        <div className="mb-12">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-light tracking-tighter">Albums</h2>
+              );
+            })}
           </div>
+        )}
 
-          {albums.length === 0 ? (
-            <div className="text-center py-20 bg-[#0F0F0F] rounded-xl">
-              <p className="text-gray-400 text-lg mb-4">No albums found</p>
-              <p className="text-gray-500 mb-6">Create your first album for this artist</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {albums.map((album) => (
-                <div key={album.id} className="relative group w-72 h-84 mx-auto">
-                  <Link 
-                    href={`/admin/catalog/artist/${artistId}/album/${album.id}`}
-                    className="block w-full h-full"
-                  >
-                    <MusicCardSm
-                      song={{
-                        id: album.id,
-                        name: album.name,
-                        thumbnail: album.coverImage,
-                        audio: null,
-                        primaryArtistName: getPrimaryArtistName(album.primaryArtistIds),
-                        featureArtistNames: getFeatureArtistNames(
-                          album.featureArtistIds,
-                          album.primaryArtistIds
-                        ),
-                        songCount: album.songIds.length,
-                        spotifyLink: album.spotifyLink,
-                        appleMusicLink: album.appleMusicLink,
-                        tidalLink: album.tidalLink,
-                        amazonMusicLink: album.amazonMusicLink,
-                        youtubeLink: album.youtubeLink,
-                        soundcloudLink: album.soundcloudLink,
-                      }}
-                    />
-                  </Link>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10 h-8 w-8"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                        }}
-                      >
-                        <MoreVertical className="w-4 h-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="bg-[#0F0F0F] border-gray-800">
-                      <DropdownMenuItem asChild>
-                        <Link
-                          href={`/admin/catalog/edit/album/${album.id}`}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                          }}
-                        >
-                          <Pencil className="w-4 h-4 mr-2" />
-                          Edit Album
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        variant="destructive"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          handleDeleteClick("album", album.id, album.name);
-                        }}
-                        className="text-red-400 focus:text-red-300 focus:bg-red-950/20"
-                      >
-                        <Trash2 className="w-4 h-4 mr-2" />
-                        Delete Album
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Delete Confirmation Dialog */}
-        <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
           <DialogContent className="bg-[#0F0F0F] border-gray-800 text-white">
             <DialogHeader>
-              <DialogTitle>
-                Delete {deleteType === "single" ? "Single" : deleteType === "album" ? "Album" : "EP"}
-              </DialogTitle>
+              <DialogTitle>Delete release</DialogTitle>
               <DialogDescription className="text-gray-400">
-                {getDeleteMessage()}
+                Delete &quot;{toDelete?.name}&quot; and all tracks?
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setDeleteDialogOpen(false);
-                  setItemToDelete(null);
-                  setDeleteType(null);
-                }}
-                className="border-gray-700"
-              >
+              <Button variant="outline" className="border-gray-700" onClick={() => setDeleteOpen(false)}>
                 Cancel
               </Button>
-              <Button
-                variant="destructive"
-                onClick={handleDeleteConfirm}
-              >
+              <Button variant="destructive" onClick={confirmDelete}>
                 Delete
               </Button>
             </DialogFooter>

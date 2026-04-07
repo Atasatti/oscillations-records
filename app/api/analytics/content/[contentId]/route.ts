@@ -84,7 +84,7 @@ export async function GET(
         { status: 400 }
       );
     }
-    const contentType = searchParams.get("type") || "single"; // single, album, or ep
+    const contentType = searchParams.get("type") || "track";
     const days = parseInt(searchParams.get("days") || "30", 10);
     
     const startDate = new Date();

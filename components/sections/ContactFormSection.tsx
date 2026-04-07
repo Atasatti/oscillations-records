@@ -16,18 +16,18 @@ const ContactFormSection = () => {
       <form className="mt-14 space-y-5 max-w-[360px]">
         <Input
           type="text"
-          placeholder="enter your name"
+          placeholder="Enter your name"
           className="placeholder:font-light rounded-full !py-5"
         />
 
         <Input
           type="email"
-          placeholder="enter your email"
+          placeholder="Eenter your email"
           className="placeholder:font-light rounded-full !py-5"
         />
 
         <Textarea
-          placeholder="enter your message"
+          placeholder="Enter your message"
           className="placeholder:font-light min-h-[120px] max-h-[200px] resize-none no-scrollbar rounded-3xl !py-5"
           rows={5}
         />

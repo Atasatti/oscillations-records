@@ -3,10 +3,12 @@ import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import MusicCard from "@/components/local-ui/MusicCard";
+import TrackCard from "@/components/local-ui/TrackCard";
+import ExplicitBadge from "@/components/local-ui/ExplicitBadge";
+import StreamingLinks, { hasStreamingLinks } from "@/components/local-ui/StreamingLinks";
 import Footer from "@/components/local-ui/Footer";
 
-interface Song {
+interface TrackRow {
   id: string;
   name: string;
   image: string | null;
@@ -20,6 +22,7 @@ interface Song {
   soundcloudLink?: string;
   primaryArtistIds: string[];
   featureArtistIds: string[];
+  isrcExplicit?: boolean;
 }
 
 interface Artist {
@@ -38,7 +41,19 @@ interface Release {
   artists: Artist[];
   description?: string | null;
   releaseDate?: string | null;
-  songs: Song[];
+  composer?: string | null;
+  lyricist?: string | null;
+  leadVocal?: string | null;
+  isrcCode?: string | null;
+  isrcExplicit?: boolean;
+  spotifyLink?: string | null;
+  appleMusicLink?: string | null;
+  tidalLink?: string | null;
+  amazonMusicLink?: string | null;
+  youtubeLink?: string | null;
+  soundcloudLink?: string | null;
+  tracks: TrackRow[];
+  songs?: TrackRow[];
 }
 
 export default function ReleaseDetail() {
@@ -75,7 +90,7 @@ export default function ReleaseDetail() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          contentType: release.type,
+          contentType: "release",
           contentId: release.id,
           contentName: release.name,
           artistId: primaryArtistId || null,
@@ -116,6 +131,23 @@ export default function ReleaseDetail() {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
+  const releasePrimaryNames = release
+    ? release.primaryArtistIds
+        .map((id) => release.artists.find((a) => a.id === id)?.name)
+        .filter((name): name is string => Boolean(name))
+    : [];
+  const primarySet = release ? new Set(release.primaryArtistIds) : new Set<string>();
+  const releaseFeatureNames = release
+    ? Array.from(
+        new Set(
+          release.featureArtistIds
+            .filter((id) => !primarySet.has(id))
+            .map((id) => release.artists.find((a) => a.id === id)?.name)
+            .filter((name): name is string => Boolean(name))
+        )
+      )
+    : [];
+
   if (isLoading) {
     return (
       <div>
@@ -145,57 +177,162 @@ export default function ReleaseDetail() {
     );
   }
 
+  const kindLabel =
+    release.type === "album" ? "Album" : release.type === "ep" ? "EP" : "Single";
+  const hasCredits = Boolean(
+    release.composer ||
+      release.lyricist ||
+      release.leadVocal ||
+      release.isrcCode
+  );
+  const showAbout =
+    Boolean(release.description) || Boolean(release.releaseDate);
+  const streamProps = {
+    spotifyLink: release.spotifyLink,
+    appleMusicLink: release.appleMusicLink,
+    tidalLink: release.tidalLink,
+    amazonMusicLink: release.amazonMusicLink,
+    youtubeLink: release.youtubeLink,
+    soundcloudLink: release.soundcloudLink,
+  };
+  const showStream = hasStreamingLinks(streamProps);
+  const trackList = release.tracks?.length ? release.tracks : release.songs ?? [];
+
   return (
     <div>
       <div className="min-h-screen text-white">
-        <div className="px-[10%] py-14">
-          {/* Header */}
-          <div className="mb-8">
+        <div className="px-4 sm:px-6 md:px-[10%] py-10 sm:py-14">
+          <div className="mb-10 lg:mb-14 max-w-6xl xl:max-w-7xl mx-auto">
             <Button
               variant="ghost"
               onClick={() => router.back()}
-              className="mb-4 text-gray-400 hover:text-white"
+              className="mb-6 -ml-2 text-gray-400 hover:text-white"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back
             </Button>
-            
-            <div className="flex items-start gap-6">
-              <img
-                src={release.coverImage}
-                alt={release.name}
-                className="w-64 h-64 rounded-2xl object-cover"
-              />
-              <div className="flex-1">
-                <p className="text-sm text-gray-400 uppercase tracking-wider mb-2">
-                  {release.type === 'album' ? 'Album' : release.type === 'ep' ? 'EP' : 'Single'}
-                </p>
-                <h1 className="text-5xl font-light tracking-tighter mb-4">{release.name}</h1>
-                {/* <p className="text-xl text-gray-400 mb-2">{release.artist.name}</p> */}
-                {release.releaseDate && (
-                  <p className="text-sm text-gray-500">
-                    Released: {new Date(release.releaseDate).toLocaleDateString('en-US', { 
-                      year: 'numeric', 
-                      month: 'long', 
-                      day: 'numeric' 
-                    })}
+
+            <div className="flex flex-col lg:flex-row gap-8 lg:gap-10 xl:gap-12 items-start">
+              <div className="w-full max-w-[min(100%,320px)] mx-auto lg:mx-0 shrink-0">
+                <img
+                  src={release.coverImage}
+                  alt={release.name}
+                  className="w-full aspect-square object-cover rounded-2xl ring-1 ring-white/10 shadow-2xl shadow-black/40"
+                />
+              </div>
+
+              <div className="flex-1 min-w-0 space-y-6 w-full">
+                <header className="space-y-3">
+                  <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
+                    {kindLabel}
                   </p>
+                  <h1 className="text-4xl sm:text-5xl font-light tracking-tighter flex flex-wrap items-center gap-3">
+                    <span>{release.name}</span>
+                    {release.isrcExplicit ? <ExplicitBadge size="xl" /> : null}
+                  </h1>
+                  {(releasePrimaryNames.length > 0 || releaseFeatureNames.length > 0) ? (
+                    <div className="space-y-0.5">
+                      {releasePrimaryNames.length > 0 ? (
+                        <p className="text-lg sm:text-xl text-white/95 font-medium">
+                          {releasePrimaryNames.join(", ")}
+                        </p>
+                      ) : null}
+                      {releaseFeatureNames.length > 0 ? (
+                        <p className="text-sm text-muted-foreground">
+                          ft {releaseFeatureNames.join(", ")}
+                        </p>
+                      ) : null}
+                    </div>
+                  ) : null}
+                </header>
+
+                {(showAbout || hasCredits) && (
+                  <div
+                    className={`grid gap-4 lg:gap-5 ${showAbout && hasCredits ? "md:grid-cols-2" : ""}`}
+                  >
+                    {showAbout ? (
+                      <div className="rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.05] to-white/[0.02] p-5 sm:p-6">
+                        <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
+                          About
+                        </h2>
+                        {release.releaseDate ? (
+                          <p className="text-sm text-white/90 font-medium mb-3">
+                            Released{" "}
+                            {new Date(release.releaseDate).toLocaleDateString("en-US", {
+                              year: "numeric",
+                              month: "long",
+                              day: "numeric",
+                            })}
+                          </p>
+                        ) : null}
+                        {release.description ? (
+                          <p className="text-sm text-gray-400 leading-relaxed whitespace-pre-wrap">
+                            {release.description}
+                          </p>
+                        ) : !release.releaseDate ? (
+                          <p className="text-sm text-muted-foreground">No description yet.</p>
+                        ) : null}
+                      </div>
+                    ) : null}
+
+                    {hasCredits ? (
+                      <div className="rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.05] to-white/[0.02] p-5 sm:p-6">
+                        <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4">
+                          Credits
+                        </h2>
+                        <dl className="grid gap-x-8 gap-y-3 text-sm sm:grid-cols-[minmax(5rem,auto)_1fr]">
+                          {release.composer ? (
+                            <>
+                              <dt className="text-gray-500 font-medium">Composer</dt>
+                              <dd className="text-gray-200">{release.composer}</dd>
+                            </>
+                          ) : null}
+                          {release.lyricist ? (
+                            <>
+                              <dt className="text-gray-500 font-medium">Lyricist</dt>
+                              <dd className="text-gray-200">{release.lyricist}</dd>
+                            </>
+                          ) : null}
+                          {release.leadVocal ? (
+                            <>
+                              <dt className="text-gray-500 font-medium">Lead vocal</dt>
+                              <dd className="text-gray-200">{release.leadVocal}</dd>
+                            </>
+                          ) : null}
+                          {release.isrcCode ? (
+                            <>
+                              <dt className="text-gray-500 font-medium">ISRC</dt>
+                              <dd className="text-gray-200 font-mono text-xs sm:text-sm break-all">
+                                {release.isrcCode}
+                              </dd>
+                            </>
+                          ) : null}
+                        </dl>
+                      </div>
+                    ) : null}
+                  </div>
                 )}
-                {release.description && (
-                  <p className="text-gray-400 mt-4 max-w-2xl">{release.description}</p>
-                )}
+
+                {showStream ? (
+                  <div className="rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.05] to-white/[0.02] px-5 py-4 sm:px-6 sm:py-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground shrink-0">
+                      Stream
+                    </h2>
+                    <StreamingLinks {...streamProps} size="md" className="sm:ml-auto" />
+                  </div>
+                ) : null}
               </div>
             </div>
           </div>
 
           {/* Songs */}
-          <div className="mt-12">
-            <h2 className="text-2xl font-light mb-6">Songs</h2>
-            {release.songs.length === 0 ? (
-              <p className="text-gray-400">No songs available.</p>
+          <div className="mt-12 max-w-6xl xl:max-w-7xl mx-auto px-0">
+            <h2 className="text-2xl font-light mb-6">Tracks</h2>
+            {trackList.length === 0 ? (
+              <p className="text-gray-400">No tracks available.</p>
             ) : (
-              <div className="flex gap-4 overflow-x-auto scrollbar-hide scroll-smooth">
-                {release.songs.map((song) => {
+              <div className="flex gap-4 overflow-x-auto scrollbar-hide scroll-smooth pb-2">
+                {trackList.map((song) => {
                   // Get primary artist for this song from the release's artists array
                   const primaryArtistId = song.primaryArtistIds[0];
                   const primaryArtist = primaryArtistId 
@@ -223,9 +360,9 @@ export default function ReleaseDetail() {
                     : null;
                   
                   return (
-                    <MusicCard
+                    <TrackCard
                       key={song.id}
-                      song={{
+                      track={{
                         id: song.id,
                         title: song.name,
                         artist: artistName,
@@ -239,6 +376,7 @@ export default function ReleaseDetail() {
                         amazonMusicLink: song.amazonMusicLink,
                         youtubeLink: song.youtubeLink,
                         soundcloudLink: song.soundcloudLink,
+                        isrcExplicit: song.isrcExplicit,
                       }}
                     />
                   );

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { BarChart3, Users, Play, TrendingUp, Music, Disc, Radio, Eye } from "lucide-react";
+import { BarChart3, Users, Play, TrendingUp, Music, Radio, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -20,6 +20,8 @@ interface DashboardData {
     totalUsers: number;
   };
   playsByType: {
+    track: number;
+    release: number;
     single: number;
     album: number;
     ep: number;
@@ -254,20 +256,20 @@ export default function AnalyticsDashboard() {
 
       {/* Plays by Type */}
       <div className="bg-[#0F0F0F] rounded-xl p-6 border border-gray-800">
-        <h3 className="text-lg font-medium text-gray-200 mb-6">Plays by Content Type</h3>
+        <h3 className="text-lg font-medium text-gray-200 mb-6">Plays by content type</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Music className="w-4 h-4 text-red-500" />
-                <span className="text-sm text-gray-400">Singles</span>
+                <span className="text-sm text-gray-400">Track (audio)</span>
               </div>
-              <span className="text-sm font-medium">{data.playsByType.single}</span>
+              <span className="text-sm font-medium">{data.playsByType.track}</span>
             </div>
             <div className="h-2 bg-[#0F0F0F] rounded-full overflow-hidden">
               <div
                 className="h-full bg-red-500 rounded-full transition-all"
-                style={{ width: `${(data.playsByType.single / (data.summary.totalPlays || 1)) * 100}%` }}
+                style={{ width: `${(data.playsByType.track / (data.summary.totalPlays || 1)) * 100}%` }}
               />
             </div>
           </div>
@@ -275,15 +277,15 @@ export default function AnalyticsDashboard() {
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Disc className="w-4 h-4 text-blue-500" />
-                <span className="text-sm text-gray-400">Albums</span>
+                <Eye className="w-4 h-4 text-blue-500" />
+                <span className="text-sm text-gray-400">Release (detail)</span>
               </div>
-              <span className="text-sm font-medium">{data.playsByType.album}</span>
+              <span className="text-sm font-medium">{data.playsByType.release}</span>
             </div>
             <div className="h-2 bg-[#0F0F0F] rounded-full overflow-hidden">
               <div
                 className="h-full bg-blue-500 rounded-full transition-all"
-                style={{ width: `${(data.playsByType.album / (data.summary.totalPlays || 1)) * 100}%` }}
+                style={{ width: `${(data.playsByType.release / (data.summary.totalPlays || 1)) * 100}%` }}
               />
             </div>
           </div>
@@ -292,14 +294,18 @@ export default function AnalyticsDashboard() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Radio className="w-4 h-4 text-green-500" />
-                <span className="text-sm text-gray-400">EPs</span>
+                <span className="text-sm text-gray-400">Legacy (old)</span>
               </div>
-              <span className="text-sm font-medium">{data.playsByType.ep}</span>
+              <span className="text-sm font-medium">
+                {data.playsByType.single + data.playsByType.album + data.playsByType.ep}
+              </span>
             </div>
             <div className="h-2 bg-[#0F0F0F] rounded-full overflow-hidden">
               <div
                 className="h-full bg-green-500 rounded-full transition-all"
-                style={{ width: `${(data.playsByType.ep / (data.summary.totalPlays || 1)) * 100}%` }}
+                style={{
+                  width: `${((data.playsByType.single + data.playsByType.album + data.playsByType.ep) / (data.summary.totalPlays || 1)) * 100}%`,
+                }}
               />
             </div>
           </div>

@@ -9,6 +9,8 @@ interface Song {
   image?: string | null;
   audio: string;
   duration?: number;
+  /** Parental advisory — shown in the player UI */
+  isExplicit?: boolean;
 }
 
 interface MusicContextType {
@@ -43,7 +45,7 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          contentType: "single",
+          contentType: "track",
           contentId: song.id,
           contentName: song.title,
           artistId: null,
@@ -58,7 +60,7 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
   };
 
   // Track play event
-  const trackPlay = async (song: Song, contentType: "single" | "album" | "ep", artistId?: string) => {
+  const trackPlay = async (song: Song, contentType: "track" | "release", artistId?: string) => {
     try {
       // Extract artist name from song.artist (could be a string or object)
       const artistName = typeof song.artist === 'string' ? song.artist : song.artist || 'Unknown Artist';
@@ -162,7 +164,7 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
       audioRef.current.load();
       
       // Track play event (fire and forget)
-      trackPlay(song, "single").catch(console.error);
+      trackPlay(song, "track").catch(console.error);
       
       // Try to play immediately - browser will buffer if needed
       const attemptPlay = async () => {

@@ -5,6 +5,7 @@ import MusicHeardSection from "@/components/sections/MusicHeardSection";
 import NewMusicSection from "@/components/sections/NewMusicSection";
 import NoProfitSection from "@/components/sections/NoProfitSection";
 import UpcomingReleasesSection from "@/components/sections/UpcomingReleasesSection";
+import Footer from "@/components/local-ui/Footer";
 
 export default function Home() {
   return (
@@ -19,6 +20,7 @@ export default function Home() {
         heading="Let's get your music heard."
         subtext="Artist, visionary, or just someone with big ideas? We're here to listen. Let's talk. "
       />
+      <Footer />
     </div>
   );
 } 

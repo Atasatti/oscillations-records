@@ -3,72 +3,10 @@ import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import MusicCardSm from "@/components/local-ui/MusicCardSm";
-import MusicCard from "@/components/local-ui/MusicCard";
+import ReleaseCardSm from "@/components/local-ui/ReleaseCardSm";
 import { FaFacebookF, FaInstagram, FaSpotify, FaYoutube } from "react-icons/fa";
 import { LuX } from "react-icons/lu";
 import { RiTiktokFill } from "react-icons/ri";
-
-interface Single {
-  id: string;
-  name: string;
-  image?: string;
-  audioFile: string;
-  duration: number;
-  spotifyLink?: string;
-  appleMusicLink?: string;
-  tidalLink?: string;
-  amazonMusicLink?: string;
-  youtubeLink?: string;
-  soundcloudLink?: string;
-  primaryArtistIds: string[];
-  featureArtistIds: string[];
-  artist?: {
-    id: string;
-    name: string;
-  };
-  createdAt: string;
-  updatedAt: string;
-}
-
-interface Album {
-  id: string;
-  name: string;
-  coverImage: string;
-  primaryArtistIds: string[];
-  featureArtistIds: string[];
-  releaseDate?: string | null;
-  description?: string | null;
-  spotifyLink?: string;
-  appleMusicLink?: string;
-  tidalLink?: string;
-  amazonMusicLink?: string;
-  youtubeLink?: string;
-  soundcloudLink?: string;
-  songIds: string[];
-  songs?: Single[];
-  createdAt: string;
-  updatedAt: string;
-}
-
-interface EP {
-  id: string;
-  name: string;
-  coverImage: string;
-  primaryArtistIds: string[];
-  featureArtistIds: string[];
-  description?: string | null;
-  spotifyLink?: string;
-  appleMusicLink?: string;
-  tidalLink?: string;
-  amazonMusicLink?: string;
-  youtubeLink?: string;
-  soundcloudLink?: string;
-  songIds: string[];
-  songs?: Single[];
-  createdAt: string;
-  updatedAt: string;
-}
 
 interface Artist {
   id: string;
@@ -85,6 +23,23 @@ interface Artist {
   updatedAt: string;
 }
 
+interface ArtistRelease {
+  id: string;
+  name: string;
+  kind: "SINGLE" | "EP" | "ALBUM";
+  coverImage: string;
+  primaryArtistIds: string[];
+  featureArtistIds: string[];
+  tracks: { id: string }[];
+  spotifyLink?: string | null;
+  appleMusicLink?: string | null;
+  tidalLink?: string | null;
+  amazonMusicLink?: string | null;
+  youtubeLink?: string | null;
+  soundcloudLink?: string | null;
+  isrcExplicit?: boolean;
+}
+
 interface ArtistSummary {
   id: string;
   name: string;
@@ -94,12 +49,10 @@ export default function ArtistDetail() {
   const params = useParams();
   const router = useRouter();
   const artistId = params.artistId as string;
-  
+
   const [artist, setArtist] = useState<Artist | null>(null);
   const [allArtists, setAllArtists] = useState<ArtistSummary[]>([]);
-  const [singles, setSingles] = useState<Single[]>([]);
-  const [albums, setAlbums] = useState<Album[]>([]);
-  const [eps, setEps] = useState<EP[]>([]);
+  const [releases, setReleases] = useState<ArtistRelease[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -109,66 +62,42 @@ export default function ArtistDetail() {
 
   const fetchArtistData = async () => {
     try {
-      // Fetch artist details
       const artistResponse = await fetch(`/api/artists/${artistId}`);
       if (artistResponse.ok) {
         const artistData = await artistResponse.json();
         setArtist(artistData);
       } else {
-        if (artistResponse.status === 404) {
-          setError("Artist not found");
-        } else {
-          setError("Failed to fetch artist");
-        }
+        setError(
+          artistResponse.status === 404 ? "Artist not found" : "Failed to fetch artist"
+        );
         return;
       }
 
-      // Fetch all data in parallel
-      const [singlesResponse, albumsResponse, epsResponse] = await Promise.all([
-        fetch(`/api/artists/${artistId}/singles`),
-        fetch(`/api/artists/${artistId}/albums`),
-        fetch(`/api/artists/${artistId}/eps`),
+      const [releasesResponse, artistsResponse] = await Promise.all([
+        fetch(`/api/artists/${artistId}/releases`),
+        fetch("/api/artists"),
       ]);
 
-      const artistsResponse = await fetch("/api/artists");
       if (artistsResponse.ok) {
-        const artistsData: ArtistSummary[] = await artistsResponse.json();
-        setAllArtists(artistsData);
+        setAllArtists(await artistsResponse.json());
       }
 
-      if (singlesResponse.ok) {
-        const singlesData = await singlesResponse.json();
-        setSingles(singlesData);
+      if (releasesResponse.ok) {
+        setReleases(await releasesResponse.json());
       }
-
-      if (albumsResponse.ok) {
-        const albumsData = await albumsResponse.json();
-        setAlbums(albumsData);
-      }
-
-      if (epsResponse.ok) {
-        const epsData = await epsResponse.json();
-        setEps(epsData);
-      }
-    } catch (error) {
-      console.error("Error fetching data:", error);
+    } catch (e) {
+      console.error(e);
       setError("Failed to fetch data");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const formatDuration = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
-
   const handleSocialClick = (url: string | undefined, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     if (url) {
-      window.open(url, '_blank', 'noopener,noreferrer');
+      window.open(url, "_blank", "noopener,noreferrer");
     }
   };
 
@@ -228,7 +157,6 @@ export default function ArtistDetail() {
     <div>
       <div className="min-h-screen  text-white">
         <div className="px-[10%] py-14">
-          {/* Header */}
           <div className="mb-12">
             <Button
               variant="ghost"
@@ -238,7 +166,7 @@ export default function ArtistDetail() {
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back
             </Button>
-            
+
             <div className="flex items-start gap-8">
               {artist.profilePicture && (
                 <img
@@ -250,8 +178,7 @@ export default function ArtistDetail() {
               <div className="flex-1">
                 <h1 className="text-5xl font-light tracking-tighter mb-4">{artist.name}</h1>
                 <p className="text-gray-400 text-lg mb-6 max-w-3xl">{artist.biography}</p>
-                
-                {/* Social Media Links */}
+
                 <div className="flex items-center gap-4">
                   {artist.xLink && (
                     <button
@@ -312,118 +239,50 @@ export default function ArtistDetail() {
             </div>
           </div>
 
-          {/* Singles Section */}
-          {singles.length > 0 && (
+          {releases.length > 0 ? (
             <div className="mb-12">
-              <h2 className="text-2xl font-light tracking-tighter mb-6">Singles</h2>
-              <div className="flex gap-4 overflow-x-auto scrollbar-hide scroll-smooth pb-4">
-                {singles.map((single) => (
-                  <MusicCard
-                    key={single.id}
-                    song={{
-                      id: single.id,
-                      title: single.name,
-                      artist: getPrimaryArtistName(single.primaryArtistIds),
-                      primaryArtistName: getPrimaryArtistName(single.primaryArtistIds),
-                      featureArtistNames: getFeatureArtistNames(
-                        single.featureArtistIds,
-                        single.primaryArtistIds
-                      ),
-                      duration: formatDuration(single.duration),
-                      backgroundImage: single.image || artist.profilePicture || "/placeholder.svg",
-                      avatar: artist.profilePicture || undefined,
-                      audio: single.audioFile,
-                      spotifyLink: single.spotifyLink,
-                      appleMusicLink: single.appleMusicLink,
-                      tidalLink: single.tidalLink,
-                      amazonMusicLink: single.amazonMusicLink,
-                      youtubeLink: single.youtubeLink,
-                      soundcloudLink: single.soundcloudLink,
-                    }}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Albums Section */}
-          {albums.length > 0 && (
-            <div className="mb-12">
-              <h2 className="text-2xl font-light tracking-tighter mb-6">Albums</h2>
+              <h2 className="text-2xl font-light tracking-tighter mb-6">Releases</h2>
               <div className="flex gap-5 items-center flex-wrap">
-                {albums.map((album) => (
+                {releases.map((rel) => (
                   <div
-                    key={album.id}
-                    onClick={() => router.push(`/releases/${album.id}`)}
+                    key={rel.id}
+                    onClick={() => router.push(`/releases/${rel.id}`)}
                     className="cursor-pointer w-72 h-84"
                   >
-                    <MusicCardSm 
-                      song={{
-                        id: album.id,
-                        name: album.name,
-                        thumbnail: album.coverImage,
+                    <ReleaseCardSm
+                      release={{
+                        id: rel.id,
+                        name: rel.name,
+                        thumbnail: rel.coverImage,
                         audio: null,
-                        primaryArtistName: getPrimaryArtistName(album.primaryArtistIds),
+                        primaryArtistName: getPrimaryArtistName(rel.primaryArtistIds),
                         featureArtistNames: getFeatureArtistNames(
-                          album.featureArtistIds,
-                          album.primaryArtistIds
+                          rel.featureArtistIds,
+                          rel.primaryArtistIds
                         ),
-                        songCount: album.songIds.length,
-                        spotifyLink: album.spotifyLink,
-                        appleMusicLink: album.appleMusicLink,
-                        tidalLink: album.tidalLink,
-                        amazonMusicLink: album.amazonMusicLink,
-                        youtubeLink: album.youtubeLink,
-                        soundcloudLink: album.soundcloudLink,
-                      }} 
+                        songCount: rel.tracks?.length ?? 0,
+                        kindLabel:
+                          rel.kind === "ALBUM"
+                            ? "Album"
+                            : rel.kind === "EP"
+                              ? "EP"
+                              : "Single",
+                        spotifyLink: rel.spotifyLink,
+                        appleMusicLink: rel.appleMusicLink,
+                        tidalLink: rel.tidalLink,
+                        amazonMusicLink: rel.amazonMusicLink,
+                        youtubeLink: rel.youtubeLink,
+                        soundcloudLink: rel.soundcloudLink,
+                        isrcExplicit: rel.isrcExplicit,
+                      }}
                     />
                   </div>
                 ))}
               </div>
             </div>
-          )}
-
-          {/* EPs Section */}
-          {eps.length > 0 && (
-            <div className="mb-12">
-              <h2 className="text-2xl font-light tracking-tighter mb-6">EPs</h2>
-              <div className="flex gap-5 items-center flex-wrap">
-                {eps.map((ep) => (
-                  <div
-                    key={ep.id}
-                    onClick={() => router.push(`/releases/${ep.id}`)}
-                    className="cursor-pointer w-72 h-84"
-                  >
-                    <MusicCardSm 
-                      song={{
-                        id: ep.id,
-                        name: ep.name,
-                        thumbnail: ep.coverImage,
-                        audio: null,
-                        primaryArtistName: getPrimaryArtistName(ep.primaryArtistIds),
-                        featureArtistNames: getFeatureArtistNames(
-                          ep.featureArtistIds,
-                          ep.primaryArtistIds
-                        ),
-                        songCount: ep.songIds.length,
-                        spotifyLink: ep.spotifyLink,
-                        appleMusicLink: ep.appleMusicLink,
-                        tidalLink: ep.tidalLink,
-                        amazonMusicLink: ep.amazonMusicLink,
-                        youtubeLink: ep.youtubeLink,
-                        soundcloudLink: ep.soundcloudLink,
-                      }} 
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Empty State */}
-          {singles.length === 0 && albums.length === 0 && eps.length === 0 && (
+          ) : (
             <div className="text-center py-20">
-              <p className="text-gray-400 text-lg">No music available yet.</p>
+              <p className="text-gray-400 text-lg">No releases yet.</p>
             </div>
           )}
         </div>
@@ -431,4 +290,3 @@ export default function ArtistDetail() {
     </div>
   );
 }
-

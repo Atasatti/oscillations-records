@@ -6,6 +6,27 @@ export const runtime = "nodejs";
 
 const VALID_TYPES = new Set(["single", "ep", "album"]);
 
+function normalizeOptionalString(v: unknown): string | null | undefined {
+  if (v === undefined) return undefined;
+  if (v === null) return null;
+  const s = String(v).trim();
+  return s === "" ? null : s;
+}
+
+function validateOptionalUrl(raw: string | null | undefined): string | undefined {
+  if (raw === undefined) return undefined;
+  if (raw === null || raw === "") return undefined;
+  try {
+    const u = new URL(raw);
+    if (u.protocol !== "http:" && u.protocol !== "https:") {
+      return undefined;
+    }
+    return raw;
+  } catch {
+    return undefined;
+  }
+}
+
 export async function GET() {
   try {
     const now = new Date();
@@ -17,7 +38,7 @@ export async function GET() {
 
     const releases = await prisma.upcomingRelease.findMany({
       where: { releaseDate: { gt: now } },
-      orderBy: { releaseDate: "asc" },
+      orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
     });
 
     return NextResponse.json(releases);
@@ -34,6 +55,9 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { name, type, image, releaseDate } = body;
+    const preSmartLinkUrlRaw = normalizeOptionalString(body.preSmartLinkUrl);
+    const primaryArtist = normalizeOptionalString(body.primaryArtist);
+    const featureArtist = normalizeOptionalString(body.featureArtist);
 
     if (!name || !type || !image || !releaseDate) {
       return NextResponse.json(
@@ -50,10 +74,27 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    let preSmartLinkUrl: string | null = null;
+    if (preSmartLinkUrlRaw) {
+      const ok = validateOptionalUrl(preSmartLinkUrlRaw);
+      if (!ok) {
+        return NextResponse.json(
+          { error: "preSmartLinkUrl must be a valid http(s) URL" },
+          { status: 400 }
+        );
+      }
+      preSmartLinkUrl = ok;
+    }
+
     const parsedDate = new Date(releaseDate);
     if (Number.isNaN(parsedDate.getTime())) {
       return NextResponse.json({ error: "Invalid releaseDate" }, { status: 400 });
     }
+
+    const maxOrder = await prisma.upcomingRelease.aggregate({
+      _max: { sortOrder: true },
+    });
+    const sortOrder = (maxOrder._max.sortOrder ?? -1) + 1;
 
     const created = await prisma.upcomingRelease.create({
       data: {
@@ -61,6 +102,10 @@ export async function POST(request: NextRequest) {
         type: normalizedType,
         image,
         releaseDate: parsedDate,
+        sortOrder,
+        preSmartLinkUrl,
+        primaryArtist: primaryArtist ?? null,
+        featureArtist: featureArtist ?? null,
       },
     });
 

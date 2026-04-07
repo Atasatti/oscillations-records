@@ -1,241 +1,100 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import {
+  apiKindToPrisma,
+  buildArtistMap,
+  featureIdsExcludingPrimary,
+  formatArtistLine,
+  getOptionalDate,
+  primaryNamesFromIds,
+  prismaKindToApi,
+} from "@/lib/release-format";
 
-// Force dynamic rendering - prevent static generation
-export const dynamic = 'force-dynamic';
-export const runtime = 'nodejs';
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
-const getOptionalDate = (value: unknown): Date | null => {
-  if (!value) return null;
-  if (value instanceof Date) return value;
-  const parsed = new Date(String(value));
-  return Number.isNaN(parsed.getTime()) ? null : parsed;
-};
-
-// GET /api/releases - Get all singles, albums and EPs with artist info
-export async function GET() {
+// GET /api/releases — list releases for public grid (optional `?limit=` for home carousel)
+export async function GET(request: NextRequest) {
   try {
-    // Fetch all singles
-    const singles = await prisma.single.findMany({
-      orderBy: {
-        createdAt: 'desc'
+    const { searchParams } = new URL(request.url);
+    const limitRaw = searchParams.get("limit");
+    let take: number | undefined;
+    if (limitRaw !== null && limitRaw !== "") {
+      const n = parseInt(limitRaw, 10);
+      if (Number.isFinite(n) && n > 0) {
+        take = Math.min(n, 100);
       }
-    });
+    }
 
-    // Fetch all albums
-    const albums = await prisma.album.findMany({
-      orderBy: {
-        createdAt: 'desc'
-      }
-    });
-
-    // Fetch all EPs
-    const eps = await prisma.ep.findMany({
-      orderBy: {
-        createdAt: 'desc'
-      }
-    });
-
-    // Get all unique artist IDs
-    const allArtistIds = new Set<string>();
-    albums.forEach(album => {
-      album.primaryArtistIds.forEach(id => allArtistIds.add(String(id)));
-      album.featureArtistIds.forEach(id => allArtistIds.add(String(id)));
-    });
-    eps.forEach(ep => {
-      ep.primaryArtistIds.forEach(id => allArtistIds.add(String(id)));
-      ep.featureArtistIds.forEach(id => allArtistIds.add(String(id)));
-    });
-    singles.forEach(single => {
-      single.primaryArtistIds.forEach(id => allArtistIds.add(String(id)));
-      single.featureArtistIds.forEach(id => allArtistIds.add(String(id)));
-    });
-
-    // Fetch all artists
-    const artists = await prisma.artist.findMany({
-      where: {
-        id: { in: Array.from(allArtistIds) },
+    const releases = await prisma.release.findMany({
+      ...(take !== undefined ? { take } : {}),
+      orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
+      include: {
+        tracks: { orderBy: { sortOrder: "asc" } },
       },
-      select: {
-        id: true,
-        name: true,
-      }
     });
 
-    // Mongo ObjectIds can come back in varying representations; normalize to strings.
-    const artistMap = new Map(artists.map(a => [String(a.id), a]));
-
-    const formatArtistLine = (primaryName: string, featureNames: string[]) => {
-      const unique = Array.from(new Set(featureNames.filter(Boolean)));
-      return unique.length > 0 ? `${primaryName} ft ${unique.join(", ")}` : primaryName;
-    };
-
-    /** Feature IDs that are not also listed as primary (avoid dupes / bad data). */
-    const featureIdsExcludingPrimary = (
-      featureIds: string[],
-      primaryIds: string[]
-    ) => {
-      const primarySet = new Set(primaryIds.map(String));
-      return featureIds.filter((id) => !primarySet.has(String(id)));
-    };
-
-    const primaryNamesFromIds = (ids: string[]) => {
-      const names = ids
-        .map((id) => artistMap.get(String(id))?.name)
-        .filter((n): n is string => Boolean(n));
-      return names.length ? names.join(", ") : "Unknown Artist";
-    };
-
-    // Exclude tracks already included in albums/EPs from singles section
-    const usedSongIds = new Set<string>();
-    albums.forEach((album) =>
-      album.songIds.forEach((id) => usedSongIds.add(String(id)))
-    );
-    eps.forEach((ep) => ep.songIds.forEach((id) => usedSongIds.add(String(id))));
-
-    // Combine and format releases
-    const releases = [
-      ...singles
-        .filter((single) => !usedSongIds.has(single.id))
-        .map(single => {
-          const primaryIds = single.primaryArtistIds || [];
-          const primaryArtistId = primaryIds[0];
-          const featureArtistIds = featureIdsExcludingPrimary(
-            single.featureArtistIds || [],
-            primaryIds
-          );
-          const featureArtistNames = Array.from(
-            new Set(
-              featureArtistIds
-                .map((id: string) => artistMap.get(String(id))?.name)
-                .filter((name): name is string => Boolean(name))
-            )
-          );
-          const primaryName = primaryNamesFromIds(primaryIds);
-          const singleReleaseDate = getOptionalDate(
-            (single as unknown as Record<string, unknown>).releaseDate
-          );
-
-          return {
-            id: single.id,
-            name: single.name,
-            thumbnail: single.image,
-            audio: single.audioFile,
-            type: 'single' as const,
-            primaryArtistName: primaryName,
-            artist: formatArtistLine(primaryName, featureArtistNames),
-            artistId: primaryArtistId ? String(primaryArtistId) : '',
-            featureArtistIds,
-            featureArtistNames,
-            releaseDate: singleReleaseDate,
-            spotifyLink: single.spotifyLink || null,
-            appleMusicLink: single.appleMusicLink || null,
-            tidalLink: single.tidalLink || null,
-            amazonMusicLink: single.amazonMusicLink || null,
-            youtubeLink: single.youtubeLink || null,
-            soundcloudLink: single.soundcloudLink || null,
-            createdAt: single.createdAt,
-            year: singleReleaseDate
-              ? singleReleaseDate.getFullYear().toString()
-              : new Date(single.createdAt).getFullYear().toString(),
-            songCount: 1,
-          };
-        }),
-      ...albums.map(album => {
-        const primaryIds = album.primaryArtistIds || [];
-        const primaryArtistId = primaryIds[0];
-        const featureArtistIds = featureIdsExcludingPrimary(
-          album.featureArtistIds || [],
-          primaryIds
-        );
-        const featureArtistNames = Array.from(
-          new Set(
-            featureArtistIds
-              .map((id: string) => artistMap.get(String(id))?.name)
-              .filter((name): name is string => Boolean(name))
-          )
-        );
-        const primaryName = primaryNamesFromIds(primaryIds);
-        
-        return {
-          id: album.id,
-          name: album.name,
-          thumbnail: album.coverImage,
-          audio: null, // Albums don't have a single audio file
-          type: 'album' as const,
-          primaryArtistName: primaryName,
-          artist: formatArtistLine(primaryName, featureArtistNames),
-          artistId: primaryArtistId ? String(primaryArtistId) : '',
-          featureArtistIds,
-          featureArtistNames,
-          releaseDate: album.releaseDate,
-          spotifyLink: album.spotifyLink || null,
-          appleMusicLink: album.appleMusicLink || null,
-          tidalLink: album.tidalLink || null,
-          amazonMusicLink: album.amazonMusicLink || null,
-          youtubeLink: album.youtubeLink || null,
-          soundcloudLink: album.soundcloudLink || null,
-          createdAt: album.createdAt,
-          year: album.releaseDate 
-            ? new Date(album.releaseDate).getFullYear().toString()
-            : new Date(album.createdAt).getFullYear().toString(),
-          songCount: album.songIds.length,
-        };
-      }),
-      ...eps.map(ep => {
-        const primaryIds = ep.primaryArtistIds || [];
-        const primaryArtistId = primaryIds[0];
-        const featureArtistIds = featureIdsExcludingPrimary(
-          ep.featureArtistIds || [],
-          primaryIds
-        );
-        const featureArtistNames = Array.from(
-          new Set(
-            featureArtistIds
-              .map((id: string) => artistMap.get(String(id))?.name)
-              .filter((name): name is string => Boolean(name))
-          )
-        );
-        const primaryName = primaryNamesFromIds(primaryIds);
-        const epReleaseDate = getOptionalDate(
-          (ep as unknown as Record<string, unknown>).releaseDate
-        );
-        
-        return {
-          id: ep.id,
-          name: ep.name,
-          thumbnail: ep.coverImage,
-          audio: null, // EPs don't have a single audio file
-          type: 'ep' as const,
-          primaryArtistName: primaryName,
-          artist: formatArtistLine(primaryName, featureArtistNames),
-          artistId: primaryArtistId ? String(primaryArtistId) : '',
-          featureArtistIds,
-          featureArtistNames,
-          releaseDate: epReleaseDate,
-          spotifyLink: ep.spotifyLink || null,
-          appleMusicLink: ep.appleMusicLink || null,
-          tidalLink: ep.tidalLink || null,
-          amazonMusicLink: ep.amazonMusicLink || null,
-          youtubeLink: ep.youtubeLink || null,
-          soundcloudLink: ep.soundcloudLink || null,
-          createdAt: ep.createdAt,
-          year: epReleaseDate
-            ? epReleaseDate.getFullYear().toString()
-            : new Date(ep.createdAt).getFullYear().toString(),
-          songCount: ep.songIds.length,
-        };
-      })
-    ];
-
-    // Sort by creation date (newest first)
-    releases.sort((a, b) => {
-      const dateA = a.releaseDate ? new Date(a.releaseDate).getTime() : new Date(a.createdAt).getTime();
-      const dateB = b.releaseDate ? new Date(b.releaseDate).getTime() : new Date(b.createdAt).getTime();
-      return dateB - dateA;
+    const allArtistIds = new Set<string>();
+    releases.forEach((r) => {
+      r.primaryArtistIds.forEach((id) => allArtistIds.add(String(id)));
+      r.featureArtistIds.forEach((id) => allArtistIds.add(String(id)));
     });
 
-    return NextResponse.json(releases);
+    const artists = await prisma.artist.findMany({
+      where: { id: { in: Array.from(allArtistIds) } },
+      select: { id: true, name: true },
+    });
+    const artistMap = buildArtistMap(artists);
+
+    const out = releases.map((r) => {
+      const primaryIds = r.primaryArtistIds || [];
+      const primaryArtistId = primaryIds[0];
+      const featureArtistIds = featureIdsExcludingPrimary(
+        r.featureArtistIds || [],
+        primaryIds
+      );
+      const featureArtistNames = Array.from(
+        new Set(
+          featureArtistIds
+            .map((id: string) => artistMap.get(String(id))?.name)
+            .filter((name): name is string => Boolean(name))
+        )
+      );
+      const primaryName = primaryNamesFromIds(primaryIds, artistMap);
+      const rd = getOptionalDate(r.releaseDate);
+
+      const firstAudio = r.tracks[0]?.audioFile ?? null;
+
+      return {
+        id: r.id,
+        name: r.name,
+        thumbnail: r.coverImage,
+        audio: firstAudio,
+        type: prismaKindToApi(r.kind),
+        primaryArtistName: primaryName,
+        artist: formatArtistLine(primaryName, featureArtistNames),
+        artistId: primaryArtistId ? String(primaryArtistId) : "",
+        featureArtistIds,
+        featureArtistNames,
+        releaseDate: r.releaseDate,
+        spotifyLink: r.spotifyLink || null,
+        appleMusicLink: r.appleMusicLink || null,
+        tidalLink: r.tidalLink || null,
+        amazonMusicLink: r.amazonMusicLink || null,
+        youtubeLink: r.youtubeLink || null,
+        soundcloudLink: r.soundcloudLink || null,
+        isrcExplicit: r.isrcExplicit,
+        sortOrder: r.sortOrder,
+        showLatestOnHome: r.showLatestOnHome,
+        createdAt: r.createdAt,
+        year: rd
+          ? rd.getFullYear().toString()
+          : new Date(r.createdAt).getFullYear().toString(),
+        songCount: r.tracks.length,
+      };
+    });
+
+    return NextResponse.json(out);
   } catch (error) {
     console.error("Error fetching releases:", error);
     return NextResponse.json(
@@ -245,3 +104,133 @@ export async function GET() {
   }
 }
 
+// POST /api/releases — create release shell (tracks added separately)
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const kind = apiKindToPrisma(body.kind);
+    if (!kind) {
+      return NextResponse.json(
+        { error: "kind must be single, ep, or album" },
+        { status: 400 }
+      );
+    }
+
+    const {
+      name,
+      coverImage,
+      releaseDate,
+      description,
+      composer,
+      lyricist,
+      leadVocal,
+      isrcCode,
+      isrcExplicit,
+      spotifyLink,
+      appleMusicLink,
+      tidalLink,
+      amazonMusicLink,
+      youtubeLink,
+      soundcloudLink,
+      primaryArtistIds,
+      featureArtistIds,
+    } = body;
+
+    if (!name || !coverImage) {
+      return NextResponse.json(
+        { error: "name and coverImage are required" },
+        { status: 400 }
+      );
+    }
+
+    if (
+      !primaryArtistIds ||
+      !Array.isArray(primaryArtistIds) ||
+      primaryArtistIds.length === 0
+    ) {
+      return NextResponse.json(
+        { error: "At least one primary artist is required" },
+        { status: 400 }
+      );
+    }
+
+    const primaryArtists = await prisma.artist.findMany({
+      where: { id: { in: primaryArtistIds } },
+    });
+    if (primaryArtists.length !== primaryArtistIds.length) {
+      return NextResponse.json(
+        { error: "One or more primary artists not found" },
+        { status: 404 }
+      );
+    }
+
+    const featIds = featureArtistIds || [];
+    if (featIds.length > 0) {
+      const featureArtists = await prisma.artist.findMany({
+        where: { id: { in: featIds } },
+      });
+      if (featureArtists.length !== featIds.length) {
+        return NextResponse.json(
+          { error: "One or more feature artists not found" },
+          { status: 404 }
+        );
+      }
+    }
+
+    const maxOrder = await prisma.release.aggregate({
+      _max: { sortOrder: true },
+    });
+    const sortOrder = (maxOrder._max.sortOrder ?? -1) + 1;
+
+    const release = await prisma.release.create({
+      data: {
+        kind,
+        name: String(name),
+        coverImage: String(coverImage),
+        primaryArtistIds,
+        featureArtistIds: featIds,
+        sortOrder,
+        releaseDate: releaseDate ? new Date(releaseDate) : null,
+        description: description ? String(description) : null,
+        composer: composer ? String(composer) : null,
+        lyricist: lyricist ? String(lyricist) : null,
+        leadVocal: leadVocal ? String(leadVocal) : null,
+        isrcCode: isrcCode ? String(isrcCode) : null,
+        isrcExplicit: Boolean(isrcExplicit),
+        spotifyLink: spotifyLink || null,
+        appleMusicLink: appleMusicLink || null,
+        tidalLink: tidalLink || null,
+        amazonMusicLink: amazonMusicLink || null,
+        youtubeLink: youtubeLink || null,
+        soundcloudLink: soundcloudLink || null,
+      },
+      include: { tracks: { orderBy: { sortOrder: "asc" } } },
+    });
+
+    const allArtistIds = [
+      ...release.primaryArtistIds,
+      ...release.featureArtistIds,
+    ];
+    const artists = await prisma.artist.findMany({
+      where: { id: { in: allArtistIds } },
+      select: { id: true, name: true, profilePicture: true },
+    });
+
+    return NextResponse.json(
+      {
+        ...release,
+        type: prismaKindToApi(release.kind),
+        songs: release.tracks,
+        tracks: release.tracks,
+        artists,
+      },
+      { status: 201 }
+    );
+  } catch (error) {
+    console.error("Error creating release:", error);
+    return NextResponse.json(
+      { error: "Failed to create release" },
+      { status: 500 }
+    );
+  }
+}

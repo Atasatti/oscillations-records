@@ -1,5 +1,6 @@
 "use client";
 import React, { useEffect, useState } from "react";
+import { cn } from "@/lib/utils";
 
 interface UpcomingRelease {
   id: string;
@@ -7,6 +8,9 @@ interface UpcomingRelease {
   type: "single" | "ep" | "album";
   image: string;
   releaseDate: string;
+  preSmartLinkUrl?: string | null;
+  primaryArtist?: string | null;
+  featureArtist?: string | null;
 }
 
 const UpcomingReleasesSection = () => {
@@ -47,27 +51,62 @@ const UpcomingReleasesSection = () => {
       <p className="text-muted-foreground mt-3">Stay tuned for what is dropping next.</p>
 
       <div className="flex gap-5 items-center flex-wrap mt-8">
-        {releases.map((release) => (
-          <div
-            key={release.id}
-            className="w-72 h-84 bg-[#0F0F0F] rounded-2xl overflow-hidden border border-gray-800 flex flex-col"
-          >
-            <img
-              src={release.image}
-              alt={release.name}
-              className="w-full h-52 object-cover flex-none"
-            />
-            <div className="p-4 flex-1 min-h-0 flex flex-col justify-end">
-              <p className="text-xs uppercase tracking-wider text-gray-400">
-                {release.type}
-              </p>
-              <p className="text-lg mt-1 line-clamp-1">{release.name}</p>
-              <p className="text-sm text-gray-400 mt-2 line-clamp-2">
-                Releases on {new Date(release.releaseDate).toLocaleDateString()}
-              </p>
+        {releases.map((release) => {
+          const href = release.preSmartLinkUrl?.trim();
+          const shellClass =
+            "w-72 h-84 bg-[#0F0F0F] rounded-2xl overflow-hidden border border-gray-800 flex flex-col transition-opacity hover:opacity-95";
+          const inner = (
+            <>
+              <div className="flex h-52 w-full shrink-0 items-center justify-center bg-black/50">
+                <img
+                  src={release.image}
+                  alt={release.name}
+                  className="max-h-full max-w-full object-contain"
+                />
+              </div>
+              <div className="p-4 flex-1 min-h-0 flex flex-col justify-end">
+                <p className="text-xs uppercase tracking-wider text-gray-400">
+                  {release.type}
+                </p>
+                <p className="text-lg mt-1 line-clamp-1">{release.name}</p>
+                {(release.primaryArtist?.trim() || release.featureArtist?.trim()) && (
+                  <p className="text-sm text-gray-300 mt-1.5 line-clamp-2">
+                    {release.primaryArtist?.trim() ? (
+                      <span>{release.primaryArtist?.trim()}</span>
+                    ) : null}
+                    {release.primaryArtist?.trim() && release.featureArtist?.trim() ? (
+                      <span className="text-gray-500"> · </span>
+                    ) : null}
+                    {release.featureArtist?.trim() ? (
+                      <span className="text-gray-400">feat. {release.featureArtist?.trim()}</span>
+                    ) : null}
+                  </p>
+                )}
+                <p className="text-sm text-gray-400 mt-2 line-clamp-2">
+                  Releases on {new Date(release.releaseDate).toLocaleDateString()}
+                </p>
+                {href ? (
+                  <p className="text-xs text-white/70 mt-2 font-medium">Pre-save →</p>
+                ) : null}
+              </div>
+            </>
+          );
+          return href ? (
+            <a
+              key={release.id}
+              href={href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={cn(shellClass, "cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40")}
+            >
+              {inner}
+            </a>
+          ) : (
+            <div key={release.id} className={shellClass}>
+              {inner}
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </section>
   );

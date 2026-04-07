@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import MusicCardSm from "../local-ui/MusicCardSm";
+import ReleaseCardSm from "../local-ui/ReleaseCardSm";
 
 interface Release {
   id: string;
@@ -23,6 +23,7 @@ interface Release {
   amazonMusicLink?: string | null;
   youtubeLink?: string | null;
   soundcloudLink?: string | null;
+  isrcExplicit?: boolean;
   createdAt: string;
   year: string;
   songCount: number;
@@ -126,8 +127,8 @@ const ReleasesSection = () => {
               className="cursor-pointer relative group w-72 h-84"
             >
 
-              <MusicCardSm 
-                song={{
+              <ReleaseCardSm
+                release={{
                   id: release.id,
                   name: release.name,
                   thumbnail: release.thumbnail,
@@ -136,13 +137,20 @@ const ReleasesSection = () => {
                   featureArtistNames: release.featureArtistNames,
                   artist: release.artist,
                   songCount: release.songCount,
+                  kindLabel:
+                    release.type === "album"
+                      ? "Album"
+                      : release.type === "ep"
+                        ? "EP"
+                        : "Single",
                   spotifyLink: release.spotifyLink,
                   appleMusicLink: release.appleMusicLink,
                   tidalLink: release.tidalLink,
                   amazonMusicLink: release.amazonMusicLink,
                   youtubeLink: release.youtubeLink,
                   soundcloudLink: release.soundcloudLink,
-                }} 
+                  isrcExplicit: release.isrcExplicit,
+                }}
               />
             </div>
           ))}

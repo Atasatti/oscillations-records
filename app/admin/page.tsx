@@ -3,6 +3,7 @@ import React from "react";
 import AdminNavbar from "@/components/local-ui/AdminNavbar";
 import AnalyticsDashboard from "@/components/admin/AnalyticsDashboard";
 import StackedHeroImagesAdmin from "@/components/admin/StackedHeroImagesAdmin";
+import FooterSettingsAdmin from "@/components/admin/FooterSettingsAdmin";
 
 export default function Admin() {
   return (
@@ -21,6 +22,8 @@ export default function Admin() {
         <AnalyticsDashboard />
 
         <StackedHeroImagesAdmin />
+
+        <FooterSettingsAdmin />
       </div>
     </div>
   );

@@ -1,0 +1,65 @@
+import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
+import { getToken } from "next-auth/jwt";
+import { prisma } from "@/lib/prisma";
+import { DEFAULT_STACKED_HERO_IMAGES } from "@/lib/site-settings-defaults";
+import { normalizeFooterUrl } from "@/lib/footer-settings";
+
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
+const ADMIN_EMAIL = "oscillationrecordz@gmail.com";
+
+export async function PUT(request: NextRequest) {
+  try {
+    const token = await getToken({
+      req: request,
+      secret: process.env.NEXTAUTH_SECRET,
+    });
+
+    if (!token?.email || token.email !== ADMIN_EMAIL) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    const body = await request.json();
+    const data = {
+      footerXLink: normalizeFooterUrl(body.xLink),
+      footerTiktokLink: normalizeFooterUrl(body.tiktokLink),
+      footerYoutubeLink: normalizeFooterUrl(body.youtubeLink),
+      footerInstagramLink: normalizeFooterUrl(body.instagramLink),
+      footerFacebookLink: normalizeFooterUrl(body.facebookLink),
+      footerSpotifyLink: normalizeFooterUrl(body.spotifyLink),
+      footerSoundcloudLink: normalizeFooterUrl(body.soundcloudLink),
+    };
+
+    await prisma.siteSettings.upsert({
+      where: { id: "site" },
+      create: {
+        id: "site",
+        stackedHeroImage1: DEFAULT_STACKED_HERO_IMAGES.image1,
+        stackedHeroImage2: DEFAULT_STACKED_HERO_IMAGES.image2,
+        stackedHeroImage3: DEFAULT_STACKED_HERO_IMAGES.image3,
+        ...data,
+      },
+      update: data,
+    });
+
+    revalidatePath("/");
+
+    return NextResponse.json({
+      xLink: data.footerXLink,
+      tiktokLink: data.footerTiktokLink,
+      youtubeLink: data.footerYoutubeLink,
+      instagramLink: data.footerInstagramLink,
+      facebookLink: data.footerFacebookLink,
+      spotifyLink: data.footerSpotifyLink,
+      soundcloudLink: data.footerSoundcloudLink,
+    });
+  } catch (error) {
+    console.error("Error saving footer links:", error);
+    return NextResponse.json(
+      { error: "Failed to save footer links" },
+      { status: 500 }
+    );
+  }
+}

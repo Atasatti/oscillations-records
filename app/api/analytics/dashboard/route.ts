@@ -69,11 +69,12 @@ export async function GET(request: NextRequest) {
     const uniqueUsers = new Set(playEvents.map(e => e.userId)).size;
     const completedPlays = playEvents.filter(e => e.completed).length;
 
-    // Group by content type
     const playsByType = {
-      single: playEvents.filter(e => e.contentType === "single").length,
-      album: playEvents.filter(e => e.contentType === "album").length,
-      ep: playEvents.filter(e => e.contentType === "ep").length,
+      track: playEvents.filter((e) => e.contentType === "track").length,
+      release: playEvents.filter((e) => e.contentType === "release").length,
+      single: playEvents.filter((e) => e.contentType === "single").length,
+      album: playEvents.filter((e) => e.contentType === "album").length,
+      ep: playEvents.filter((e) => e.contentType === "ep").length,
     };
 
     // Top content
