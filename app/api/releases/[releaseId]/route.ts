@@ -1,13 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getToken } from "next-auth/jwt";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { prismaKindToApi, serializeTrack } from "@/lib/release-format";
+import {
+  prismaKindToApi,
+  serializeTrack,
+  serializeTrackForPublic,
+} from "@/lib/release-format";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
+const ADMIN_EMAIL = "oscillationrecordz@gmail.com";
+
 // GET /api/releases/[releaseId]
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ releaseId: string }> }
 ) {
   try {
@@ -38,7 +46,14 @@ export async function GET(
       select: { id: true, name: true, profilePicture: true },
     });
 
-    const tracks = release.tracks.map(serializeTrack);
+    const token = await getToken({
+      req: request,
+      secret: process.env.NEXTAUTH_SECRET,
+    });
+    const isAdmin = Boolean(token?.email && token.email === ADMIN_EMAIL);
+    const tracks = release.tracks.map((t) =>
+      isAdmin ? serializeTrack(t) : serializeTrackForPublic(t)
+    );
 
     return NextResponse.json({
       id: release.id,
@@ -53,7 +68,7 @@ export async function GET(
       composer: release.composer,
       lyricist: release.lyricist,
       leadVocal: release.leadVocal,
-      isrcCode: release.isrcCode,
+      upcCode: release.upcCode,
       isrcExplicit: release.isrcExplicit,
       spotifyLink: release.spotifyLink,
       appleMusicLink: release.appleMusicLink,
@@ -92,6 +107,9 @@ function parseTrackInput(
   composer: string | null;
   lyricist: string | null;
   leadVocal: string | null;
+  lyrics: string | null;
+  stemsFile: string | null;
+  trackCredits: Prisma.InputJsonValue | null;
   isrcCode: string | null;
   isrcExplicit: boolean;
   spotifyLink: string | null;
@@ -132,6 +150,12 @@ function parseTrackInput(
     composer: t.composer ? String(t.composer) : null,
     lyricist: t.lyricist ? String(t.lyricist) : null,
     leadVocal: t.leadVocal ? String(t.leadVocal) : null,
+    lyrics: t.lyrics ? String(t.lyrics) : null,
+    stemsFile: t.stemsFile ? String(t.stemsFile) : null,
+    trackCredits:
+      t.trackCredits !== undefined && t.trackCredits !== null
+        ? (t.trackCredits as Prisma.InputJsonValue)
+        : null,
     isrcCode: t.isrcCode ? String(t.isrcCode) : null,
     isrcExplicit: Boolean(t.isrcExplicit),
     spotifyLink: t.spotifyLink ? String(t.spotifyLink) : null,
@@ -172,7 +196,7 @@ export async function PATCH(
       composer,
       lyricist,
       leadVocal,
-      isrcCode,
+      upcCode,
       isrcExplicit,
       spotifyLink,
       appleMusicLink,
@@ -280,8 +304,8 @@ export async function PATCH(
           ...(leadVocal !== undefined && {
             leadVocal: leadVocal ? String(leadVocal) : null,
           }),
-          ...(isrcCode !== undefined && {
-            isrcCode: isrcCode ? String(isrcCode) : null,
+          ...(upcCode !== undefined && {
+            upcCode: upcCode ? String(upcCode) : null,
           }),
           ...(isrcExplicit !== undefined && {
             isrcExplicit: Boolean(isrcExplicit),
@@ -342,6 +366,9 @@ export async function PATCH(
                 composer: t.composer,
                 lyricist: t.lyricist,
                 leadVocal: t.leadVocal,
+                lyrics: t.lyrics,
+                stemsFile: t.stemsFile,
+                trackCredits: t.trackCredits,
                 isrcCode: t.isrcCode,
                 isrcExplicit: t.isrcExplicit,
                 spotifyLink: t.spotifyLink,
@@ -367,6 +394,9 @@ export async function PATCH(
                 composer: t.composer,
                 lyricist: t.lyricist,
                 leadVocal: t.leadVocal,
+                lyrics: t.lyrics,
+                stemsFile: t.stemsFile,
+                trackCredits: t.trackCredits,
                 isrcCode: t.isrcCode,
                 isrcExplicit: t.isrcExplicit,
                 spotifyLink: t.spotifyLink,

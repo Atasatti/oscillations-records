@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import type { Track } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { featureIdsExcludingPrimary } from "@/lib/release-format";
+import {
+  featureIdsExcludingPrimary,
+  serializeTrackForPublic,
+} from "@/lib/release-format";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -73,7 +76,7 @@ export async function GET(request: NextRequest) {
       );
 
       return {
-        ...track,
+        ...serializeTrackForPublic(track),
         artist: primaryArtist || null,
         primaryArtistName,
         featureArtistNames,

@@ -29,6 +29,9 @@ export async function POST(
       composer,
       lyricist,
       leadVocal,
+      lyrics,
+      stemsFile,
+      trackCredits,
       isrcCode,
       isrcExplicit,
       spotifyLink,
@@ -44,6 +47,12 @@ export async function POST(
     if (!name || !audioFile || duration === undefined || duration === null) {
       return NextResponse.json(
         { error: "name, audioFile, and duration are required" },
+        { status: 400 }
+      );
+    }
+    if (!isrcCode || !String(isrcCode).trim()) {
+      return NextResponse.json(
+        { error: "isrcCode is required" },
         { status: 400 }
       );
     }
@@ -105,6 +114,12 @@ export async function POST(
         composer: composer ? String(composer) : null,
         lyricist: lyricist ? String(lyricist) : null,
         leadVocal: leadVocal ? String(leadVocal) : null,
+        lyrics: lyrics ? String(lyrics) : null,
+        stemsFile: stemsFile ? String(stemsFile) : null,
+        trackCredits:
+          trackCredits !== undefined && trackCredits !== null
+            ? trackCredits
+            : null,
         isrcCode: isrcCode ? String(isrcCode) : null,
         isrcExplicit: Boolean(isrcExplicit),
         spotifyLink: spotifyLink || null,

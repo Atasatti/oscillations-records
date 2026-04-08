@@ -50,27 +50,29 @@ const UpcomingReleasesSection = () => {
       <p className="text-3xl sm:text-4xl md:text-5xl tracking-tighter">Upcoming Releases</p>
       <p className="text-muted-foreground mt-3">Stay tuned for what is dropping next.</p>
 
-      <div className="flex gap-5 items-center flex-wrap mt-8">
+      <div className="mt-8 flex flex-wrap items-stretch gap-5">
         {releases.map((release) => {
           const href = release.preSmartLinkUrl?.trim();
           const shellClass =
-            "w-72 h-84 bg-[#0F0F0F] rounded-2xl overflow-hidden border border-gray-800 flex flex-col transition-opacity hover:opacity-95";
+            "flex w-72 min-w-0 flex-col rounded-2xl border border-gray-800 bg-[#0F0F0F] transition-opacity hover:opacity-95";
           const inner = (
             <>
-              <div className="flex h-52 w-full shrink-0 items-center justify-center bg-black/50">
+              <div className="flex h-52 w-full shrink-0 items-center justify-center overflow-hidden rounded-t-2xl bg-black/50">
                 <img
                   src={release.image}
                   alt={release.name}
                   className="max-h-full max-w-full object-contain"
                 />
               </div>
-              <div className="p-4 flex-1 min-h-0 flex flex-col justify-end">
+              <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-1.5 rounded-b-2xl p-4">
                 <p className="text-xs uppercase tracking-wider text-gray-400">
                   {release.type}
                 </p>
-                <p className="text-lg mt-1 line-clamp-1">{release.name}</p>
+                <p className="text-lg leading-snug break-words hyphens-auto">
+                  {release.name}
+                </p>
                 {(release.primaryArtist?.trim() || release.featureArtist?.trim()) && (
-                  <p className="text-sm text-gray-300 mt-1.5 line-clamp-2">
+                  <p className="text-sm leading-snug text-gray-300 break-words hyphens-auto">
                     {release.primaryArtist?.trim() ? (
                       <span>{release.primaryArtist?.trim()}</span>
                     ) : null}
@@ -82,11 +84,13 @@ const UpcomingReleasesSection = () => {
                     ) : null}
                   </p>
                 )}
-                <p className="text-sm text-gray-400 mt-2 line-clamp-2">
+                <p className="text-sm leading-snug text-gray-400 break-words">
                   Releases on {new Date(release.releaseDate).toLocaleDateString()}
                 </p>
                 {href ? (
-                  <p className="text-xs text-white/70 mt-2 font-medium">Pre-save →</p>
+                  <p className="mt-1 text-xs leading-snug font-medium break-all text-white/70">
+                    Pre-save →
+                  </p>
                 ) : null}
               </div>
             </>

@@ -44,7 +44,7 @@ interface Release {
   composer?: string | null;
   lyricist?: string | null;
   leadVocal?: string | null;
-  isrcCode?: string | null;
+  upcCode?: string | null;
   isrcExplicit?: boolean;
   spotifyLink?: string | null;
   appleMusicLink?: string | null;
@@ -183,7 +183,7 @@ export default function ReleaseDetail() {
     release.composer ||
       release.lyricist ||
       release.leadVocal ||
-      release.isrcCode
+      release.upcCode
   );
   const showAbout =
     Boolean(release.description) || Boolean(release.releaseDate);
@@ -299,11 +299,11 @@ export default function ReleaseDetail() {
                               <dd className="text-gray-200">{release.leadVocal}</dd>
                             </>
                           ) : null}
-                          {release.isrcCode ? (
+                          {release.upcCode ? (
                             <>
-                              <dt className="text-gray-500 font-medium">ISRC</dt>
+                              <dt className="text-gray-500 font-medium">UPC</dt>
                               <dd className="text-gray-200 font-mono text-xs sm:text-sm break-all">
-                                {release.isrcCode}
+                                {release.upcCode}
                               </dd>
                             </>
                           ) : null}

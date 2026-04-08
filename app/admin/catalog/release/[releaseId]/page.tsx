@@ -36,6 +36,9 @@ interface Track {
   composer?: string | null;
   lyricist?: string | null;
   leadVocal?: string | null;
+  lyrics?: string | null;
+  stemsFile?: string | null;
+  trackCredits?: TrackFormDialogTrack["trackCredits"];
   isrcCode?: string | null;
   isrcExplicit?: boolean;
   spotifyLink?: string;
@@ -58,7 +61,7 @@ interface ReleaseDetail {
   composer?: string | null;
   lyricist?: string | null;
   leadVocal?: string | null;
-  isrcCode?: string | null;
+  upcCode?: string | null;
   isrcExplicit?: boolean;
   spotifyLink?: string | null;
   appleMusicLink?: string | null;
@@ -118,7 +121,7 @@ export default function AdminReleaseDetail() {
           composer: data.composer,
           lyricist: data.lyricist,
           leadVocal: data.leadVocal,
-          isrcCode: data.isrcCode,
+          upcCode: data.upcCode,
           isrcExplicit: data.isrcExplicit,
           spotifyLink: data.spotifyLink,
           appleMusicLink: data.appleMusicLink,
@@ -213,6 +216,13 @@ export default function AdminReleaseDetail() {
     setTrackDialogOpen(true);
   };
 
+  const handleTrackDialogOpenChange = (next: boolean) => {
+    setTrackDialogOpen(next);
+    if (!next) {
+      setEditingTrack(null);
+    }
+  };
+
   const openEditTrack = (t: Track) => {
     setTrackDialogMode("edit");
     setEditingTrack({
@@ -225,6 +235,11 @@ export default function AdminReleaseDetail() {
       composer: t.composer,
       lyricist: t.lyricist,
       leadVocal: t.leadVocal,
+      lyrics: t.lyrics ?? null,
+      stemsFile: t.stemsFile ?? null,
+      trackCredits: Array.isArray(t.trackCredits)
+        ? (t.trackCredits as TrackFormDialogTrack["trackCredits"])
+        : null,
       isrcCode: t.isrcCode,
       isrcExplicit: t.isrcExplicit,
       spotifyLink: t.spotifyLink,
@@ -282,7 +297,7 @@ export default function AdminReleaseDetail() {
     release.composer ||
       release.lyricist ||
       release.leadVocal ||
-      release.isrcCode
+      release.upcCode
   );
   const showAbout = Boolean(release.description) || Boolean(release.releaseDate);
   const streamProps = {
@@ -363,7 +378,7 @@ export default function AdminReleaseDetail() {
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       variant="destructive"
-                      onClick={() => setDeleteDialogOpen(true)}
+                      onSelect={() => setDeleteDialogOpen(true)}
                       className="text-red-400"
                     >
                       <Trash2 className="w-4 h-4 mr-2" />
@@ -426,11 +441,11 @@ export default function AdminReleaseDetail() {
                             <dd className="text-gray-200">{release.leadVocal}</dd>
                           </>
                         ) : null}
-                        {release.isrcCode ? (
+                        {release.upcCode ? (
                           <>
-                            <dt className="text-gray-500 font-medium">ISRC</dt>
+                            <dt className="text-gray-500 font-medium">UPC</dt>
                             <dd className="text-gray-200 font-mono text-xs sm:text-sm break-all">
-                              {release.isrcCode}
+                              {release.upcCode}
                             </dd>
                           </>
                         ) : null}
@@ -496,7 +511,7 @@ export default function AdminReleaseDetail() {
                     isrcExplicit: track.isrcExplicit,
                   }}
                 />
-                <DropdownMenu>
+                <DropdownMenu modal={false}>
                   <DropdownMenuTrigger asChild>
                     <Button
                       variant="ghost"
@@ -512,9 +527,8 @@ export default function AdminReleaseDetail() {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="bg-[#0F0F0F] border-gray-800">
                     <DropdownMenuItem
-                      onClick={(e) => {
-                        e.preventDefault();
-                        openEditTrack(track);
+                      onSelect={() => {
+                        requestAnimationFrame(() => openEditTrack(track));
                       }}
                     >
                       <Pencil className="w-4 h-4 mr-2" />
@@ -522,9 +536,7 @@ export default function AdminReleaseDetail() {
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       variant="destructive"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
+                      onSelect={() => {
                         setTrackToDelete({ id: track.id, name: track.name });
                         setDeleteTrackDialogOpen(true);
                       }}
@@ -541,8 +553,17 @@ export default function AdminReleaseDetail() {
         )}
 
         <TrackFormDialog
+          key={
+            trackDialogOpen
+              ? `${trackDialogMode}-${
+                  trackDialogMode === "edit"
+                    ? editingTrack?.id ?? "unknown"
+                    : "new"
+                }`
+              : "track-form-closed"
+          }
           open={trackDialogOpen}
-          onOpenChange={setTrackDialogOpen}
+          onOpenChange={handleTrackDialogOpenChange}
           releaseId={releaseId}
           artists={allArtists}
           defaultPrimaryIds={release.primaryArtistIds}

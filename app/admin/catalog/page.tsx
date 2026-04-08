@@ -506,6 +506,17 @@ export default function AdminCatalog() {
     }
   };
 
+  const handleCatalogReorderByType = async (
+    type: CatalogRelease["type"],
+    orderedGroup: CatalogRelease[]
+  ) => {
+    const groupQueue = [...orderedGroup];
+    const merged = releases.map((r) =>
+      r.type === type ? (groupQueue.shift() as CatalogRelease) : r
+    );
+    await handleCatalogReorderSave(merged);
+  };
+
   const handleReleaseLatestChange = async (id: string, checked: boolean) => {
     const prev = [...releases];
     setReleases((list) =>
@@ -653,36 +664,55 @@ export default function AdminCatalog() {
           )}
         </div>
 
-        {/* Releases (Single / EP / Album) */}
+        {/* Singles */}
         <div className="mb-12 md:mb-16">
           <div className="mb-4 flex flex-col gap-4 sm:mb-6 sm:flex-row sm:items-end sm:justify-between">
             <div className="min-w-0 space-y-1">
               <h2 className="text-xl font-light tracking-tighter md:text-2xl">
-                Manage releases
+                Singles
               </h2>
               <p className="max-w-xl text-sm text-gray-500">
-                Drag releases to set public order (home carousel and releases page).
-                Check <span className="text-gray-400">Latest on home</span> to show
-                the red &quot;Latest&quot; pill on that release&apos;s track in New Music.
+                Drag to reorder singles. Toggle <span className="text-gray-400">Latest on home</span> to show the red pill in New Music.
               </p>
             </div>
             <NewReleaseDropdown />
           </div>
-          {releases.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-gray-700 bg-[#0F0F0F]/80 px-6 py-16 text-center">
-              <p className="mb-1 text-lg text-gray-300">No releases yet</p>
-              <p className="mx-auto mb-8 max-w-md text-sm text-gray-500">
-                Start with a single, EP, or album — you can add as many tracks as you need after
-                creating the release.
-              </p>
-              <div className="flex justify-center">
-                <NewReleaseDropdown align="center" />
-              </div>
-            </div>
+          {releases.filter((r) => r.type === "single").length === 0 ? (
+            <p className="text-sm text-gray-500">No singles yet.</p>
           ) : (
             <CatalogReleasesSortableList
-              releases={releases}
-              onReorderSave={handleCatalogReorderSave}
+              releases={releases.filter((r) => r.type === "single")}
+              onReorderSave={(ordered) => handleCatalogReorderByType("single", ordered)}
+              onLatestChange={handleReleaseLatestChange}
+              onDeleteClick={handleContentDeleteClick}
+            />
+          )}
+        </div>
+
+        {/* EPs */}
+        <div className="mb-12 md:mb-16">
+          <h2 className="text-xl font-light tracking-tighter md:text-2xl mb-4">EPs</h2>
+          {releases.filter((r) => r.type === "ep").length === 0 ? (
+            <p className="text-sm text-gray-500">No EPs yet.</p>
+          ) : (
+            <CatalogReleasesSortableList
+              releases={releases.filter((r) => r.type === "ep")}
+              onReorderSave={(ordered) => handleCatalogReorderByType("ep", ordered)}
+              onLatestChange={handleReleaseLatestChange}
+              onDeleteClick={handleContentDeleteClick}
+            />
+          )}
+        </div>
+
+        {/* Albums */}
+        <div className="mb-12 md:mb-16">
+          <h2 className="text-xl font-light tracking-tighter md:text-2xl mb-4">Albums</h2>
+          {releases.filter((r) => r.type === "album").length === 0 ? (
+            <p className="text-sm text-gray-500">No albums yet.</p>
+          ) : (
+            <CatalogReleasesSortableList
+              releases={releases.filter((r) => r.type === "album")}
+              onReorderSave={(ordered) => handleCatalogReorderByType("album", ordered)}
               onLatestChange={handleReleaseLatestChange}
               onDeleteClick={handleContentDeleteClick}
             />

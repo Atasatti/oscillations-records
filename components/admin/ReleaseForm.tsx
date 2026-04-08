@@ -45,7 +45,7 @@ export default function ReleaseForm({
     composer: "",
     lyricist: "",
     leadVocal: "",
-    isrcCode: "",
+    upcCode: "",
     isrcExplicit: false,
     spotifyLink: "",
     appleMusicLink: "",
@@ -96,7 +96,7 @@ export default function ReleaseForm({
           composer: data.composer || "",
           lyricist: data.lyricist || "",
           leadVocal: data.leadVocal || "",
-          isrcCode: data.isrcCode || "",
+          upcCode: data.upcCode || "",
           isrcExplicit: Boolean(data.isrcExplicit),
           spotifyLink: data.spotifyLink || "",
           appleMusicLink: data.appleMusicLink || "",
@@ -222,6 +222,10 @@ export default function ReleaseForm({
       alert("Please select at least one primary artist");
       return;
     }
+    if (!formData.upcCode.trim()) {
+      alert("UPC is required");
+      return;
+    }
     if (artists.length === 0) {
       alert("No artists available. Create an artist first.");
       return;
@@ -246,7 +250,7 @@ export default function ReleaseForm({
         composer: formData.composer || null,
         lyricist: formData.lyricist || null,
         leadVocal: formData.leadVocal || null,
-        isrcCode: formData.isrcCode || null,
+        upcCode: formData.upcCode || null,
         isrcExplicit: formData.isrcExplicit,
         spotifyLink: formData.spotifyLink || null,
         appleMusicLink: formData.appleMusicLink || null,
@@ -434,10 +438,11 @@ export default function ReleaseForm({
                     className="md:col-span-2 bg-gray-800 border-gray-700 text-white"
                   />
                   <Input
-                    name="isrcCode"
-                    value={formData.isrcCode}
+                    name="upcCode"
+                    value={formData.upcCode}
                     onChange={handleInputChange}
-                    placeholder="ISRC"
+                    placeholder="UPC *"
+                    required
                     className="md:col-span-2 bg-gray-800 border-gray-700 text-white"
                   />
                   <label className="md:col-span-2 inline-flex items-center gap-2 text-sm text-gray-300">

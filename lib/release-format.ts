@@ -72,6 +72,9 @@ export function serializeTrack(t: Track) {
     composer: t.composer,
     lyricist: t.lyricist,
     leadVocal: t.leadVocal,
+    lyrics: t.lyrics,
+    stemsFile: t.stemsFile,
+    trackCredits: t.trackCredits,
     isrcCode: t.isrcCode,
     isrcExplicit: t.isrcExplicit,
     spotifyLink: t.spotifyLink,
@@ -86,4 +89,13 @@ export function serializeTrack(t: Track) {
     createdAt: t.createdAt,
     updatedAt: t.updatedAt,
   };
+}
+
+/** Public payloads: omit ISRC — admin session still uses full {@link serializeTrack}. */
+export function serializeTrackForPublic(
+  t: Track
+): Omit<ReturnType<typeof serializeTrack>, "isrcCode"> {
+  const { isrcCode: _isrc, ...rest } = serializeTrack(t);
+  void _isrc;
+  return rest;
 }

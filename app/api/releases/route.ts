@@ -77,6 +77,7 @@ export async function GET(request: NextRequest) {
         featureArtistIds,
         featureArtistNames,
         releaseDate: r.releaseDate,
+        upcCode: r.upcCode,
         spotifyLink: r.spotifyLink || null,
         appleMusicLink: r.appleMusicLink || null,
         tidalLink: r.tidalLink || null,
@@ -124,7 +125,7 @@ export async function POST(request: NextRequest) {
       composer,
       lyricist,
       leadVocal,
-      isrcCode,
+      upcCode,
       isrcExplicit,
       spotifyLink,
       appleMusicLink,
@@ -139,6 +140,12 @@ export async function POST(request: NextRequest) {
     if (!name || !coverImage) {
       return NextResponse.json(
         { error: "name and coverImage are required" },
+        { status: 400 }
+      );
+    }
+    if (!upcCode || !String(upcCode).trim()) {
+      return NextResponse.json(
+        { error: "upcCode is required" },
         { status: 400 }
       );
     }
@@ -195,7 +202,7 @@ export async function POST(request: NextRequest) {
         composer: composer ? String(composer) : null,
         lyricist: lyricist ? String(lyricist) : null,
         leadVocal: leadVocal ? String(leadVocal) : null,
-        isrcCode: isrcCode ? String(isrcCode) : null,
+        upcCode: upcCode ? String(upcCode) : null,
         isrcExplicit: Boolean(isrcExplicit),
         spotifyLink: spotifyLink || null,
         appleMusicLink: appleMusicLink || null,

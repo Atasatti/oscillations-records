@@ -9,10 +9,18 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { MultiSelect } from "@/components/ui/multi-select";
-import { Loader2, Music, Image as ImageIcon } from "lucide-react";
+import { Loader2, Music } from "lucide-react";
 
 type ArtistOpt = { id: string; name: string };
+
+type CreditCategory =
+  | "composer"
+  | "songwriter"
+  | "production_engineer"
+  | "performer"
+  | "custom";
 
 export type TrackFormDialogTrack = {
   id: string;
@@ -24,6 +32,9 @@ export type TrackFormDialogTrack = {
   composer?: string | null;
   lyricist?: string | null;
   leadVocal?: string | null;
+  lyrics?: string | null;
+  stemsFile?: string | null;
+  trackCredits?: TrackCreditJsonRow[] | null;
   isrcCode?: string | null;
   isrcExplicit?: boolean;
   spotifyLink?: string | null;
@@ -36,12 +47,206 @@ export type TrackFormDialogTrack = {
   featureArtistIds: string[];
 };
 
+/** Row as stored in DB JSON */
+type TrackCreditJsonRow = {
+  category: CreditCategory | "other";
+  name: string;
+  role: string;
+};
+
+const SONGWRITER_ROLES = [
+  "Arranger",
+  "Author",
+  "Conductor",
+  "Librettist",
+  "Lyricist",
+];
+const PRODUCTION_ROLES = [
+  "Assistant Producer",
+  "Mastering Engineer",
+  "Mixing Engineer",
+  "Musical Director",
+  "Producer",
+  "Sound Engineer",
+];
+const PERFORMER_ROLES = [
+  "Acoustic Guitar",
+  "Alto Saxophone",
+  "Background Vocals",
+  "Banjo",
+  "Baritone Saxophone",
+  "Bass Clarinet",
+  "Bass Guitar",
+  "Bass Trombone",
+  "Bassoon",
+  "Bongos",
+  "Bouzouki",
+  "Cello",
+  "Choir",
+  "Chorus",
+  "Clarinet",
+  "Classical Guitar",
+  "Congas",
+  "Cornet",
+  "DJ",
+  "Djembe",
+  "Double Bass",
+  "Drums",
+  "Electric Guitar",
+  "Fiddle",
+  "First Violin",
+  "Flugelhorn",
+  "Flute",
+  "Guitar",
+  "Hammond Organ",
+  "Harmonica",
+  "Harmony Vocals",
+  "Harp",
+  "Harpsichord",
+  "Keyboards",
+  "Kora",
+  "Lead Guitar",
+  "Lead Vocals",
+  "Mandolin",
+  "Mezzo-soprano Vocals",
+  "Oboe",
+  "Organ",
+  "Pedal Steel Guitar",
+  "Percussion",
+  "Performer",
+  "Piano",
+  "Piccolo",
+  "Remixer",
+  "Rhodes Piano",
+  "Rhythm Guitar",
+  "Saxophone",
+  "Second Violin",
+  "Sitar",
+  "Sopranino Saxophone",
+  "Tabla",
+  "Tambourine",
+  "Tenor Saxophone",
+  "Timbales",
+  "Timpani",
+  "Trombone",
+  "Trumpet",
+  "Tuba",
+  "Ukulele",
+  "Viola",
+  "Violin",
+];
+
+type NameRoleRow = { name: string; role: string };
+
+function creditPayload(
+  composerNames: string[],
+  songwriterRows: NameRoleRow[],
+  productionRows: NameRoleRow[],
+  performerRows: NameRoleRow[],
+  customRows: NameRoleRow[]
+): TrackCreditJsonRow[] {
+  const out: TrackCreditJsonRow[] = [];
+  for (const name of composerNames) {
+    const n = name.trim();
+    if (n) out.push({ category: "composer", name: n, role: "" });
+  }
+  for (const r of songwriterRows) {
+    if (r.name.trim() && r.role.trim()) {
+      out.push({ category: "songwriter", name: r.name.trim(), role: r.role.trim() });
+    }
+  }
+  for (const r of productionRows) {
+    if (r.name.trim() && r.role.trim()) {
+      out.push({
+        category: "production_engineer",
+        name: r.name.trim(),
+        role: r.role.trim(),
+      });
+    }
+  }
+  for (const r of performerRows) {
+    if (r.name.trim() && r.role.trim()) {
+      out.push({ category: "performer", name: r.name.trim(), role: r.role.trim() });
+    }
+  }
+  for (const r of customRows) {
+    if (r.name.trim() && r.role.trim()) {
+      out.push({ category: "custom", name: r.name.trim(), role: r.role.trim() });
+    }
+  }
+  return out;
+}
+
+function parseStoredCredits(
+  raw: unknown,
+  legacy: { composer?: string | null; lyricist?: string | null; leadVocal?: string | null }
+): {
+  composerNames: string[];
+  songwriterRows: NameRoleRow[];
+  productionRows: NameRoleRow[];
+  performerRows: NameRoleRow[];
+  customRows: NameRoleRow[];
+} {
+  const composerNames: string[] = [];
+  const songwriterRows: NameRoleRow[] = [];
+  const productionRows: NameRoleRow[] = [];
+  const performerRows: NameRoleRow[] = [];
+  const customRows: NameRoleRow[] = [];
+
+  if (Array.isArray(raw)) {
+    for (const item of raw) {
+      if (!item || typeof item !== "object") continue;
+      const row = item as Record<string, unknown>;
+      const category = String(row.category || "");
+      const name = String(row.name || "").trim();
+      const role = String(row.role || "").trim();
+      if (category === "composer" && name) {
+        composerNames.push(name);
+        continue;
+      }
+      if (category === "songwriter") {
+        songwriterRows.push({ name, role });
+        continue;
+      }
+      if (category === "production_engineer") {
+        productionRows.push({ name, role });
+        continue;
+      }
+      if (category === "performer") {
+        performerRows.push({ name, role });
+        continue;
+      }
+      if (category === "custom" || category === "other") {
+        customRows.push({ name, role });
+      }
+    }
+  }
+
+  if (composerNames.length === 0 && legacy.composer?.trim()) {
+    composerNames.push(legacy.composer.trim());
+  }
+  if (songwriterRows.length === 0 && legacy.lyricist?.trim()) {
+    songwriterRows.push({ name: legacy.lyricist.trim(), role: "Lyricist" });
+  }
+  if (performerRows.length === 0 && legacy.leadVocal?.trim()) {
+    performerRows.push({ name: legacy.leadVocal.trim(), role: "Lead Vocals" });
+  }
+
+  const ensured = (rows: NameRoleRow[]) => (rows.length > 0 ? rows : [{ name: "", role: "" }]);
+  return {
+    composerNames: composerNames.length > 0 ? composerNames : [""],
+    songwriterRows: ensured(songwriterRows),
+    productionRows: ensured(productionRows),
+    performerRows: ensured(performerRows),
+    customRows,
+  };
+}
+
 type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   releaseId: string;
   artists: ArtistOpt[];
-  /** Default from release — used for new tracks */
   defaultPrimaryIds: string[];
   defaultFeatureIds: string[];
   mode: "create" | "edit";
@@ -61,29 +266,38 @@ export default function TrackFormDialog({
   onSaved,
 }: Props) {
   const [saving, setSaving] = useState(false);
-  const [uploadingImage, setUploadingImage] = useState(false);
   const [uploadingAudio, setUploadingAudio] = useState(false);
   const [calcDuration, setCalcDuration] = useState(false);
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [duration, setDuration] = useState(0);
-  const imgRef = useRef<HTMLInputElement>(null);
   const audRef = useRef<HTMLInputElement>(null);
 
   const [name, setName] = useState("");
-  const [releaseDate, setReleaseDate] = useState("");
-  const [composer, setComposer] = useState("");
-  const [lyricist, setLyricist] = useState("");
-  const [leadVocal, setLeadVocal] = useState("");
+  const [lyrics, setLyrics] = useState("");
   const [isrcCode, setIsrcCode] = useState("");
+  const [stemsFile, setStemsFile] = useState<File | null>(null);
+  const [stemsUrl, setStemsUrl] = useState("");
+  const [uploadingStems, setUploadingStems] = useState(false);
+  const stemsRef = useRef<HTMLInputElement>(null);
+
+  const [composerNames, setComposerNames] = useState<string[]>([""]);
+  const [songwriterRows, setSongwriterRows] = useState<NameRoleRow[]>([
+    { name: "", role: "" },
+  ]);
+  const [productionRows, setProductionRows] = useState<NameRoleRow[]>([
+    { name: "", role: "" },
+  ]);
+  const [performerRows, setPerformerRows] = useState<NameRoleRow[]>([
+    { name: "", role: "" },
+  ]);
+  const [customRows, setCustomRows] = useState<NameRoleRow[]>([]);
+
   const [isrcExplicit, setIsrcExplicit] = useState(false);
   const [spotifyLink, setSpotifyLink] = useState("");
   const [appleMusicLink, setAppleMusicLink] = useState("");
   const [tidalLink, setTidalLink] = useState("");
   const [amazonMusicLink, setAmazonMusicLink] = useState("");
   const [youtubeLink, setYoutubeLink] = useState("");
-  const [soundcloudLink, setSoundcloudLink] = useState("");
   const [primaryArtistIds, setPrimaryArtistIds] = useState<string[]>([]);
   const [featureArtistIds, setFeatureArtistIds] = useState<string[]>([]);
 
@@ -91,48 +305,52 @@ export default function TrackFormDialog({
     if (!open) return;
     if (mode === "edit" && track) {
       setName(track.name);
-      setReleaseDate(
-        track.releaseDate ? String(track.releaseDate).slice(0, 10) : ""
-      );
-      setComposer(track.composer || "");
-      setLyricist(track.lyricist || "");
-      setLeadVocal(track.leadVocal || "");
+      const parsed = parseStoredCredits(track.trackCredits, {
+        composer: track.composer,
+        lyricist: track.lyricist,
+        leadVocal: track.leadVocal,
+      });
+      setComposerNames(parsed.composerNames);
+      setSongwriterRows(parsed.songwriterRows);
+      setProductionRows(parsed.productionRows);
+      setPerformerRows(parsed.performerRows);
+      setCustomRows(parsed.customRows);
+      setLyrics(track.lyrics || "");
       setIsrcCode(track.isrcCode || "");
+      setStemsUrl(track.stemsFile || "");
       setIsrcExplicit(Boolean(track.isrcExplicit));
       setSpotifyLink(track.spotifyLink || "");
       setAppleMusicLink(track.appleMusicLink || "");
       setTidalLink(track.tidalLink || "");
       setAmazonMusicLink(track.amazonMusicLink || "");
       setYoutubeLink(track.youtubeLink || "");
-      setSoundcloudLink(track.soundcloudLink || "");
       setPrimaryArtistIds(track.primaryArtistIds || []);
       setFeatureArtistIds(track.featureArtistIds || []);
       setDuration(track.duration);
-      setImagePreview(track.image || null);
-      setImageFile(null);
       setAudioFile(null);
     } else {
       setName("");
-      setReleaseDate("");
-      setComposer("");
-      setLyricist("");
-      setLeadVocal("");
+      setComposerNames([""]);
+      setSongwriterRows([{ name: "", role: "" }]);
+      setProductionRows([{ name: "", role: "" }]);
+      setPerformerRows([{ name: "", role: "" }]);
+      setCustomRows([]);
+      setLyrics("");
       setIsrcCode("");
+      setStemsUrl("");
       setIsrcExplicit(false);
       setSpotifyLink("");
       setAppleMusicLink("");
       setTidalLink("");
       setAmazonMusicLink("");
       setYoutubeLink("");
-      setSoundcloudLink("");
       setPrimaryArtistIds([...defaultPrimaryIds]);
       setFeatureArtistIds(
         defaultFeatureIds.filter((id) => !defaultPrimaryIds.includes(id))
       );
       setDuration(0);
-      setImagePreview(null);
-      setImageFile(null);
       setAudioFile(null);
+      setStemsFile(null);
     }
   }, [open, mode, track, defaultPrimaryIds, defaultFeatureIds]);
 
@@ -145,20 +363,6 @@ export default function TrackFormDialog({
     if (!r.ok) throw new Error("Upload failed");
   };
 
-  const uploadImage = async (file: File): Promise<string> => {
-    const ts = Date.now();
-    const key = `tracks/images/${ts}-${file.name.replace(/[^a-zA-Z0-9.-]/g, "_")}`;
-    const res = await fetch("/api/upload/presigned-url-image", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ imageFileName: key, imageFileType: file.type }),
-    });
-    if (!res.ok) throw new Error("Presign image failed");
-    const data = await res.json();
-    await uploadS3(file, data.uploadURL);
-    return data.fileURL as string;
-  };
-
   const uploadAudio = async (file: File): Promise<string> => {
     const ts = Date.now();
     const key = `tracks/audio/${ts}-${file.name.replace(/[^a-zA-Z0-9.-]/g, "_")}`;
@@ -168,6 +372,23 @@ export default function TrackFormDialog({
       body: JSON.stringify({ audioFileName: key, audioFileType: file.type }),
     });
     if (!res.ok) throw new Error("Presign audio failed");
+    const data = await res.json();
+    await uploadS3(file, data.audio.uploadURL);
+    return data.audio.fileURL as string;
+  };
+
+  const uploadStems = async (file: File): Promise<string> => {
+    const ts = Date.now();
+    const key = `tracks/stems/${ts}-${file.name.replace(/[^a-zA-Z0-9.-]/g, "_")}`;
+    const res = await fetch("/api/upload/presigned-urls", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        audioFileName: key,
+        audioFileType: file.type || "application/octet-stream",
+      }),
+    });
+    if (!res.ok) throw new Error("Presign stems failed");
     const data = await res.json();
     await uploadS3(file, data.audio.uploadURL);
     return data.audio.fileURL as string;
@@ -200,11 +421,10 @@ export default function TrackFormDialog({
     }
   };
 
-  const onPickImage = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const onPickStems = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    setImageFile(file);
-    setImagePreview(URL.createObjectURL(file));
+    setStemsFile(file);
   };
 
   const handlePrimary = (selected: string[]) => {
@@ -218,6 +438,26 @@ export default function TrackFormDialog({
     );
   };
 
+  const validateNameRoleRows = (
+    rows: NameRoleRow[],
+    label: string
+  ): boolean => {
+    const valid = rows.filter((r) => r.name.trim() && r.role.trim());
+    if (valid.length === 0) {
+      alert(`Add at least one ${label} with name and role`);
+      return false;
+    }
+    for (const r of rows) {
+      const hasName = Boolean(r.name.trim());
+      const hasRole = Boolean(r.role.trim());
+      if (hasName !== hasRole) {
+        alert(`${label}: each row needs both name and role`);
+        return false;
+      }
+    }
+    return true;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) {
@@ -229,7 +469,11 @@ export default function TrackFormDialog({
       return;
     }
     if (mode === "create" && (!audioFile || duration <= 0)) {
-      alert("Add an audio file and wait for duration");
+      alert("Add an audio file (WAV or MP3) and wait for duration");
+      return;
+    }
+    if (!isrcCode.trim()) {
+      alert("ISRC is required");
       return;
     }
     if (mode === "edit" && !audioFile && !track?.audioFile) {
@@ -237,40 +481,66 @@ export default function TrackFormDialog({
       return;
     }
 
+    if (!composerNames.some((n) => n.trim())) {
+      alert("Add at least one composer name");
+      return;
+    }
+    if (!validateNameRoleRows(songwriterRows, "Songwriter")) return;
+    if (!validateNameRoleRows(productionRows, "Production / Engineer")) return;
+    if (!validateNameRoleRows(performerRows, "Performer")) return;
+    for (const r of customRows) {
+      const hasName = Boolean(r.name.trim());
+      const hasRole = Boolean(r.role.trim());
+      if (hasName !== hasRole) {
+        alert('Additional credits: each "Add more" row needs both name and role');
+        return;
+      }
+    }
+
+    const trackCreditsPayload = creditPayload(
+      composerNames,
+      songwriterRows,
+      productionRows,
+      performerRows,
+      customRows
+    );
+    const composerJoined =
+      composerNames.map((n) => n.trim()).filter(Boolean).join(", ") || null;
+
     setSaving(true);
     try {
-      let imageUrl: string | null =
-        mode === "edit" ? track?.image ?? null : null;
-      if (imageFile) {
-        setUploadingImage(true);
-        imageUrl = await uploadImage(imageFile);
-        setUploadingImage(false);
-      }
-
       let audioUrl = track?.audioFile ?? "";
       if (audioFile) {
         setUploadingAudio(true);
         audioUrl = await uploadAudio(audioFile);
         setUploadingAudio(false);
       }
+      let finalStemsUrl = stemsUrl || "";
+      if (stemsFile) {
+        setUploadingStems(true);
+        finalStemsUrl = await uploadStems(stemsFile);
+        setUploadingStems(false);
+      }
 
       const body = {
         name: name.trim(),
-        image: imageUrl,
+        image: mode === "edit" ? track?.image ?? null : null,
         audioFile: audioUrl,
         duration,
-        releaseDate: releaseDate || null,
-        composer: composer || null,
-        lyricist: lyricist || null,
-        leadVocal: leadVocal || null,
-        isrcCode: isrcCode || null,
+        releaseDate: null,
+        composer: composerJoined,
+        lyricist: null,
+        leadVocal: null,
+        lyrics: lyrics.trim() || null,
+        stemsFile: finalStemsUrl || null,
+        trackCredits: trackCreditsPayload,
+        isrcCode: isrcCode.trim(),
         isrcExplicit,
-        spotifyLink: spotifyLink || null,
-        appleMusicLink: appleMusicLink || null,
-        tidalLink: tidalLink || null,
-        amazonMusicLink: amazonMusicLink || null,
-        youtubeLink: youtubeLink || null,
-        soundcloudLink: soundcloudLink || null,
+        spotifyLink: spotifyLink.trim() || null,
+        appleMusicLink: appleMusicLink.trim() || null,
+        tidalLink: tidalLink.trim() || null,
+        amazonMusicLink: amazonMusicLink.trim() || null,
+        youtubeLink: youtubeLink.trim() || null,
         primaryArtistIds,
         featureArtistIds,
       };
@@ -303,44 +573,68 @@ export default function TrackFormDialog({
       console.error(err);
       alert(err instanceof Error ? err.message : "Failed");
     } finally {
+      setUploadingStems(false);
       setSaving(false);
     }
   };
 
+  const updateNamedRow = (
+    setter: React.Dispatch<React.SetStateAction<NameRoleRow[]>>,
+    index: number,
+    patch: Partial<NameRoleRow>
+  ) => {
+    setter((prev) =>
+      prev.map((row, i) => (i === index ? { ...row, ...patch } : row))
+    );
+  };
+
+  const roleSelect = (
+    value: string,
+    onChange: (v: string) => void,
+    options: string[],
+    id: string
+  ) => (
+    <select
+      id={id}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      className="w-full rounded-md border border-gray-700 bg-gray-900 px-2 py-2 text-sm"
+    >
+      <option value="">Select role *</option>
+      {options.map((r) => (
+        <option key={r} value={r}>
+          {r}
+        </option>
+      ))}
+    </select>
+  );
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-[#0F0F0F] border-gray-800 text-white max-h-[90vh] max-w-lg overflow-y-auto no-scrollbar">
+      <DialogContent className="no-scrollbar max-h-[90vh] max-w-2xl overflow-y-auto border-gray-800 bg-[#0F0F0F] text-white">
         <DialogHeader>
           <DialogTitle>
             {mode === "create" ? "Add track" : "Edit track"}
           </DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <Input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Track title *"
-            className="bg-gray-900 border-gray-700"
-            required
-          />
-
-          <div className="grid grid-cols-2 gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              className="border-gray-700"
-              onClick={() => imgRef.current?.click()}
-            >
-              <ImageIcon className="w-4 h-4 mr-2" />
-              Track art
-            </Button>
-            <input
-              ref={imgRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={onPickImage}
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div>
+            <label className="mb-1 block text-xs font-medium text-gray-400">
+              Track name *
+            </label>
+            <Input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Track name"
+              className="border-gray-700 bg-gray-900"
+              required
             />
+          </div>
+
+          <div>
+            <label className="mb-1 block text-xs font-medium text-gray-400">
+              Track audio (WAV / MP3) *
+            </label>
             <Button
               type="button"
               variant="outline"
@@ -348,124 +642,155 @@ export default function TrackFormDialog({
               onClick={() => audRef.current?.click()}
               disabled={calcDuration}
             >
-              <Music className="w-4 h-4 mr-2" />
-              Audio file
+              <Music className="mr-2 h-4 w-4" />
+              Choose audio file
             </Button>
             <input
               ref={audRef}
               type="file"
-              accept="audio/*"
+              accept="audio/*,.wav,.mp3"
               className="hidden"
               onChange={onPickAudio}
             />
+            {audioFile ? (
+              <p className="mt-1 text-xs text-gray-400">{audioFile.name}</p>
+            ) : mode === "edit" && track ? (
+              <p className="mt-1 text-xs text-gray-400">
+                Audio on file — choose a new file to replace
+              </p>
+            ) : null}
+            <p className="mt-1 text-xs text-gray-500">
+              Duration:{" "}
+              {duration > 0
+                ? `${Math.floor(duration / 60)}:${String(duration % 60).padStart(2, "0")}`
+                : "—"}
+              {calcDuration ? " (reading…)" : ""}
+            </p>
           </div>
-          {imagePreview ? (
-            <img
-              src={imagePreview}
-              alt=""
-              className="h-24 w-24 object-cover rounded border border-gray-700"
-            />
-          ) : null}
-          {audioFile ? (
-            <p className="text-xs text-gray-400">{audioFile.name}</p>
-          ) : mode === "edit" && track ? (
-            <p className="text-xs text-gray-400">Existing audio on file — choose new file to replace</p>
-          ) : null}
-          <p className="text-xs text-gray-500">
-            Duration: {duration > 0 ? `${Math.floor(duration / 60)}:${String(duration % 60).padStart(2, "0")}` : "—"}
-            {calcDuration ? " (reading…)" : ""}
-          </p>
 
-          <Input
-            type="date"
-            value={releaseDate}
-            onChange={(e) => setReleaseDate(e.target.value)}
-            className="bg-gray-900 border-gray-700"
-          />
-
-          <div className="grid grid-cols-1 gap-2">
-            <Input
-              value={composer}
-              onChange={(e) => setComposer(e.target.value)}
-              placeholder="Composer"
-              className="bg-gray-900 border-gray-700"
-            />
-            <Input
-              value={lyricist}
-              onChange={(e) => setLyricist(e.target.value)}
-              placeholder="Lyricist"
-              className="bg-gray-900 border-gray-700"
-            />
-            <Input
-              value={leadVocal}
-              onChange={(e) => setLeadVocal(e.target.value)}
-              placeholder="Lead vocal"
-              className="bg-gray-900 border-gray-700"
-            />
-            <Input
-              value={isrcCode}
-              onChange={(e) => setIsrcCode(e.target.value)}
-              placeholder="ISRC"
-              className="bg-gray-900 border-gray-700"
-            />
-            <label className="inline-flex items-center gap-2 text-sm text-gray-300">
-              <input
-                type="checkbox"
-                checked={isrcExplicit}
-                onChange={(e) => setIsrcExplicit(e.target.checked)}
-                className="rounded border-gray-600"
-              />
-              Explicit
+          <div>
+            <label className="mb-1 block text-xs font-medium text-gray-400">
+              Lyrics
             </label>
-          </div>
-
-          <div className="space-y-2">
-            <p className="text-sm text-gray-400">Streaming (track)</p>
-            <Input
-              value={spotifyLink}
-              onChange={(e) => setSpotifyLink(e.target.value)}
-              placeholder="Spotify"
-              className="bg-gray-900 border-gray-700"
-            />
-            <Input
-              value={appleMusicLink}
-              onChange={(e) => setAppleMusicLink(e.target.value)}
-              placeholder="Apple Music"
-              className="bg-gray-900 border-gray-700"
-            />
-            <Input
-              value={tidalLink}
-              onChange={(e) => setTidalLink(e.target.value)}
-              placeholder="Tidal"
-              className="bg-gray-900 border-gray-700"
-            />
-            <Input
-              value={amazonMusicLink}
-              onChange={(e) => setAmazonMusicLink(e.target.value)}
-              placeholder="Amazon Music"
-              className="bg-gray-900 border-gray-700"
-            />
-            <Input
-              value={youtubeLink}
-              onChange={(e) => setYoutubeLink(e.target.value)}
-              placeholder="YouTube"
-              className="bg-gray-900 border-gray-700"
-            />
-            <Input
-              value={soundcloudLink}
-              onChange={(e) => setSoundcloudLink(e.target.value)}
-              placeholder="SoundCloud"
-              className="bg-gray-900 border-gray-700"
+            <Textarea
+              value={lyrics}
+              onChange={(e) => setLyrics(e.target.value)}
+              placeholder="Lyrics"
+              className="border-gray-700 bg-gray-900"
+              rows={4}
             />
           </div>
 
           <div>
-            <p className="text-sm text-gray-400 mb-2">Artists *</p>
+            <label className="mb-1 block text-xs font-medium text-gray-400">
+              Stems
+            </label>
+            <Button
+              type="button"
+              variant="outline"
+              className="border-gray-700"
+              onClick={() => stemsRef.current?.click()}
+            >
+              Upload stems
+            </Button>
+            <input
+              ref={stemsRef}
+              type="file"
+              className="hidden"
+              onChange={onPickStems}
+            />
+            {stemsFile ? (
+              <p className="mt-1 text-xs text-gray-400">{stemsFile.name}</p>
+            ) : stemsUrl ? (
+              <p className="mt-1 text-xs text-gray-500">Stems on file</p>
+            ) : null}
+          </div>
+
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div>
+              <label className="mb-1 block text-xs font-medium text-gray-400">
+                ISRC *
+              </label>
+              <Input
+                value={isrcCode}
+                onChange={(e) => setIsrcCode(e.target.value)}
+                placeholder="ISRC"
+                className="border-gray-700 bg-gray-900 font-mono text-sm"
+                required
+              />
+            </div>
+            <div>
+              <span className="mb-1 block text-xs font-medium text-gray-400">
+                Explicit *
+              </span>
+              <div className="flex flex-wrap gap-4 pt-2">
+                <label className="inline-flex cursor-pointer items-center gap-2 text-sm text-gray-300">
+                  <input
+                    type="radio"
+                    name="track-explicit"
+                    checked={!isrcExplicit}
+                    onChange={() => setIsrcExplicit(false)}
+                    className="border-gray-600"
+                  />
+                  No
+                </label>
+                <label className="inline-flex cursor-pointer items-center gap-2 text-sm text-gray-300">
+                  <input
+                    type="radio"
+                    name="track-explicit"
+                    checked={isrcExplicit}
+                    onChange={() => setIsrcExplicit(true)}
+                    className="border-gray-600"
+                  />
+                  Yes
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <p className="mb-2 text-sm font-medium text-gray-300">Track URLs</p>
+            <div className="space-y-2">
+              <Input
+                value={spotifyLink}
+                onChange={(e) => setSpotifyLink(e.target.value)}
+                placeholder="Spotify"
+                className="border-gray-700 bg-gray-900"
+              />
+              <Input
+                value={tidalLink}
+                onChange={(e) => setTidalLink(e.target.value)}
+                placeholder="Tidal"
+                className="border-gray-700 bg-gray-900"
+              />
+              <Input
+                value={appleMusicLink}
+                onChange={(e) => setAppleMusicLink(e.target.value)}
+                placeholder="Apple Music"
+                className="border-gray-700 bg-gray-900"
+              />
+              <Input
+                value={amazonMusicLink}
+                onChange={(e) => setAmazonMusicLink(e.target.value)}
+                placeholder="Amazon Music"
+                className="border-gray-700 bg-gray-900"
+              />
+              <Input
+                value={youtubeLink}
+                onChange={(e) => setYoutubeLink(e.target.value)}
+                placeholder="YouTube"
+                className="border-gray-700 bg-gray-900"
+              />
+            </div>
+          </div>
+
+          <div>
+            <p className="mb-2 text-sm text-gray-400">Artists *</p>
             <MultiSelect
               options={artists.map((a) => ({ value: a.id, label: a.name }))}
               selected={primaryArtistIds}
               onChange={handlePrimary}
-              placeholder="Primary"
+              placeholder="Primary artist"
             />
             <div className="h-2" />
             <MultiSelect
@@ -474,8 +799,275 @@ export default function TrackFormDialog({
                 .map((a) => ({ value: a.id, label: a.name }))}
               selected={featureArtistIds}
               onChange={handleFeature}
-              placeholder="Feature"
+              placeholder="Feature artist"
             />
+          </div>
+
+          <div className="space-y-4 rounded-xl border border-gray-800 bg-black/20 p-4">
+            <p className="text-sm font-medium text-white">Track credits *</p>
+
+            <div className="space-y-2">
+              <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">
+                Composer
+              </p>
+              {composerNames.map((cn, idx) => (
+                <div key={idx} className="flex gap-2">
+                  <Input
+                    value={cn}
+                    onChange={(e) =>
+                      setComposerNames((prev) =>
+                        prev.map((c, i) => (i === idx ? e.target.value : c))
+                      )
+                    }
+                    placeholder="Name *"
+                    className="border-gray-700 bg-gray-900"
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="shrink-0 text-red-400 hover:text-red-300"
+                    onClick={() =>
+                      setComposerNames((prev) =>
+                        prev.length > 1 ? prev.filter((_, i) => i !== idx) : prev
+                      )
+                    }
+                  >
+                    Remove
+                  </Button>
+                </div>
+              ))}
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="border-gray-700"
+                onClick={() => setComposerNames((prev) => [...prev, ""])}
+              >
+                Add composer
+              </Button>
+            </div>
+
+            <div className="space-y-2">
+              <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">
+                Songwriter
+              </p>
+              {songwriterRows.map((row, idx) => (
+                <div
+                  key={idx}
+                  className="grid grid-cols-1 gap-2 border-b border-gray-800/80 pb-3 md:grid-cols-12"
+                >
+                  <Input
+                    className="border-gray-700 bg-gray-900 md:col-span-5"
+                    value={row.name}
+                    onChange={(e) =>
+                      updateNamedRow(setSongwriterRows, idx, {
+                        name: e.target.value,
+                      })
+                    }
+                    placeholder="Name *"
+                  />
+                  <div className="md:col-span-5">
+                    {roleSelect(
+                      row.role,
+                      (v) => updateNamedRow(setSongwriterRows, idx, { role: v }),
+                      SONGWRITER_ROLES,
+                      `sw-role-${idx}`
+                    )}
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="text-red-400 hover:text-red-300 md:col-span-2"
+                    onClick={() =>
+                      setSongwriterRows((prev) =>
+                        prev.length > 1
+                          ? prev.filter((_, i) => i !== idx)
+                          : prev
+                      )
+                    }
+                  >
+                    Remove
+                  </Button>
+                </div>
+              ))}
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="border-gray-700"
+                onClick={() =>
+                  setSongwriterRows((prev) => [...prev, { name: "", role: "" }])
+                }
+              >
+                Add songwriter
+              </Button>
+            </div>
+
+            <div className="space-y-2">
+              <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">
+                Production / Engineer
+              </p>
+              {productionRows.map((row, idx) => (
+                <div
+                  key={idx}
+                  className="grid grid-cols-1 gap-2 border-b border-gray-800/80 pb-3 md:grid-cols-12"
+                >
+                  <Input
+                    className="border-gray-700 bg-gray-900 md:col-span-5"
+                    value={row.name}
+                    onChange={(e) =>
+                      updateNamedRow(setProductionRows, idx, {
+                        name: e.target.value,
+                      })
+                    }
+                    placeholder="Name *"
+                  />
+                  <div className="md:col-span-5">
+                    {roleSelect(
+                      row.role,
+                      (v) => updateNamedRow(setProductionRows, idx, { role: v }),
+                      PRODUCTION_ROLES,
+                      `prod-role-${idx}`
+                    )}
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="text-red-400 hover:text-red-300 md:col-span-2"
+                    onClick={() =>
+                      setProductionRows((prev) =>
+                        prev.length > 1
+                          ? prev.filter((_, i) => i !== idx)
+                          : prev
+                      )
+                    }
+                  >
+                    Remove
+                  </Button>
+                </div>
+              ))}
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="border-gray-700"
+                onClick={() =>
+                  setProductionRows((prev) => [...prev, { name: "", role: "" }])
+                }
+              >
+                Add production / engineer
+              </Button>
+            </div>
+
+            <div className="space-y-2">
+              <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">
+                Performer
+              </p>
+              {performerRows.map((row, idx) => (
+                <div
+                  key={idx}
+                  className="grid grid-cols-1 gap-2 border-b border-gray-800/80 pb-3 md:grid-cols-12"
+                >
+                  <Input
+                    className="border-gray-700 bg-gray-900 md:col-span-5"
+                    value={row.name}
+                    onChange={(e) =>
+                      updateNamedRow(setPerformerRows, idx, {
+                        name: e.target.value,
+                      })
+                    }
+                    placeholder="Name *"
+                  />
+                  <div className="md:col-span-5">
+                    {roleSelect(
+                      row.role,
+                      (v) => updateNamedRow(setPerformerRows, idx, { role: v }),
+                      PERFORMER_ROLES,
+                      `perf-role-${idx}`
+                    )}
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="text-red-400 hover:text-red-300 md:col-span-2"
+                    onClick={() =>
+                      setPerformerRows((prev) =>
+                        prev.length > 1
+                          ? prev.filter((_, i) => i !== idx)
+                          : prev
+                      )
+                    }
+                  >
+                    Remove
+                  </Button>
+                </div>
+              ))}
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="border-gray-700"
+                onClick={() =>
+                  setPerformerRows((prev) => [...prev, { name: "", role: "" }])
+                }
+              >
+                Add performer
+              </Button>
+            </div>
+
+            <div className="space-y-2 border-t border-gray-800 pt-4">
+              <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">
+                Add more
+              </p>
+              {customRows.map((row, idx) => (
+                <div
+                  key={idx}
+                  className="grid grid-cols-1 gap-2 md:grid-cols-12 md:items-center"
+                >
+                  <Input
+                    className="border-gray-700 bg-gray-900 md:col-span-5"
+                    value={row.name}
+                    onChange={(e) =>
+                      updateNamedRow(setCustomRows, idx, {
+                        name: e.target.value,
+                      })
+                    }
+                    placeholder="Name"
+                  />
+                  <Input
+                    className="border-gray-700 bg-gray-900 md:col-span-5"
+                    value={row.role}
+                    onChange={(e) =>
+                      updateNamedRow(setCustomRows, idx, {
+                        role: e.target.value,
+                      })
+                    }
+                    placeholder="Role"
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="text-red-400 hover:text-red-300 md:col-span-2"
+                    onClick={() =>
+                      setCustomRows((prev) => prev.filter((_, i) => i !== idx))
+                    }
+                  >
+                    Remove
+                  </Button>
+                </div>
+              ))}
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="border-gray-700"
+                onClick={() =>
+                  setCustomRows((prev) => [...prev, { name: "", role: "" }])
+                }
+              >
+                Add more
+              </Button>
+            </div>
           </div>
 
           <DialogFooter className="gap-2 sm:gap-0">
@@ -489,11 +1081,16 @@ export default function TrackFormDialog({
             </Button>
             <Button
               type="submit"
-              disabled={saving || uploadingImage || uploadingAudio || calcDuration}
-              className="bg-white text-black inline-flex items-center gap-2"
+              disabled={
+                saving || uploadingAudio || uploadingStems || calcDuration
+              }
+              className="inline-flex items-center gap-2 bg-white text-black"
             >
-              {saving || uploadingImage || uploadingAudio ? (
-                <Loader2 className="w-4 h-4 shrink-0 animate-spin" aria-hidden />
+              {saving || uploadingAudio ? (
+                <Loader2
+                  className="h-4 w-4 shrink-0 animate-spin"
+                  aria-hidden
+                />
               ) : null}
               {mode === "create" ? "Add track" : "Save track"}
             </Button>

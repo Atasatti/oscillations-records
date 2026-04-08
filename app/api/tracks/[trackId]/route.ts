@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getToken } from "next-auth/jwt";
 import { prisma } from "@/lib/prisma";
-import { serializeTrack } from "@/lib/release-format";
+import { serializeTrack, serializeTrackForPublic } from "@/lib/release-format";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
+const ADMIN_EMAIL = "oscillationrecordz@gmail.com";
+
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ trackId: string }> }
 ) {
   try {
@@ -18,8 +21,14 @@ export async function GET(
     if (!track) {
       return NextResponse.json({ error: "Track not found" }, { status: 404 });
     }
+    const token = await getToken({
+      req: request,
+      secret: process.env.NEXTAUTH_SECRET,
+    });
+    const isAdmin = Boolean(token?.email && token.email === ADMIN_EMAIL);
+    const serialized = isAdmin ? serializeTrack(track) : serializeTrackForPublic(track);
     return NextResponse.json({
-      ...serializeTrack(track),
+      ...serialized,
       releaseId: track.releaseId,
     });
   } catch (error) {
@@ -52,6 +61,9 @@ export async function PATCH(
       composer,
       lyricist,
       leadVocal,
+      lyrics,
+      stemsFile,
+      trackCredits,
       isrcCode,
       isrcExplicit,
       spotifyLink,
@@ -109,6 +121,9 @@ export async function PATCH(
         ...(composer !== undefined && { composer: composer ? String(composer) : null }),
         ...(lyricist !== undefined && { lyricist: lyricist ? String(lyricist) : null }),
         ...(leadVocal !== undefined && { leadVocal: leadVocal ? String(leadVocal) : null }),
+        ...(lyrics !== undefined && { lyrics: lyrics ? String(lyrics) : null }),
+        ...(stemsFile !== undefined && { stemsFile: stemsFile ? String(stemsFile) : null }),
+        ...(trackCredits !== undefined && { trackCredits: trackCredits ?? null }),
         ...(isrcCode !== undefined && { isrcCode: isrcCode ? String(isrcCode) : null }),
         ...(isrcExplicit !== undefined && { isrcExplicit: Boolean(isrcExplicit) }),
         ...(spotifyLink !== undefined && { spotifyLink: spotifyLink || null }),

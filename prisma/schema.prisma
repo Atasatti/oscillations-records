@@ -116,6 +116,7 @@ model Release {
   composer         String?
   lyricist         String?
   leadVocal        String?
+  upcCode          String?
   isrcCode         String?
   isrcExplicit     Boolean      @default(false)
   spotifyLink      String?
@@ -150,6 +151,9 @@ model Track {
   composer         String?
   lyricist         String?
   leadVocal        String?
+  lyrics           String?
+  stemsFile        String?
+  trackCredits     Json?
   isrcCode         String?
   isrcExplicit     Boolean  @default(false)
   spotifyLink      String?
