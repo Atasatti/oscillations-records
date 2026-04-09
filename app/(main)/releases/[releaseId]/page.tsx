@@ -256,17 +256,18 @@ export default function ReleaseDetail() {
   };
   const parseTrackCredits = (credits: unknown): ParsedTrackCredit[] => {
     if (!Array.isArray(credits)) return [];
-    return credits
-      .map((item) => {
-        if (!item || typeof item !== "object") return null;
-        const row = item as Record<string, unknown>;
-        return {
-          category: row.category ? String(row.category) : undefined,
-          name: row.name ? String(row.name) : undefined,
-          role: row.role ? String(row.role) : undefined,
-        };
-      })
-      .filter((item): item is ParsedTrackCredit => Boolean(item?.name));
+    return credits.reduce<ParsedTrackCredit[]>((acc, item) => {
+      if (!item || typeof item !== "object") return acc;
+      const row = item as Record<string, unknown>;
+      const name = row.name ? String(row.name) : undefined;
+      if (!name) return acc;
+      acc.push({
+        category: row.category ? String(row.category) : undefined,
+        name,
+        role: row.role ? String(row.role) : undefined,
+      });
+      return acc;
+    }, []);
   };
   const formatCreditCategory = (category?: string) =>
     category
