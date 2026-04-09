@@ -16,7 +16,7 @@ interface UpcomingRelease {
 const UpcomingReleasesSection = () => {
   const [releases, setReleases] = useState<UpcomingRelease[]>([]);
   const [loading, setLoading] = useState(true);
-
+  //fetch upcoming releases from the API
   useEffect(() => {
     const fetchReleases = async () => {
       try {
