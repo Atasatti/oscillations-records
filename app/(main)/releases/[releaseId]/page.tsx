@@ -1,12 +1,19 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, MoreVertical } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import TrackCard from "@/components/local-ui/TrackCard";
 import ExplicitBadge from "@/components/local-ui/ExplicitBadge";
 import StreamingLinks, { hasStreamingLinks } from "@/components/local-ui/StreamingLinks";
 import Footer from "@/components/local-ui/Footer";
+import { useSession } from "next-auth/react";
+import { useMusic } from "@/contexts/music-context";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface TrackRow {
   id: string;
@@ -23,6 +30,11 @@ interface TrackRow {
   primaryArtistIds: string[];
   featureArtistIds: string[];
   isrcExplicit?: boolean;
+  composer?: string | null;
+  lyricist?: string | null;
+  leadVocal?: string | null;
+  lyrics?: string | null;
+  trackCredits?: unknown;
 }
 
 interface Artist {
@@ -44,7 +56,6 @@ interface Release {
   composer?: string | null;
   lyricist?: string | null;
   leadVocal?: string | null;
-  upcCode?: string | null;
   isrcExplicit?: boolean;
   spotifyLink?: string | null;
   appleMusicLink?: string | null;
@@ -56,22 +67,33 @@ interface Release {
   songs?: TrackRow[];
 }
 
+interface ParsedTrackCredit {
+  category?: string;
+  name?: string;
+  role?: string;
+}
+
 export default function ReleaseDetail() {
   const params = useParams();
   const router = useRouter();
+  const { data: session, status } = useSession();
+  const { playSong } = useMusic();
   const releaseId = params.releaseId as string;
   
   const [release, setRelease] = useState<Release | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedTrack, setSelectedTrack] = useState<TrackRow | null>(null);
+  const trackedReleaseId = useRef<string | null>(null);
 
   useEffect(() => {
     fetchReleaseData();
   }, [releaseId]);
 
-  // Track release view
+  // Track release view — guard with ref so it only fires once per release ID
   useEffect(() => {
-    if (release) {
+    if (release && trackedReleaseId.current !== release.id) {
+      trackedReleaseId.current = release.id;
       trackReleaseView(release);
     }
   }, [release]);
@@ -182,8 +204,7 @@ export default function ReleaseDetail() {
   const hasCredits = Boolean(
     release.composer ||
       release.lyricist ||
-      release.leadVocal ||
-      release.upcCode
+      release.leadVocal
   );
   const showAbout =
     Boolean(release.description) || Boolean(release.releaseDate);
@@ -197,6 +218,62 @@ export default function ReleaseDetail() {
   };
   const showStream = hasStreamingLinks(streamProps);
   const trackList = release.tracks?.length ? release.tracks : release.songs ?? [];
+  const formatArtistLine = (song: TrackRow) => {
+    const primaryNames = song.primaryArtistIds
+      .map((id) => release.artists.find((a) => a.id === id)?.name)
+      .filter((name): name is string => Boolean(name));
+    const primaryName = primaryNames.length ? primaryNames.join(", ") : "Unknown Artist";
+    const primarySet = new Set(song.primaryArtistIds);
+    const featureNames = Array.from(
+      new Set(
+        song.featureArtistIds
+          .filter((id) => !primarySet.has(id))
+          .map((id) => release.artists.find((a) => a.id === id)?.name)
+          .filter((name): name is string => Boolean(name))
+      )
+    );
+    return featureNames.length > 0
+      ? `${primaryName} ft ${featureNames.join(", ")}`
+      : primaryName;
+  };
+  const playTrackFromArtwork = (song: TrackRow) => {
+    if (status === "unauthenticated" || !session) {
+      const currentPath = window.location.pathname;
+      router.push(`/login?callbackUrl=${encodeURIComponent(currentPath)}`);
+      return;
+    }
+
+    const artist = formatArtistLine(song);
+    playSong({
+      id: String(song.id),
+      title: song.name,
+      artist,
+      image: song.image || release.coverImage,
+      audio: song.audioFile,
+      isExplicit: Boolean(song.isrcExplicit),
+      releaseType: release.type,
+    });
+  };
+  const parseTrackCredits = (credits: unknown): ParsedTrackCredit[] => {
+    if (!Array.isArray(credits)) return [];
+    return credits
+      .map((item) => {
+        if (!item || typeof item !== "object") return null;
+        const row = item as Record<string, unknown>;
+        return {
+          category: row.category ? String(row.category) : undefined,
+          name: row.name ? String(row.name) : undefined,
+          role: row.role ? String(row.role) : undefined,
+        };
+      })
+      .filter((item): item is ParsedTrackCredit => Boolean(item?.name));
+  };
+  const formatCreditCategory = (category?: string) =>
+    category
+      ? category
+          .replace(/_/g, " ")
+          .replace(/\b\w/g, (c) => c.toUpperCase())
+      : "Credit";
 
   return (
     <div>
@@ -299,14 +376,6 @@ export default function ReleaseDetail() {
                               <dd className="text-gray-200">{release.leadVocal}</dd>
                             </>
                           ) : null}
-                          {release.upcCode ? (
-                            <>
-                              <dt className="text-gray-500 font-medium">UPC</dt>
-                              <dd className="text-gray-200 font-mono text-xs sm:text-sm break-all">
-                                {release.upcCode}
-                              </dd>
-                            </>
-                          ) : null}
                         </dl>
                       </div>
                     ) : null}
@@ -331,61 +400,136 @@ export default function ReleaseDetail() {
             {trackList.length === 0 ? (
               <p className="text-gray-400">No tracks available.</p>
             ) : (
-              <div className="flex gap-4 overflow-x-auto scrollbar-hide scroll-smooth pb-2">
-                {trackList.map((song) => {
-                  // Get primary artist for this song from the release's artists array
-                  const primaryArtistId = song.primaryArtistIds[0];
-                  const primaryArtist = primaryArtistId 
-                    ? release.artists.find(a => a.id === primaryArtistId)
-                    : null;
-                  const primaryName = primaryArtist?.name || 'Unknown Artist';
-
-                  const featureArtistNames = Array.from(
-                    new Set(
-                      song.featureArtistIds
-                        .map((id) => release.artists.find((a) => a.id === id)?.name)
-                        .filter((name): name is string => Boolean(name))
-                    )
-                  );
-
-                  const artistName =
-                    featureArtistNames.length > 0
-                      ? `${primaryName} ft ${featureArtistNames.join(", ")}`
-                      : primaryName;
-                  
-                  // Get primary artist for release (for avatar)
-                  const releasePrimaryArtistId = release.primaryArtistIds[0];
-                  const releasePrimaryArtist = releasePrimaryArtistId
-                    ? release.artists.find(a => a.id === releasePrimaryArtistId)
-                    : null;
-                  
-                  return (
-                    <TrackCard
-                      key={song.id}
-                      track={{
-                        id: song.id,
-                        title: song.name,
-                        artist: artistName,
-                        duration: formatDuration(song.duration),
-                        backgroundImage: song.image || release.coverImage,
-                        avatar: releasePrimaryArtist?.profilePicture || undefined,
-                        audio: song.audioFile,
-                        spotifyLink: song.spotifyLink,
-                        appleMusicLink: song.appleMusicLink,
-                        tidalLink: song.tidalLink,
-                        amazonMusicLink: song.amazonMusicLink,
-                        youtubeLink: song.youtubeLink,
-                        soundcloudLink: song.soundcloudLink,
-                        isrcExplicit: song.isrcExplicit,
-                      }}
-                    />
-                  );
-                })}
+              <div className="rounded-2xl border border-white/10 overflow-hidden bg-gradient-to-b from-white/[0.04] to-white/[0.015]">
+                {trackList.map((song, index) => (
+                  <div
+                    key={song.id}
+                    className="grid grid-cols-[auto_auto_1fr_auto_auto_auto] items-center gap-3 px-3 sm:px-4 py-2.5 border-b border-white/5 last:border-b-0"
+                  >
+                    <span className="w-5 text-xs text-gray-500 text-right">{index + 1}</span>
+                    <button
+                      type="button"
+                      onClick={() => playTrackFromArtwork(song)}
+                      className="group/cover relative h-11 w-11 overflow-hidden rounded-md ring-1 ring-white/10 hover:ring-white/30 transition"
+                      aria-label={`Play ${song.name}`}
+                    >
+                      <img
+                        src={song.image || release.coverImage}
+                        alt={song.name}
+                        className="h-full w-full object-cover"
+                      />
+                      <span className="absolute inset-0 bg-black/0 group-hover/cover:bg-black/30 transition-colors" />
+                    </button>
+                    <div className="min-w-0">
+                      <p className="text-sm text-white/95 truncate flex items-center gap-1.5">
+                        <span>{song.name}</span>
+                        {song.isrcExplicit ? <ExplicitBadge size="sm" /> : null}
+                      </p>
+                      <p className="text-xs text-gray-400 truncate">{formatArtistLine(song)}</p>
+                    </div>
+                    <div className="hidden md:flex justify-start">
+                      <StreamingLinks
+                        spotifyLink={song.spotifyLink}
+                        appleMusicLink={song.appleMusicLink}
+                        tidalLink={song.tidalLink}
+                        amazonMusicLink={song.amazonMusicLink}
+                        youtubeLink={song.youtubeLink}
+                        soundcloudLink={song.soundcloudLink}
+                        size="sm"
+                        className="opacity-85 hover:opacity-100 transition-opacity"
+                      />
+                    </div>
+                    <span className="text-xs text-gray-500 tabular-nums">
+                      {formatDuration(song.duration)}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedTrack(song)}
+                      className="h-7 w-7 inline-flex items-center justify-center rounded-md text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
+                      aria-label={`Open details for ${song.name}`}
+                    >
+                      <MoreVertical className="h-4 w-4" />
+                    </button>
+                  </div>
+                ))}
               </div>
             )}
           </div>
         </div>
       </div>
+      <Dialog
+        open={Boolean(selectedTrack)}
+        onOpenChange={(open) => {
+          if (!open) setSelectedTrack(null);
+        }}
+      >
+        <DialogContent className="bg-[#0F0F0F] border-gray-800 text-white max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{selectedTrack?.name ?? "Track details"}</DialogTitle>
+          </DialogHeader>
+          {selectedTrack ? (
+            (() => {
+              const parsedTrackCredits = parseTrackCredits(selectedTrack.trackCredits);
+              return (
+            <div className="space-y-4">
+              <p className="text-sm text-gray-300">{formatArtistLine(selectedTrack)}</p>
+              <dl className="grid gap-x-6 gap-y-2 text-sm sm:grid-cols-[minmax(6rem,auto)_1fr]">
+                <dt className="text-gray-500">Duration</dt>
+                <dd className="text-gray-200">{formatDuration(selectedTrack.duration)}</dd>
+                {selectedTrack.composer ? (
+                  <>
+                    <dt className="text-gray-500">Composer</dt>
+                    <dd className="text-gray-200">{selectedTrack.composer}</dd>
+                  </>
+                ) : null}
+                {selectedTrack.lyricist ? (
+                  <>
+                    <dt className="text-gray-500">Lyricist</dt>
+                    <dd className="text-gray-200">{selectedTrack.lyricist}</dd>
+                  </>
+                ) : null}
+                {selectedTrack.leadVocal ? (
+                  <>
+                    <dt className="text-gray-500">Lead vocal</dt>
+                    <dd className="text-gray-200">{selectedTrack.leadVocal}</dd>
+                  </>
+                ) : null}
+              </dl>
+              {parsedTrackCredits.length > 0 ? (
+                <div>
+                  <h3 className="text-sm font-medium text-gray-300 mb-2">Track credits</h3>
+                  <div className="space-y-2 text-sm bg-black/30 border border-white/10 rounded-lg p-3">
+                    {parsedTrackCredits.map((credit, idx) => (
+                      <div
+                        key={`${credit.name}-${credit.role ?? "role"}-${idx}`}
+                        className="grid gap-x-3 gap-y-1 sm:grid-cols-[minmax(8rem,auto)_1fr]"
+                      >
+                        <p className="text-gray-500">{formatCreditCategory(credit.category)}</p>
+                        <p className="text-gray-200">
+                          {credit.name}
+                          {credit.role ? (
+                            <span className="text-gray-400"> - {credit.role}</span>
+                          ) : null}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+              {selectedTrack.lyrics ? (
+                <div>
+                  <h3 className="text-sm font-medium text-gray-300 mb-2">Lyrics</h3>
+                  <p className="text-sm text-gray-400 whitespace-pre-wrap leading-relaxed">
+                    {selectedTrack.lyrics}
+                  </p>
+                </div>
+              ) : null}
+            </div>
+              );
+            })()
+          ) : null}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

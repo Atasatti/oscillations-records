@@ -174,7 +174,7 @@ export async function GET(request: NextRequest) {
         ageRange: ageRangeStats,
       },
       playsOverTime,
-      recentPlays: playEvents.slice(0, 20).map(event => ({
+      recentPlays: playEvents.slice(0, 60).map(event => ({
         id: event.id,
         userName: event.user.name || event.user.email,
         contentType: event.contentType,

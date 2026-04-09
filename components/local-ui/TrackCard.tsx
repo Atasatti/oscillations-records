@@ -24,8 +24,9 @@ export interface TrackCardTrack {
   amazonMusicLink?: string | null;
   youtubeLink?: string | null;
   soundcloudLink?: string | null;
-  /** Parental advisory — show “E” beside title */
+  /** Parental advisory — show "E" beside title */
   isrcExplicit?: boolean;
+  releaseType?: string;
 }
 
 const TrackCard: React.FC<{ track: TrackCardTrack }> = ({ track }) => {
@@ -56,6 +57,7 @@ const TrackCard: React.FC<{ track: TrackCardTrack }> = ({ track }) => {
         image: track.backgroundImage,
         audio: track.audio,
         isExplicit: Boolean(track.isrcExplicit),
+        releaseType: track.releaseType,
       });
     }
   };

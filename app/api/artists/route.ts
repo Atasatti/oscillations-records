@@ -9,9 +9,7 @@ export const runtime = 'nodejs';
 export async function GET() {
   try {
     const artists = await prisma.artist.findMany({
-      orderBy: {
-        createdAt: 'desc'
-      }
+      orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
     });
     
     return NextResponse.json(artists);
@@ -51,6 +49,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const maxOrder = await prisma.artist.aggregate({
+      _max: { sortOrder: true },
+    });
+    const sortOrder = (maxOrder._max.sortOrder ?? -1) + 1;
+
     const artist = await prisma.artist.create({
       data: {
         name,
@@ -65,6 +68,7 @@ export async function POST(request: NextRequest) {
         instagramLink,
         youtubeLink,
         facebookLink,
+        sortOrder,
       },
     });
 

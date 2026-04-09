@@ -11,6 +11,8 @@ interface Song {
   duration?: number;
   /** Parental advisory — shown in the player UI */
   isExplicit?: boolean;
+  /** Release type — used for analytics (single | ep | album) */
+  releaseType?: string;
 }
 
 interface MusicContextType {
@@ -45,7 +47,7 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          contentType: "track",
+          contentType: song.releaseType || "track",
           contentId: song.id,
           contentName: song.title,
           artistId: null,
@@ -60,9 +62,8 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
   };
 
   // Track play event
-  const trackPlay = async (song: Song, contentType: "track" | "release", artistId?: string) => {
+  const trackPlay = async (song: Song, artistId?: string) => {
     try {
-      // Extract artist name from song.artist (could be a string or object)
       const artistName = typeof song.artist === 'string' ? song.artist : song.artist || 'Unknown Artist';
       
       await fetch("/api/analytics/track-play", {
@@ -71,12 +72,12 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          contentType,
+          contentType: song.releaseType || "track",
           contentId: song.id,
           contentName: song.title,
           artistId: artistId || null,
           artistName: artistName,
-          playDuration: null, // Will be updated when song ends
+          playDuration: null,
           completed: false,
         }),
       });
@@ -164,7 +165,7 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
       audioRef.current.load();
       
       // Track play event (fire and forget)
-      trackPlay(song, "track").catch(console.error);
+      trackPlay(song).catch(console.error);
       
       // Try to play immediately - browser will buffer if needed
       const attemptPlay = async () => {

@@ -57,11 +57,11 @@ const UpcomingReleasesSection = () => {
             "flex w-72 min-w-0 flex-col rounded-2xl border border-gray-800 bg-[#0F0F0F] transition-opacity hover:opacity-95";
           const inner = (
             <>
-              <div className="flex h-52 w-full shrink-0 items-center justify-center overflow-hidden rounded-t-2xl bg-black/50">
+              <div className="aspect-square w-full shrink-0 overflow-hidden rounded-t-2xl">
                 <img
                   src={release.image}
                   alt={release.name}
-                  className="max-h-full max-w-full object-contain"
+                  className="h-full w-full object-cover"
                 />
               </div>
               <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-1.5 rounded-b-2xl p-4">

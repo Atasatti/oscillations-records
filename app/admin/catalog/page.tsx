@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import AdminNavbar from "@/components/local-ui/AdminNavbar";
-import ArtistCard from "@/components/local-ui/ArtistCard";
+import ArtistsSortableList from "@/components/admin/ArtistsSortableList";
 import CatalogReleasesSortableList from "@/components/admin/CatalogReleasesSortableList";
 import UpcomingReleasesSortableList from "@/components/admin/UpcomingReleasesSortableList";
 import { Button } from "@/components/ui/button";
@@ -25,9 +25,6 @@ import {
 import {
   Plus,
   Users,
-  MoreVertical,
-  Trash2,
-  Pencil,
   Image as ImageIcon,
   Loader2,
   ChevronDown,
@@ -50,6 +47,7 @@ interface Artist {
   facebookLink?: string;
   createdAt: string;
   updatedAt: string;
+  sortOrder?: number;
 }
 
 interface CatalogRelease {
@@ -251,6 +249,29 @@ export default function AdminCatalog() {
   const handleDeleteClick = (artistId: string, artistName: string) => {
     setArtistToDelete({ id: artistId, name: artistName });
     setDeleteDialogOpen(true);
+  };
+
+  const handleArtistsReorderSave = async (ordered: Artist[]) => {
+    try {
+      const res = await fetch("/api/admin/artists/reorder", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderedIds: ordered.map((a) => a.id) }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        const msg =
+          typeof err.error === "string" ? err.error : "Failed to save artist order";
+        alert(msg);
+        throw new Error(msg);
+      }
+      setArtists(ordered);
+    } catch (e) {
+      if (e instanceof TypeError) {
+        alert("Network error - could not save artist order.");
+      }
+      throw e;
+    }
   };
 
   const handleDeleteConfirm = async () => {
@@ -506,17 +527,6 @@ export default function AdminCatalog() {
     }
   };
 
-  const handleCatalogReorderByType = async (
-    type: CatalogRelease["type"],
-    orderedGroup: CatalogRelease[]
-  ) => {
-    const groupQueue = [...orderedGroup];
-    const merged = releases.map((r) =>
-      r.type === type ? (groupQueue.shift() as CatalogRelease) : r
-    );
-    await handleCatalogReorderSave(merged);
-  };
-
   const handleReleaseLatestChange = async (id: string, checked: boolean) => {
     const prev = [...releases];
     setReleases((list) =>
@@ -612,107 +622,33 @@ export default function AdminCatalog() {
               <p className="text-gray-500 mb-6">Create your first artist to get started</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
-              {artists.map((artist) => (
-                <div key={artist.id} className="relative group w-72 h-84">
-                  <Link href={`/admin/catalog/artist/${artist.id}`}>
-                    <ArtistCard artist={artist} />
-                  </Link>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10 h-8 w-8"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                        }}
-                      >
-                        <MoreVertical className="w-4 h-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="bg-[#0F0F0F] border-gray-800">
-                      <DropdownMenuItem asChild>
-                        <Link
-                          href={`/admin/catalog/edit/artist/${artist.id}`}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                          }}
-                        >
-                          <Pencil className="w-4 h-4 mr-2" />
-                          Edit Artist
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        variant="destructive"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          handleDeleteClick(artist.id, artist.name);
-                        }}
-                        className="text-red-400 focus:text-red-300 focus:bg-red-950/20"
-                      >
-                        <Trash2 className="w-4 h-4 mr-2" />
-                        Delete Artist
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-              ))}
-            </div>
+            <ArtistsSortableList
+              artists={artists}
+              onReorderSave={handleArtistsReorderSave}
+              onDeleteClick={handleDeleteClick}
+            />
           )}
         </div>
 
-        {/* Singles */}
+        {/* Releases */}
         <div className="mb-12 md:mb-16">
           <div className="mb-4 flex flex-col gap-4 sm:mb-6 sm:flex-row sm:items-end sm:justify-between">
             <div className="min-w-0 space-y-1">
               <h2 className="text-xl font-light tracking-tighter md:text-2xl">
-                Singles
+                Releases
               </h2>
               <p className="max-w-xl text-sm text-gray-500">
-                Drag to reorder singles. Toggle <span className="text-gray-400">Latest on home</span> to show the red pill in New Music.
+                Drag to set one global order across Singles, EPs, and Albums. Toggle <span className="text-gray-400">Latest on home</span> to show the red pill in New Music.
               </p>
             </div>
             <NewReleaseDropdown />
           </div>
-          {releases.filter((r) => r.type === "single").length === 0 ? (
-            <p className="text-sm text-gray-500">No singles yet.</p>
+          {releases.length === 0 ? (
+            <p className="text-sm text-gray-500">No releases yet.</p>
           ) : (
             <CatalogReleasesSortableList
-              releases={releases.filter((r) => r.type === "single")}
-              onReorderSave={(ordered) => handleCatalogReorderByType("single", ordered)}
-              onLatestChange={handleReleaseLatestChange}
-              onDeleteClick={handleContentDeleteClick}
-            />
-          )}
-        </div>
-
-        {/* EPs */}
-        <div className="mb-12 md:mb-16">
-          <h2 className="text-xl font-light tracking-tighter md:text-2xl mb-4">EPs</h2>
-          {releases.filter((r) => r.type === "ep").length === 0 ? (
-            <p className="text-sm text-gray-500">No EPs yet.</p>
-          ) : (
-            <CatalogReleasesSortableList
-              releases={releases.filter((r) => r.type === "ep")}
-              onReorderSave={(ordered) => handleCatalogReorderByType("ep", ordered)}
-              onLatestChange={handleReleaseLatestChange}
-              onDeleteClick={handleContentDeleteClick}
-            />
-          )}
-        </div>
-
-        {/* Albums */}
-        <div className="mb-12 md:mb-16">
-          <h2 className="text-xl font-light tracking-tighter md:text-2xl mb-4">Albums</h2>
-          {releases.filter((r) => r.type === "album").length === 0 ? (
-            <p className="text-sm text-gray-500">No albums yet.</p>
-          ) : (
-            <CatalogReleasesSortableList
-              releases={releases.filter((r) => r.type === "album")}
-              onReorderSave={(ordered) => handleCatalogReorderByType("album", ordered)}
+              releases={releases}
+              onReorderSave={handleCatalogReorderSave}
               onLatestChange={handleReleaseLatestChange}
               onDeleteClick={handleContentDeleteClick}
             />

@@ -65,10 +65,9 @@ export async function GET(
       featureArtistIds: release.featureArtistIds,
       description: release.description,
       releaseDate: release.releaseDate,
-      composer: release.composer,
-      lyricist: release.lyricist,
-      leadVocal: release.leadVocal,
-      upcCode: release.upcCode,
+      primaryGenre: release.primaryGenre,
+      secondaryGenre: release.secondaryGenre,
+      upcCode: isAdmin ? release.upcCode : null,
       isrcExplicit: release.isrcExplicit,
       spotifyLink: release.spotifyLink,
       appleMusicLink: release.appleMusicLink,
@@ -193,9 +192,8 @@ export async function PATCH(
       coverImage,
       releaseDate,
       description,
-      composer,
-      lyricist,
-      leadVocal,
+      primaryGenre,
+      secondaryGenre,
       upcCode,
       isrcExplicit,
       spotifyLink,
@@ -295,14 +293,11 @@ export async function PATCH(
           ...(description !== undefined && {
             description: description ? String(description) : null,
           }),
-          ...(composer !== undefined && {
-            composer: composer ? String(composer) : null,
+          ...(primaryGenre !== undefined && {
+            primaryGenre: primaryGenre ? String(primaryGenre) : null,
           }),
-          ...(lyricist !== undefined && {
-            lyricist: lyricist ? String(lyricist) : null,
-          }),
-          ...(leadVocal !== undefined && {
-            leadVocal: leadVocal ? String(leadVocal) : null,
+          ...(secondaryGenre !== undefined && {
+            secondaryGenre: secondaryGenre ? String(secondaryGenre) : null,
           }),
           ...(upcCode !== undefined && {
             upcCode: upcCode ? String(upcCode) : null,

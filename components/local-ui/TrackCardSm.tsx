@@ -23,6 +23,7 @@ export interface TrackCardSmTrack {
   youtubeLink?: string | null;
   soundcloudLink?: string | null;
   isrcExplicit?: boolean;
+  releaseType?: string;
 }
 
 const TrackCardSm: React.FC<{ track: TrackCardSmTrack }> = ({ track }) => {
@@ -53,6 +54,7 @@ const TrackCardSm: React.FC<{ track: TrackCardSmTrack }> = ({ track }) => {
         image: track.thumbnail || null,
         audio: track.audio,
         isExplicit: Boolean(track.isrcExplicit),
+        releaseType: track.releaseType,
       });
     }
   };

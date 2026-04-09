@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft, Save, Image as ImageIcon, Loader2 } from "lucide-react";
 import { MultiSelect } from "@/components/ui/multi-select";
 
+
 interface Artist {
   id: string;
   name: string;
@@ -42,11 +43,8 @@ export default function ReleaseForm({
     coverImageFile: null as File | null,
     description: "",
     releaseDate: "",
-    composer: "",
-    lyricist: "",
-    leadVocal: "",
-    upcCode: "",
-    isrcExplicit: false,
+    primaryGenre: "",
+    secondaryGenre: "",
     spotifyLink: "",
     appleMusicLink: "",
     tidalLink: "",
@@ -54,7 +52,7 @@ export default function ReleaseForm({
     youtubeLink: "",
     soundcloudLink: "",
     primaryArtistIds: [] as string[],
-    featureArtistIds: [] as string[],
+    featureArtistText: "",
   });
 
   const imageInputRef = useRef<HTMLInputElement>(null);
@@ -93,11 +91,8 @@ export default function ReleaseForm({
           releaseDate: data.releaseDate
             ? String(data.releaseDate).slice(0, 10)
             : "",
-          composer: data.composer || "",
-          lyricist: data.lyricist || "",
-          leadVocal: data.leadVocal || "",
-          upcCode: data.upcCode || "",
-          isrcExplicit: Boolean(data.isrcExplicit),
+          primaryGenre: data.primaryGenre || "",
+          secondaryGenre: data.secondaryGenre || "",
           spotifyLink: data.spotifyLink || "",
           appleMusicLink: data.appleMusicLink || "",
           tidalLink: data.tidalLink || "",
@@ -105,7 +100,10 @@ export default function ReleaseForm({
           youtubeLink: data.youtubeLink || "",
           soundcloudLink: data.soundcloudLink || "",
           primaryArtistIds: data.primaryArtistIds || [],
-          featureArtistIds: data.featureArtistIds || [],
+          featureArtistText: ((data.featureArtistIds || []) as string[])
+            .map((id: string) => data.artists?.find((a: Artist) => a.id === id)?.name)
+            .filter(Boolean)
+            .join(", "),
         }));
         setCoverImageUrl(data.coverImage || null);
         setImagePreview(data.coverImage || null);
@@ -123,23 +121,7 @@ export default function ReleaseForm({
   }, [mode, releaseId, router]);
 
   const handlePrimaryArtistsChange = (selected: string[]) => {
-    setFormData((prev) => {
-      const updatedFeature = prev.featureArtistIds.filter(
-        (id) => !selected.includes(id)
-      );
-      return {
-        ...prev,
-        primaryArtistIds: selected,
-        featureArtistIds: updatedFeature,
-      };
-    });
-  };
-
-  const handleFeatureArtistsChange = (selected: string[]) => {
-    setFormData((prev) => {
-      const filtered = selected.filter((id) => !prev.primaryArtistIds.includes(id));
-      return { ...prev, featureArtistIds: filtered };
-    });
+    setFormData((prev) => ({ ...prev, primaryArtistIds: selected }));
   };
 
   const handleInputChange = (
@@ -222,10 +204,6 @@ export default function ReleaseForm({
       alert("Please select at least one primary artist");
       return;
     }
-    if (!formData.upcCode.trim()) {
-      alert("UPC is required");
-      return;
-    }
     if (artists.length === 0) {
       alert("No artists available. Create an artist first.");
       return;
@@ -247,11 +225,8 @@ export default function ReleaseForm({
         coverImage: finalCover,
         releaseDate: formData.releaseDate || null,
         description: formData.description || null,
-        composer: formData.composer || null,
-        lyricist: formData.lyricist || null,
-        leadVocal: formData.leadVocal || null,
-        upcCode: formData.upcCode || null,
-        isrcExplicit: formData.isrcExplicit,
+        primaryGenre: formData.primaryGenre || null,
+        secondaryGenre: formData.secondaryGenre || null,
         spotifyLink: formData.spotifyLink || null,
         appleMusicLink: formData.appleMusicLink || null,
         tidalLink: formData.tidalLink || null,
@@ -259,7 +234,12 @@ export default function ReleaseForm({
         youtubeLink: formData.youtubeLink || null,
         soundcloudLink: formData.soundcloudLink || null,
         primaryArtistIds: formData.primaryArtistIds,
-        featureArtistIds: formData.featureArtistIds,
+        featureArtistIds: formData.featureArtistText
+          .split(",")
+          .map((n) => n.trim().toLowerCase())
+          .filter(Boolean)
+          .map((name) => artists.find((a) => a.name.toLowerCase() === name)?.id)
+          .filter((id): id is string => Boolean(id)),
       };
 
       if (mode === "create") {
@@ -414,48 +394,22 @@ export default function ReleaseForm({
               </div>
 
               <div className="bg-[#0F0F0F] rounded-xl p-6 border border-gray-800">
-                <h3 className="text-lg font-medium text-gray-200 mb-4">Credits</h3>
+                <h3 className="text-lg font-medium text-gray-200 mb-4">Genre</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <Input
-                    name="composer"
-                    value={formData.composer}
+                    name="primaryGenre"
+                    value={formData.primaryGenre}
                     onChange={handleInputChange}
-                    placeholder="Composer"
+                    placeholder="Primary genre"
                     className="bg-gray-800 border-gray-700 text-white"
                   />
                   <Input
-                    name="lyricist"
-                    value={formData.lyricist}
+                    name="secondaryGenre"
+                    value={formData.secondaryGenre}
                     onChange={handleInputChange}
-                    placeholder="Lyricist"
+                    placeholder="Secondary genre (optional)"
                     className="bg-gray-800 border-gray-700 text-white"
                   />
-                  <Input
-                    name="leadVocal"
-                    value={formData.leadVocal}
-                    onChange={handleInputChange}
-                    placeholder="Lead vocal"
-                    className="md:col-span-2 bg-gray-800 border-gray-700 text-white"
-                  />
-                  <Input
-                    name="upcCode"
-                    value={formData.upcCode}
-                    onChange={handleInputChange}
-                    placeholder="UPC *"
-                    required
-                    className="md:col-span-2 bg-gray-800 border-gray-700 text-white"
-                  />
-                  <label className="md:col-span-2 inline-flex items-center gap-2 text-sm text-gray-300">
-                    <input
-                      type="checkbox"
-                      checked={formData.isrcExplicit}
-                      onChange={(e) =>
-                        setFormData((p) => ({ ...p, isrcExplicit: e.target.checked }))
-                      }
-                      className="h-4 w-4 rounded border-gray-600 bg-gray-900"
-                    />
-                    Explicit
-                  </label>
                 </div>
               </div>
 
@@ -496,13 +450,12 @@ export default function ReleaseForm({
                       onChange={handlePrimaryArtistsChange}
                       placeholder="Primary artists"
                     />
-                    <MultiSelect
-                      options={artists
-                        .filter((a) => !formData.primaryArtistIds.includes(a.id))
-                        .map((a) => ({ value: a.id, label: a.name }))}
-                      selected={formData.featureArtistIds}
-                      onChange={handleFeatureArtistsChange}
-                      placeholder="Feature artists"
+                    <Input
+                      name="featureArtistText"
+                      value={formData.featureArtistText}
+                      onChange={handleInputChange}
+                      placeholder="Feature artists (e.g. Drake, The Strokes)"
+                      className="bg-gray-800 border-gray-700 text-white"
                     />
                   </div>
                 )}

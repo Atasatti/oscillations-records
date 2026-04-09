@@ -58,12 +58,27 @@ export function MultiSelect({
     .map((val) => options.find((opt) => opt.value === val)?.label)
     .filter(Boolean);
 
+  const handleTriggerKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (disabled) return;
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      setIsOpen((prev) => !prev);
+    }
+    if (e.key === "Escape") {
+      setIsOpen(false);
+    }
+  };
+
   return (
     <div ref={dropdownRef} className={cn("relative w-full", className)}>
-      <button
-        type="button"
+      <div
+        role="button"
+        tabIndex={disabled ? -1 : 0}
+        aria-disabled={disabled}
+        aria-haspopup="listbox"
+        aria-expanded={isOpen}
         onClick={() => !disabled && setIsOpen(!isOpen)}
-        disabled={disabled}
+        onKeyDown={handleTriggerKeyDown}
         className={cn(
           "w-full min-h-[2.5rem] flex items-center justify-between gap-2 px-3 py-2 rounded-md border bg-[#0F0F0F] text-white border-gray-700",
           "hover:border-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent",
@@ -102,7 +117,7 @@ export function MultiSelect({
             isOpen && "transform rotate-180"
           )}
         />
-      </button>
+      </div>
 
       {isOpen && (
         <div className="absolute z-50 w-full mt-1 bg-[#0F0F0F] border border-gray-700 rounded-md shadow-lg max-h-60 overflow-auto">

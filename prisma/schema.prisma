@@ -93,8 +93,11 @@ model Artist {
   instagramLink String?
   youtubeLink   String?
   facebookLink  String?
+  sortOrder     Int      @default(0)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+
+  @@index([sortOrder])
 }
 
 enum ReleaseKind {
@@ -119,6 +122,8 @@ model Release {
   upcCode          String?
   isrcCode         String?
   isrcExplicit     Boolean      @default(false)
+  primaryGenre     String?
+  secondaryGenre   String?
   spotifyLink      String?
   appleMusicLink   String?
   tidalLink        String?

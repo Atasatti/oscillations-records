@@ -299,7 +299,7 @@ export default function TrackFormDialog({
   const [amazonMusicLink, setAmazonMusicLink] = useState("");
   const [youtubeLink, setYoutubeLink] = useState("");
   const [primaryArtistIds, setPrimaryArtistIds] = useState<string[]>([]);
-  const [featureArtistIds, setFeatureArtistIds] = useState<string[]>([]);
+  const [featureArtistText, setFeatureArtistText] = useState("");
 
   useEffect(() => {
     if (!open) return;
@@ -325,7 +325,12 @@ export default function TrackFormDialog({
       setAmazonMusicLink(track.amazonMusicLink || "");
       setYoutubeLink(track.youtubeLink || "");
       setPrimaryArtistIds(track.primaryArtistIds || []);
-      setFeatureArtistIds(track.featureArtistIds || []);
+      setFeatureArtistText(
+        (track.featureArtistIds || [])
+          .map((id) => artists.find((a) => a.id === id)?.name)
+          .filter(Boolean)
+          .join(", ")
+      );
       setDuration(track.duration);
       setAudioFile(null);
     } else {
@@ -345,8 +350,12 @@ export default function TrackFormDialog({
       setAmazonMusicLink("");
       setYoutubeLink("");
       setPrimaryArtistIds([...defaultPrimaryIds]);
-      setFeatureArtistIds(
-        defaultFeatureIds.filter((id) => !defaultPrimaryIds.includes(id))
+      setFeatureArtistText(
+        defaultFeatureIds
+          .filter((id) => !defaultPrimaryIds.includes(id))
+          .map((id) => artists.find((a) => a.id === id)?.name)
+          .filter(Boolean)
+          .join(", ")
       );
       setDuration(0);
       setAudioFile(null);
@@ -429,13 +438,6 @@ export default function TrackFormDialog({
 
   const handlePrimary = (selected: string[]) => {
     setPrimaryArtistIds(selected);
-    setFeatureArtistIds((prev) => prev.filter((id) => !selected.includes(id)));
-  };
-
-  const handleFeature = (selected: string[]) => {
-    setFeatureArtistIds(
-      selected.filter((id) => !primaryArtistIds.includes(id))
-    );
   };
 
   const validateNameRoleRows = (
@@ -542,7 +544,12 @@ export default function TrackFormDialog({
         amazonMusicLink: amazonMusicLink.trim() || null,
         youtubeLink: youtubeLink.trim() || null,
         primaryArtistIds,
-        featureArtistIds,
+        featureArtistIds: featureArtistText
+          .split(",")
+          .map((n) => n.trim().toLowerCase())
+          .filter(Boolean)
+          .map((name) => artists.find((a) => a.name.toLowerCase() === name)?.id)
+          .filter((id): id is string => Boolean(id)),
       };
 
       if (mode === "create") {
@@ -793,13 +800,11 @@ export default function TrackFormDialog({
               placeholder="Primary artist"
             />
             <div className="h-2" />
-            <MultiSelect
-              options={artists
-                .filter((a) => !primaryArtistIds.includes(a.id))
-                .map((a) => ({ value: a.id, label: a.name }))}
-              selected={featureArtistIds}
-              onChange={handleFeature}
-              placeholder="Feature artist"
+            <Input
+              value={featureArtistText}
+              onChange={(e) => setFeatureArtistText(e.target.value)}
+              placeholder="Feature artists (e.g. Drake, The Strokes)"
+              className="border-gray-700 bg-gray-900"
             />
           </div>
 

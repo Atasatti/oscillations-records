@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getToken } from "next-auth/jwt";
 import { prisma } from "@/lib/prisma";
 import {
   apiKindToPrisma,
@@ -12,10 +13,17 @@ import {
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
+const ADMIN_EMAIL = "oscillationrecordz@gmail.com";
 
 // GET /api/releases — list releases for public grid (optional `?limit=` for home carousel)
 export async function GET(request: NextRequest) {
   try {
+    const token = await getToken({
+      req: request,
+      secret: process.env.NEXTAUTH_SECRET,
+    });
+    const isAdmin = Boolean(token?.email && token.email === ADMIN_EMAIL);
+
     const { searchParams } = new URL(request.url);
     const limitRaw = searchParams.get("limit");
     let take: number | undefined;
@@ -77,7 +85,7 @@ export async function GET(request: NextRequest) {
         featureArtistIds,
         featureArtistNames,
         releaseDate: r.releaseDate,
-        upcCode: r.upcCode,
+        upcCode: isAdmin ? r.upcCode : null,
         spotifyLink: r.spotifyLink || null,
         appleMusicLink: r.appleMusicLink || null,
         tidalLink: r.tidalLink || null,
@@ -122,11 +130,8 @@ export async function POST(request: NextRequest) {
       coverImage,
       releaseDate,
       description,
-      composer,
-      lyricist,
-      leadVocal,
-      upcCode,
-      isrcExplicit,
+      primaryGenre,
+      secondaryGenre,
       spotifyLink,
       appleMusicLink,
       tidalLink,
@@ -140,12 +145,6 @@ export async function POST(request: NextRequest) {
     if (!name || !coverImage) {
       return NextResponse.json(
         { error: "name and coverImage are required" },
-        { status: 400 }
-      );
-    }
-    if (!upcCode || !String(upcCode).trim()) {
-      return NextResponse.json(
-        { error: "upcCode is required" },
         { status: 400 }
       );
     }
@@ -199,11 +198,8 @@ export async function POST(request: NextRequest) {
         sortOrder,
         releaseDate: releaseDate ? new Date(releaseDate) : null,
         description: description ? String(description) : null,
-        composer: composer ? String(composer) : null,
-        lyricist: lyricist ? String(lyricist) : null,
-        leadVocal: leadVocal ? String(leadVocal) : null,
-        upcCode: upcCode ? String(upcCode) : null,
-        isrcExplicit: Boolean(isrcExplicit),
+        primaryGenre: primaryGenre ? String(primaryGenre) : null,
+        secondaryGenre: secondaryGenre ? String(secondaryGenre) : null,
         spotifyLink: spotifyLink || null,
         appleMusicLink: appleMusicLink || null,
         tidalLink: tidalLink || null,

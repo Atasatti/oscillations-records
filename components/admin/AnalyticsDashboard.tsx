@@ -443,8 +443,8 @@ export default function AnalyticsDashboard() {
               </tr>
             </thead>
             <tbody>
-              {data.recentPlays.length > 0 ? (
-                data.recentPlays.map((play) => (
+              {data.recentPlays.filter((p) => p.contentType !== "release").length > 0 ? (
+                data.recentPlays.filter((p) => p.contentType !== "release").slice(0, 20).map((play) => (
                   <tr key={play.id} className="border-b border-gray-800 hover:bg-[#1a1a1a]/50">
                     <td className="py-3 px-4 text-sm text-gray-300">{play.userName}</td>
                     <td className="py-3 px-4 text-sm text-white">{play.contentName}</td>
@@ -469,7 +469,7 @@ export default function AnalyticsDashboard() {
               ) : (
                 <tr>
                   <td colSpan={6} className="py-8 text-center text-gray-500 text-sm">
-                    No recent plays
+                    No recent track plays
                   </td>
                 </tr>
               )}
