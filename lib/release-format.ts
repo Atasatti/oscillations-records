@@ -91,11 +91,12 @@ export function serializeTrack(t: Track) {
   };
 }
 
-/** Public payloads: omit ISRC — admin session still uses full {@link serializeTrack}. */
+/** Public payloads: omit ISRC and lyrics — admin session still uses full {@link serializeTrack}. */
 export function serializeTrackForPublic(
   t: Track
-): Omit<ReturnType<typeof serializeTrack>, "isrcCode"> {
-  const { isrcCode: _isrc, ...rest } = serializeTrack(t);
+): Omit<ReturnType<typeof serializeTrack>, "isrcCode" | "lyrics"> {
+  const { isrcCode: _isrc, lyrics: _lyrics, ...rest } = serializeTrack(t);
   void _isrc;
+  void _lyrics;
   return rest;
 }

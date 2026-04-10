@@ -93,6 +93,10 @@ model Artist {
   instagramLink String?
   youtubeLink   String?
   facebookLink  String?
+  appleMusicLink   String?
+  tidalLink        String?
+  amazonMusicLink  String?
+  soundcloudLink   String?
   sortOrder     Int      @default(0)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt

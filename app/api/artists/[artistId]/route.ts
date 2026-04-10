@@ -57,6 +57,10 @@ export async function PUT(
       instagramLink,
       youtubeLink,
       facebookLink,
+      appleMusicLink,
+      tidalLink,
+      amazonMusicLink,
+      soundcloudLink,
     } = body;
 
     if (!name || !biography) {
@@ -92,6 +96,10 @@ export async function PUT(
         instagramLink: instagramLink || null,
         youtubeLink: youtubeLink || null,
         facebookLink: facebookLink || null,
+        appleMusicLink: appleMusicLink || null,
+        tidalLink: tidalLink || null,
+        amazonMusicLink: amazonMusicLink || null,
+        soundcloudLink: soundcloudLink || null,
       },
     });
 

@@ -24,6 +24,10 @@ export default function CreateArtist() {
     instagramLink: "",
     youtubeLink: "",
     facebookLink: "",
+    appleMusicLink: "",
+    tidalLink: "",
+    amazonMusicLink: "",
+    soundcloudLink: "",
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -145,6 +149,10 @@ export default function CreateArtist() {
           instagramLink: formData.instagramLink,
           youtubeLink: formData.youtubeLink,
           facebookLink: formData.facebookLink,
+          appleMusicLink: formData.appleMusicLink,
+          tidalLink: formData.tidalLink,
+          amazonMusicLink: formData.amazonMusicLink,
+          soundcloudLink: formData.soundcloudLink,
         }),
       });
 
@@ -378,6 +386,62 @@ export default function CreateArtist() {
                     value={formData.facebookLink}
                     onChange={handleInputChange}
                     placeholder="https://facebook.com/username"
+                    className="bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:border-gray-600"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="appleMusicLink" className="block text-sm font-medium text-gray-300 mb-2">
+                    Apple Music
+                  </label>
+                  <Input
+                    id="appleMusicLink"
+                    name="appleMusicLink"
+                    value={formData.appleMusicLink}
+                    onChange={handleInputChange}
+                    placeholder="https://music.apple.com/..."
+                    className="bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:border-gray-600"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="tidalLink" className="block text-sm font-medium text-gray-300 mb-2">
+                    Tidal
+                  </label>
+                  <Input
+                    id="tidalLink"
+                    name="tidalLink"
+                    value={formData.tidalLink}
+                    onChange={handleInputChange}
+                    placeholder="https://tidal.com/..."
+                    className="bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:border-gray-600"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="amazonMusicLink" className="block text-sm font-medium text-gray-300 mb-2">
+                    Amazon Music
+                  </label>
+                  <Input
+                    id="amazonMusicLink"
+                    name="amazonMusicLink"
+                    value={formData.amazonMusicLink}
+                    onChange={handleInputChange}
+                    placeholder="https://music.amazon.com/..."
+                    className="bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:border-gray-600"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="soundcloudLink" className="block text-sm font-medium text-gray-300 mb-2">
+                    SoundCloud
+                  </label>
+                  <Input
+                    id="soundcloudLink"
+                    name="soundcloudLink"
+                    value={formData.soundcloudLink}
+                    onChange={handleInputChange}
+                    placeholder="https://soundcloud.com/..."
                     className="bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:border-gray-600"
                   />
                 </div>

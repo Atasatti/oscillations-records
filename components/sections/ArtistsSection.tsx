@@ -14,6 +14,10 @@ interface Artist {
   instagramLink?: string;
   youtubeLink?: string;
   facebookLink?: string;
+  appleMusicLink?: string;
+  tidalLink?: string;
+  amazonMusicLink?: string;
+  soundcloudLink?: string;
   createdAt: string;
   updatedAt: string;
 }

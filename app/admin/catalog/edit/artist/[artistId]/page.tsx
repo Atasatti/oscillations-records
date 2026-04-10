@@ -28,6 +28,10 @@ export default function EditArtist() {
     instagramLink: "",
     youtubeLink: "",
     facebookLink: "",
+    appleMusicLink: "",
+    tidalLink: "",
+    amazonMusicLink: "",
+    soundcloudLink: "",
   });
 
   useEffect(() => {
@@ -47,6 +51,10 @@ export default function EditArtist() {
           instagramLink: data.instagramLink || "",
           youtubeLink: data.youtubeLink || "",
           facebookLink: data.facebookLink || "",
+          appleMusicLink: data.appleMusicLink || "",
+          tidalLink: data.tidalLink || "",
+          amazonMusicLink: data.amazonMusicLink || "",
+          soundcloudLink: data.soundcloudLink || "",
         }));
         if (data.profilePicture) setImagePreview(data.profilePicture);
       } catch (error) {
@@ -115,6 +123,10 @@ export default function EditArtist() {
           instagramLink: formData.instagramLink,
           youtubeLink: formData.youtubeLink,
           facebookLink: formData.facebookLink,
+          appleMusicLink: formData.appleMusicLink,
+          tidalLink: formData.tidalLink,
+          amazonMusicLink: formData.amazonMusicLink,
+          soundcloudLink: formData.soundcloudLink,
         }),
       });
       if (!response.ok) {
@@ -181,6 +193,10 @@ export default function EditArtist() {
                 <Input name="instagramLink" value={formData.instagramLink} onChange={handleInputChange} placeholder="Instagram link" className="bg-gray-800 border-gray-700 text-white" />
                 <Input name="youtubeLink" value={formData.youtubeLink} onChange={handleInputChange} placeholder="YouTube link" className="bg-gray-800 border-gray-700 text-white" />
                 <Input name="facebookLink" value={formData.facebookLink} onChange={handleInputChange} placeholder="Facebook link" className="bg-gray-800 border-gray-700 text-white" />
+                <Input name="appleMusicLink" value={formData.appleMusicLink} onChange={handleInputChange} placeholder="Apple Music link" className="bg-gray-800 border-gray-700 text-white" />
+                <Input name="tidalLink" value={formData.tidalLink} onChange={handleInputChange} placeholder="Tidal link" className="bg-gray-800 border-gray-700 text-white" />
+                <Input name="amazonMusicLink" value={formData.amazonMusicLink} onChange={handleInputChange} placeholder="Amazon Music link" className="bg-gray-800 border-gray-700 text-white" />
+                <Input name="soundcloudLink" value={formData.soundcloudLink} onChange={handleInputChange} placeholder="SoundCloud link" className="bg-gray-800 border-gray-700 text-white" />
               </div>
               <Button type="submit" disabled={isLoading || uploadingImage} className="bg-white text-black hover:bg-gray-200">
                 {isLoading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />{uploadingImage ? "Uploading..." : "Saving..."}</> : <><Save className="w-4 h-4 mr-2" />Save Changes</>}

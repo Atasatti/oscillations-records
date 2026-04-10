@@ -517,14 +517,6 @@ export default function ReleaseDetail() {
                   </div>
                 </div>
               ) : null}
-              {selectedTrack.lyrics ? (
-                <div>
-                  <h3 className="text-sm font-medium text-gray-300 mb-2">Lyrics</h3>
-                  <p className="text-sm text-gray-400 whitespace-pre-wrap leading-relaxed">
-                    {selectedTrack.lyrics}
-                  </p>
-                </div>
-              ) : null}
             </div>
               );
             })()

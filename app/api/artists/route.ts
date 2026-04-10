@@ -39,6 +39,10 @@ export async function POST(request: NextRequest) {
       instagramLink,
       youtubeLink,
       facebookLink,
+      appleMusicLink,
+      tidalLink,
+      amazonMusicLink,
+      soundcloudLink,
     } = body;
 
     // Validate required fields
@@ -68,6 +72,10 @@ export async function POST(request: NextRequest) {
         instagramLink,
         youtubeLink,
         facebookLink,
+        appleMusicLink: appleMusicLink || null,
+        tidalLink: tidalLink || null,
+        amazonMusicLink: amazonMusicLink || null,
+        soundcloudLink: soundcloudLink || null,
         sortOrder,
       },
     });

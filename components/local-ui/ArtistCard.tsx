@@ -1,6 +1,7 @@
 "use client";
 import React from "react";
-import { FaFacebookF, FaInstagram, FaSpotify, FaYoutube } from "react-icons/fa";
+import { FaApple, FaFacebookF, FaInstagram, FaSoundcloud, FaSpotify, FaYoutube } from "react-icons/fa";
+import { SiAmazonmusic, SiTidal } from "react-icons/si";
 import { LuX } from "react-icons/lu";
 import { RiTiktokFill } from "react-icons/ri";
 
@@ -15,6 +16,10 @@ interface Artist {
   instagramLink?: string;
   youtubeLink?: string;
   facebookLink?: string;
+  appleMusicLink?: string;
+  tidalLink?: string;
+  amazonMusicLink?: string;
+  soundcloudLink?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -93,6 +98,30 @@ const ArtistCard: React.FC<ArtistCardProps> = ({ artist, onClick }) => {
               <FaSpotify 
                 className="h-6 w-6 text-white hover:text-gray-300 cursor-pointer" 
                 onClick={(e) => handleSocialClick(artist.spotifyLink, e)}
+              />
+            )}
+            {artist.appleMusicLink && (
+              <FaApple
+                className="h-6 w-6 text-white hover:text-gray-300 cursor-pointer"
+                onClick={(e) => handleSocialClick(artist.appleMusicLink, e)}
+              />
+            )}
+            {artist.tidalLink && (
+              <SiTidal
+                className="h-6 w-6 text-white hover:text-gray-300 cursor-pointer"
+                onClick={(e) => handleSocialClick(artist.tidalLink, e)}
+              />
+            )}
+            {artist.amazonMusicLink && (
+              <SiAmazonmusic
+                className="h-6 w-6 text-white hover:text-gray-300 cursor-pointer"
+                onClick={(e) => handleSocialClick(artist.amazonMusicLink, e)}
+              />
+            )}
+            {artist.soundcloudLink && (
+              <FaSoundcloud
+                className="h-6 w-6 text-white hover:text-gray-300 cursor-pointer"
+                onClick={(e) => handleSocialClick(artist.soundcloudLink, e)}
               />
             )}
           </div>

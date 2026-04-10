@@ -184,10 +184,10 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const maxOrder = await prisma.release.aggregate({
-      _max: { sortOrder: true },
+    const minOrder = await prisma.release.aggregate({
+      _min: { sortOrder: true },
     });
-    const sortOrder = (maxOrder._max.sortOrder ?? -1) + 1;
+    const sortOrder = (minOrder._min.sortOrder ?? 0) - 1;
 
     const release = await prisma.release.create({
       data: {

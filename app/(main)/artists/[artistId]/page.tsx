@@ -4,7 +4,8 @@ import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ReleaseCardSm from "@/components/local-ui/ReleaseCardSm";
-import { FaFacebookF, FaInstagram, FaSpotify, FaYoutube } from "react-icons/fa";
+import { FaApple, FaFacebookF, FaInstagram, FaSoundcloud, FaSpotify, FaYoutube } from "react-icons/fa";
+import { SiAmazonmusic, SiTidal } from "react-icons/si";
 import { LuX } from "react-icons/lu";
 import { RiTiktokFill } from "react-icons/ri";
 
@@ -19,6 +20,10 @@ interface Artist {
   instagramLink?: string;
   youtubeLink?: string;
   facebookLink?: string;
+  appleMusicLink?: string;
+  tidalLink?: string;
+  amazonMusicLink?: string;
+  soundcloudLink?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -232,6 +237,42 @@ export default function ArtistDetail() {
                       aria-label="Spotify"
                     >
                       <FaSpotify className="h-6 w-6" />
+                    </button>
+                  )}
+                  {artist.appleMusicLink && (
+                    <button
+                      onClick={(e) => handleSocialClick(artist.appleMusicLink, e)}
+                      className="text-gray-400 hover:text-white transition-colors"
+                      aria-label="Apple Music"
+                    >
+                      <FaApple className="h-6 w-6" />
+                    </button>
+                  )}
+                  {artist.tidalLink && (
+                    <button
+                      onClick={(e) => handleSocialClick(artist.tidalLink, e)}
+                      className="text-gray-400 hover:text-white transition-colors"
+                      aria-label="Tidal"
+                    >
+                      <SiTidal className="h-6 w-6" />
+                    </button>
+                  )}
+                  {artist.amazonMusicLink && (
+                    <button
+                      onClick={(e) => handleSocialClick(artist.amazonMusicLink, e)}
+                      className="text-gray-400 hover:text-white transition-colors"
+                      aria-label="Amazon Music"
+                    >
+                      <SiAmazonmusic className="h-6 w-6" />
+                    </button>
+                  )}
+                  {artist.soundcloudLink && (
+                    <button
+                      onClick={(e) => handleSocialClick(artist.soundcloudLink, e)}
+                      className="text-gray-400 hover:text-white transition-colors"
+                      aria-label="SoundCloud"
+                    >
+                      <FaSoundcloud className="h-6 w-6" />
                     </button>
                   )}
                 </div>

@@ -4,7 +4,8 @@ import { useRouter } from "next/navigation";
 import IconButton from "../local-ui/IconButton";
 import Image from "next/image";
 import { ArrowLeft, ArrowRight } from "lucide-react";
-import { FaFacebookF, FaInstagram, FaSpotify, FaYoutube } from "react-icons/fa";
+import { FaApple, FaFacebookF, FaInstagram, FaSoundcloud, FaSpotify, FaYoutube } from "react-icons/fa";
+import { SiAmazonmusic, SiTidal } from "react-icons/si";
 import { RiTiktokFill } from "react-icons/ri";
 import { LuX } from "react-icons/lu";
 
@@ -19,6 +20,10 @@ interface Artist {
   instagramLink: string | null;
   youtubeLink: string | null;
   facebookLink: string | null;
+  appleMusicLink: string | null;
+  tidalLink: string | null;
+  amazonMusicLink: string | null;
+  soundcloudLink: string | null;
 }
 
 /** `home`: CTA goes to the artists listing. `artists`: CTA goes to the currently shown artist’s page. */
@@ -166,6 +171,26 @@ const MeetArtistSection = ({ variant = "home" }: MeetArtistSectionProps) => {
               {currentArtist.spotifyLink && (
                 <a href={currentArtist.spotifyLink} target="_blank" rel="noopener noreferrer">
                   <FaSpotify className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground hover:text-white transition-colors cursor-pointer" />
+                </a>
+              )}
+              {currentArtist.appleMusicLink && (
+                <a href={currentArtist.appleMusicLink} target="_blank" rel="noopener noreferrer">
+                  <FaApple className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground hover:text-white transition-colors cursor-pointer" />
+                </a>
+              )}
+              {currentArtist.tidalLink && (
+                <a href={currentArtist.tidalLink} target="_blank" rel="noopener noreferrer">
+                  <SiTidal className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground hover:text-white transition-colors cursor-pointer" />
+                </a>
+              )}
+              {currentArtist.amazonMusicLink && (
+                <a href={currentArtist.amazonMusicLink} target="_blank" rel="noopener noreferrer">
+                  <SiAmazonmusic className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground hover:text-white transition-colors cursor-pointer" />
+                </a>
+              )}
+              {currentArtist.soundcloudLink && (
+                <a href={currentArtist.soundcloudLink} target="_blank" rel="noopener noreferrer">
+                  <FaSoundcloud className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground hover:text-white transition-colors cursor-pointer" />
                 </a>
               )}
             </div>
