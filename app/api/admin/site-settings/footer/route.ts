@@ -30,6 +30,8 @@ export async function PUT(request: NextRequest) {
       footerFacebookLink: normalizeFooterUrl(body.facebookLink),
       footerSpotifyLink: normalizeFooterUrl(body.spotifyLink),
       footerSoundcloudLink: normalizeFooterUrl(body.soundcloudLink),
+      footerBandcampLink: normalizeFooterUrl(body.bandcampLink),
+      footerBeatportLink: normalizeFooterUrl(body.beatportLink),
     };
 
     await prisma.siteSettings.upsert({
@@ -54,6 +56,8 @@ export async function PUT(request: NextRequest) {
       facebookLink: data.footerFacebookLink,
       spotifyLink: data.footerSpotifyLink,
       soundcloudLink: data.footerSoundcloudLink,
+      bandcampLink: data.footerBandcampLink,
+      beatportLink: data.footerBeatportLink,
     });
   } catch (error) {
     console.error("Error saving footer links:", error);

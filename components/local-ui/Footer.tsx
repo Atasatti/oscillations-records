@@ -4,12 +4,14 @@ import Image from "next/image";
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
 import {
+  FaBandcamp,
   FaFacebookF,
   FaInstagram,
   FaSoundcloud,
   FaSpotify,
   FaYoutube,
 } from "react-icons/fa";
+import { SiBeatport } from "react-icons/si";
 import { RiTiktokFill } from "react-icons/ri";
 import { LuX } from "react-icons/lu";
 import type { FooterSocialLinks } from "@/lib/footer-settings";
@@ -24,6 +26,8 @@ const EMPTY_LINKS: FooterSocialLinks = {
   facebookLink: null,
   spotifyLink: null,
   soundcloudLink: null,
+  bandcampLink: null,
+  beatportLink: null,
 };
 
 const Footer = () => {
@@ -63,6 +67,8 @@ const Footer = () => {
     { href: links.facebookLink, Icon: FaFacebookF, label: "Facebook" },
     { href: links.spotifyLink, Icon: FaSpotify, label: "Spotify" },
     { href: links.soundcloudLink, Icon: FaSoundcloud, label: "SoundCloud" },
+    { href: links.bandcampLink, Icon: FaBandcamp, label: "Bandcamp" },
+    { href: links.beatportLink, Icon: SiBeatport, label: "Beatport" },
   ].filter(
     (item): item is typeof item & { href: string } => Boolean(item.href?.trim())
   );

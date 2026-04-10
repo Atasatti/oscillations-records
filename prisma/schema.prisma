@@ -225,6 +225,8 @@ model SiteSettings {
   footerFacebookLink   String?
   footerSpotifyLink    String?
   footerSoundcloudLink String?
+  footerBandcampLink   String?
+  footerBeatportLink   String?
   updatedAt            DateTime @updatedAt
 }
 

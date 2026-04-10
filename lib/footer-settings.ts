@@ -8,6 +8,8 @@ export type FooterSocialLinks = {
   facebookLink: string | null;
   spotifyLink: string | null;
   soundcloudLink: string | null;
+  bandcampLink: string | null;
+  beatportLink: string | null;
 };
 
 export async function getFooterSocialLinks(): Promise<FooterSocialLinks> {
@@ -21,6 +23,8 @@ export async function getFooterSocialLinks(): Promise<FooterSocialLinks> {
       footerFacebookLink: true,
       footerSpotifyLink: true,
       footerSoundcloudLink: true,
+      footerBandcampLink: true,
+      footerBeatportLink: true,
     },
   });
   if (!row) {
@@ -32,6 +36,8 @@ export async function getFooterSocialLinks(): Promise<FooterSocialLinks> {
       facebookLink: null,
       spotifyLink: null,
       soundcloudLink: null,
+      bandcampLink: null,
+      beatportLink: null,
     };
   }
   return {
@@ -42,6 +48,8 @@ export async function getFooterSocialLinks(): Promise<FooterSocialLinks> {
     facebookLink: row.footerFacebookLink ?? null,
     spotifyLink: row.footerSpotifyLink ?? null,
     soundcloudLink: row.footerSoundcloudLink ?? null,
+    bandcampLink: row.footerBandcampLink ?? null,
+    beatportLink: row.footerBeatportLink ?? null,
   };
 }
 
