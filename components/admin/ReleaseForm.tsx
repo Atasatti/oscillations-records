@@ -54,6 +54,7 @@ export default function ReleaseForm({
     primaryArtistIds: [] as string[],
     featureArtistText: "",
     isrcExplicit: false,
+    upcCode: "",
   });
 
   const imageInputRef = useRef<HTMLInputElement>(null);
@@ -106,6 +107,7 @@ export default function ReleaseForm({
             .filter(Boolean)
             .join(", "),
           isrcExplicit: Boolean(data.isrcExplicit),
+          upcCode: data.upcCode || "",
         }));
         setCoverImageUrl(data.coverImage || null);
         setImagePreview(data.coverImage || null);
@@ -236,6 +238,7 @@ export default function ReleaseForm({
         youtubeLink: formData.youtubeLink || null,
         soundcloudLink: formData.soundcloudLink || null,
         isrcExplicit: formData.isrcExplicit,
+        upcCode: formData.upcCode || null,
         primaryArtistIds: formData.primaryArtistIds,
         featureArtistIds: formData.featureArtistText
           .split(",")
@@ -445,6 +448,17 @@ export default function ReleaseForm({
                     className="bg-gray-800 border-gray-700 text-white"
                   />
                 </div>
+              </div>
+
+              <div className="bg-[#0F0F0F] rounded-xl p-6 border border-gray-800">
+                <h3 className="text-lg font-medium text-gray-200 mb-4">UPC Code</h3>
+                <Input
+                  name="upcCode"
+                  value={formData.upcCode}
+                  onChange={handleInputChange}
+                  placeholder="e.g. 012345678905"
+                  className="bg-gray-800 border-gray-700 text-white"
+                />
               </div>
 
               <div className="bg-[#0F0F0F] rounded-xl p-6 border border-gray-800">

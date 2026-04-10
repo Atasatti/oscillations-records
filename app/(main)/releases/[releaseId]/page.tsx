@@ -1,7 +1,7 @@
 "use client";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, MoreVertical } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight, MoreVertical } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ExplicitBadge from "@/components/local-ui/ExplicitBadge";
 import StreamingLinks, { hasStreamingLinks } from "@/components/local-ui/StreamingLinks";
@@ -14,6 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import ReleaseCardSm from "@/components/local-ui/ReleaseCardSm";
 
 interface TrackRow {
   id: string;
@@ -53,6 +54,8 @@ interface Release {
   artists: Artist[];
   description?: string | null;
   releaseDate?: string | null;
+  primaryGenre?: string | null;
+  secondaryGenre?: string | null;
   composer?: string | null;
   lyricist?: string | null;
   leadVocal?: string | null;
@@ -73,6 +76,24 @@ interface ParsedTrackCredit {
   role?: string;
 }
 
+interface OtherRelease {
+  id: string;
+  name: string;
+  thumbnail: string;
+  type: string;
+  artist: string;
+  primaryArtistName?: string;
+  featureArtistNames?: string[];
+  songCount?: number;
+  spotifyLink?: string | null;
+  appleMusicLink?: string | null;
+  tidalLink?: string | null;
+  amazonMusicLink?: string | null;
+  youtubeLink?: string | null;
+  soundcloudLink?: string | null;
+  isrcExplicit?: boolean;
+}
+
 export default function ReleaseDetail() {
   const params = useParams();
   const router = useRouter();
@@ -84,11 +105,71 @@ export default function ReleaseDetail() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedTrack, setSelectedTrack] = useState<TrackRow | null>(null);
+  const [otherReleases, setOtherReleases] = useState<OtherRelease[]>([]);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+  const moreScrollRef = useRef<HTMLDivElement>(null);
   const trackedReleaseId = useRef<string | null>(null);
+
+  const updateMoreArrows = useCallback(() => {
+    const el = moreScrollRef.current;
+    if (!el) return;
+    const { scrollLeft, scrollWidth, clientWidth } = el;
+    setCanScrollLeft(scrollLeft > 2);
+    setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 2);
+  }, []);
+
+  const scrollMore = (dir: "prev" | "next") => {
+    const el = moreScrollRef.current;
+    if (!el) return;
+    const first = el.firstElementChild as HTMLElement | null;
+    const delta = (first?.offsetWidth ?? 288) + 16;
+    el.scrollBy({ left: dir === "next" ? delta : -delta, behavior: "smooth" });
+  };
 
   useEffect(() => {
     fetchReleaseData();
   }, [releaseId]);
+
+  useEffect(() => {
+    if (!release) return;
+    (async () => {
+      try {
+        const res = await fetch("/api/releases");
+        if (!res.ok) return;
+        const all = await res.json() as Array<{
+          id: string;
+          name: string;
+          thumbnail: string;
+          type: string;
+          artist: string;
+          artistId: string;
+        }>;
+        const primaryIds = new Set(release.primaryArtistIds);
+        const filtered = all
+          .filter((r) => r.id !== release.id && primaryIds.has(r.artistId))
+          .slice(0, 6);
+        setOtherReleases(filtered);
+      } catch {
+        // silently ignore
+      }
+    })();
+  }, [release]);
+
+  useEffect(() => {
+    const el = moreScrollRef.current;
+    if (!el || otherReleases.length === 0) return;
+    updateMoreArrows();
+    el.addEventListener("scroll", updateMoreArrows, { passive: true });
+    const ro = new ResizeObserver(() => updateMoreArrows());
+    ro.observe(el);
+    const id = requestAnimationFrame(() => updateMoreArrows());
+    return () => {
+      cancelAnimationFrame(id);
+      el.removeEventListener("scroll", updateMoreArrows);
+      ro.disconnect();
+    };
+  }, [otherReleases, updateMoreArrows]);
 
   // Track release view — guard with ref so it only fires once per release ID
   useEffect(() => {
@@ -207,7 +288,8 @@ export default function ReleaseDetail() {
       release.leadVocal
   );
   const showAbout =
-    Boolean(release.description) || Boolean(release.releaseDate);
+    Boolean(release.description) || Boolean(release.releaseDate) ||
+    Boolean(release.primaryGenre) || Boolean(release.secondaryGenre);
   const streamProps = {
     spotifyLink: release.spotifyLink,
     appleMusicLink: release.appleMusicLink,
@@ -329,26 +411,32 @@ export default function ReleaseDetail() {
                     className={`grid gap-4 lg:gap-5 ${showAbout && hasCredits ? "md:grid-cols-2" : ""}`}
                   >
                     {showAbout ? (
-                      <div className="rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.05] to-white/[0.02] p-5 sm:p-6">
-                        <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
+                      <div className="rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.05] to-white/[0.02] p-5 sm:p-6 space-y-4">
+                        <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                           About
                         </h2>
-                        {release.releaseDate ? (
-                          <p className="text-sm text-white/90 font-medium mb-3">
-                            Released{" "}
-                            {new Date(release.releaseDate).toLocaleDateString("en-US", {
-                              year: "numeric",
-                              month: "long",
-                              day: "numeric",
-                            })}
-                          </p>
-                        ) : null}
+                        <div className="flex flex-wrap gap-2">
+                          {release.releaseDate ? (
+                            <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/80">
+                              <svg className="w-3 h-3 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                              {new Date(release.releaseDate).toLocaleDateString("en-US", {
+                                year: "numeric",
+                                month: "long",
+                                day: "numeric",
+                              })}
+                            </span>
+                          ) : null}
+                          {[release.primaryGenre, release.secondaryGenre].filter(Boolean).map((g) => (
+                            <span key={g} className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/80">
+                              <svg className="w-3 h-3 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" /></svg>
+                              {g}
+                            </span>
+                          ))}
+                        </div>
                         {release.description ? (
-                          <p className="text-sm text-gray-400 leading-relaxed whitespace-pre-wrap">
+                          <p className="text-sm text-gray-400 leading-relaxed whitespace-pre-wrap border-t border-white/5 pt-4">
                             {release.description}
                           </p>
-                        ) : !release.releaseDate ? (
-                          <p className="text-sm text-muted-foreground">No description yet.</p>
                         ) : null}
                       </div>
                     ) : null}
@@ -456,6 +544,83 @@ export default function ReleaseDetail() {
               </div>
             )}
           </div>
+
+          {/* Other releases by same artist — carousel */}
+          {otherReleases.length > 0 ? (
+            <div className="mt-16 max-w-6xl xl:max-w-7xl mx-auto px-0 pb-10">
+              <div className="flex items-end justify-between mb-8 border-t border-white/5 pt-10">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-1">Discography</p>
+                  <h2 className="text-2xl font-light tracking-tight text-white">
+                    More by <span className="text-white/70">{releasePrimaryNames.join(", ")}</span>
+                  </h2>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => router.push("/releases")}
+                  className="text-xs text-gray-500 hover:text-white transition-colors shrink-0 ml-4"
+                >
+                  View all →
+                </button>
+              </div>
+              <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                {canScrollLeft ? (
+                  <button
+                    type="button"
+                    onClick={() => scrollMore("prev")}
+                    aria-label="Previous"
+                    className="flex-shrink-0 flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-full border border-white/15 bg-black/50 text-white backdrop-blur-sm transition-colors hover:bg-white/10"
+                  >
+                    <ChevronLeft className="h-5 w-5 sm:h-6 sm:w-6" aria-hidden />
+                  </button>
+                ) : null}
+                <div
+                  ref={moreScrollRef}
+                  className="flex min-w-0 flex-1 gap-4 overflow-x-auto scroll-smooth"
+                  style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+                >
+                  {otherReleases.map((r) => (
+                    <div
+                      key={r.id}
+                      onClick={() => router.push(`/releases/${r.id}`)}
+                      className="cursor-pointer relative group w-72 h-84 shrink-0"
+                    >
+                      <ReleaseCardSm
+                        release={{
+                          id: r.id,
+                          name: r.name,
+                          thumbnail: r.thumbnail,
+                          primaryArtistName: r.primaryArtistName,
+                          featureArtistNames: r.featureArtistNames,
+                          artist: r.artist,
+                          songCount: r.songCount,
+                          kindLabel:
+                            r.type === "album" ? "Album" : r.type === "ep" ? "EP" : "Single",
+                          spotifyLink: r.spotifyLink,
+                          appleMusicLink: r.appleMusicLink,
+                          tidalLink: r.tidalLink,
+                          amazonMusicLink: r.amazonMusicLink,
+                          youtubeLink: r.youtubeLink,
+                          soundcloudLink: r.soundcloudLink,
+                          isrcExplicit: r.isrcExplicit,
+                        }}
+                      />
+                    </div>
+                  ))}
+                </div>
+                {canScrollRight ? (
+                  <button
+                    type="button"
+                    onClick={() => scrollMore("next")}
+                    aria-label="Next"
+                    className="flex-shrink-0 flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-full border border-white/15 bg-black/50 text-white backdrop-blur-sm transition-colors hover:bg-white/10"
+                  >
+                    <ChevronRight className="h-5 w-5 sm:h-6 sm:w-6" aria-hidden />
+                  </button>
+                ) : null}
+              </div>
+            </div>
+          ) : null}
         </div>
       </div>
       <Dialog
