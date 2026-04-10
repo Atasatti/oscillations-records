@@ -53,6 +53,7 @@ export default function ReleaseForm({
     soundcloudLink: "",
     primaryArtistIds: [] as string[],
     featureArtistText: "",
+    isrcExplicit: false,
   });
 
   const imageInputRef = useRef<HTMLInputElement>(null);
@@ -104,6 +105,7 @@ export default function ReleaseForm({
             .map((id: string) => data.artists?.find((a: Artist) => a.id === id)?.name)
             .filter(Boolean)
             .join(", "),
+          isrcExplicit: Boolean(data.isrcExplicit),
         }));
         setCoverImageUrl(data.coverImage || null);
         setImagePreview(data.coverImage || null);
@@ -233,6 +235,7 @@ export default function ReleaseForm({
         amazonMusicLink: formData.amazonMusicLink || null,
         youtubeLink: formData.youtubeLink || null,
         soundcloudLink: formData.soundcloudLink || null,
+        isrcExplicit: formData.isrcExplicit,
         primaryArtistIds: formData.primaryArtistIds,
         featureArtistIds: formData.featureArtistText
           .split(",")
@@ -391,6 +394,37 @@ export default function ReleaseForm({
                   onChange={handleInputChange}
                   className="bg-[#0F0F0F] border-gray-700 text-white"
                 />
+                <div>
+                  <span className="mb-1 block text-xs font-medium text-gray-400">
+                    Explicit *
+                  </span>
+                  <div className="flex flex-wrap gap-4 pt-1">
+                    <label className="inline-flex cursor-pointer items-center gap-2 text-sm text-gray-300">
+                      <input
+                        type="radio"
+                        name="release-explicit"
+                        checked={!formData.isrcExplicit}
+                        onChange={() =>
+                          setFormData((p) => ({ ...p, isrcExplicit: false }))
+                        }
+                        className="border-gray-600"
+                      />
+                      No
+                    </label>
+                    <label className="inline-flex cursor-pointer items-center gap-2 text-sm text-gray-300">
+                      <input
+                        type="radio"
+                        name="release-explicit"
+                        checked={formData.isrcExplicit}
+                        onChange={() =>
+                          setFormData((p) => ({ ...p, isrcExplicit: true }))
+                        }
+                        className="border-gray-600"
+                      />
+                      Yes
+                    </label>
+                  </div>
+                </div>
               </div>
 
               <div className="bg-[#0F0F0F] rounded-xl p-6 border border-gray-800">

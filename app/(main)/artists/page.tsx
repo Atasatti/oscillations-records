@@ -6,7 +6,7 @@ import React from "react";
 const Artists = () => {
   return (
     <div>
-      <MeetArtistSection />
+      <MeetArtistSection variant="artists" />
       <ArtistsSection />
       <MusicHeardSection
         heading="Let’s get your music heard."

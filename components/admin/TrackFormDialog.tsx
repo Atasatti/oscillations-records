@@ -298,6 +298,7 @@ export default function TrackFormDialog({
   const [tidalLink, setTidalLink] = useState("");
   const [amazonMusicLink, setAmazonMusicLink] = useState("");
   const [youtubeLink, setYoutubeLink] = useState("");
+  const [soundcloudLink, setSoundcloudLink] = useState("");
   const [primaryArtistIds, setPrimaryArtistIds] = useState<string[]>([]);
   const [featureArtistText, setFeatureArtistText] = useState("");
 
@@ -324,6 +325,7 @@ export default function TrackFormDialog({
       setTidalLink(track.tidalLink || "");
       setAmazonMusicLink(track.amazonMusicLink || "");
       setYoutubeLink(track.youtubeLink || "");
+      setSoundcloudLink(track.soundcloudLink || "");
       setPrimaryArtistIds(track.primaryArtistIds || []);
       setFeatureArtistText(
         (track.featureArtistIds || [])
@@ -349,6 +351,7 @@ export default function TrackFormDialog({
       setTidalLink("");
       setAmazonMusicLink("");
       setYoutubeLink("");
+      setSoundcloudLink("");
       setPrimaryArtistIds([...defaultPrimaryIds]);
       setFeatureArtistText(
         defaultFeatureIds
@@ -543,6 +546,7 @@ export default function TrackFormDialog({
         tidalLink: tidalLink.trim() || null,
         amazonMusicLink: amazonMusicLink.trim() || null,
         youtubeLink: youtubeLink.trim() || null,
+        soundcloudLink: soundcloudLink.trim() || null,
         primaryArtistIds,
         featureArtistIds: featureArtistText
           .split(",")
@@ -786,6 +790,12 @@ export default function TrackFormDialog({
                 value={youtubeLink}
                 onChange={(e) => setYoutubeLink(e.target.value)}
                 placeholder="YouTube"
+                className="border-gray-700 bg-gray-900"
+              />
+              <Input
+                value={soundcloudLink}
+                onChange={(e) => setSoundcloudLink(e.target.value)}
+                placeholder="SoundCloud"
                 className="border-gray-700 bg-gray-900"
               />
             </div>

@@ -21,7 +21,14 @@ interface Artist {
   facebookLink: string | null;
 }
 
-const MeetArtistSection = () => {
+/** `home`: CTA goes to the artists listing. `artists`: CTA goes to the currently shown artist’s page. */
+export type MeetArtistSectionVariant = "home" | "artists";
+
+type MeetArtistSectionProps = {
+  variant?: MeetArtistSectionVariant;
+};
+
+const MeetArtistSection = ({ variant = "home" }: MeetArtistSectionProps) => {
   const router = useRouter();
   const [artists, setArtists] = useState<Artist[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -56,6 +63,11 @@ const MeetArtistSection = () => {
   };
 
   const handleViewDetails = () => {
+    if (variant === "artists") {
+      const a = artists[currentIndex];
+      if (a?.id) router.push(`/artists/${a.id}`);
+      return;
+    }
     router.push("/artists");
   };
 
@@ -168,7 +180,9 @@ const MeetArtistSection = () => {
                 className="mt-6 sm:mt-10 lg:mt-14 flex items-center gap-2 cursor-pointer hover:opacity-70 transition-opacity"
                 onClick={handleViewDetails}
               >
-                <p className="text-xs sm:text-sm font-medium">View details</p>
+                <p className="text-xs sm:text-sm font-medium">
+                  {variant === "artists" ? "View detail" : "View all artists"}
+                </p>
                 <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5"/>
               </div>
             </div>

@@ -138,6 +138,7 @@ export async function POST(request: NextRequest) {
       amazonMusicLink,
       youtubeLink,
       soundcloudLink,
+      isrcExplicit,
       primaryArtistIds,
       featureArtistIds,
     } = body;
@@ -206,6 +207,7 @@ export async function POST(request: NextRequest) {
         amazonMusicLink: amazonMusicLink || null,
         youtubeLink: youtubeLink || null,
         soundcloudLink: soundcloudLink || null,
+        isrcExplicit: Boolean(isrcExplicit),
       },
       include: { tracks: { orderBy: { sortOrder: "asc" } } },
     });
