@@ -23,7 +23,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { ArrowLeft, MoreVertical, Trash2, Pencil, Plus } from "lucide-react";
+import {
+  ArrowLeft,
+  Download,
+  FileText,
+  MoreVertical,
+  Pencil,
+  Plus,
+  Trash2,
+} from "lucide-react";
 import Link from "next/link";
 
 interface Track {
@@ -101,6 +109,11 @@ export default function AdminReleaseDetail() {
   const [editingTrack, setEditingTrack] = useState<TrackFormDialogTrack | null>(
     null
   );
+  const [lyricsDialogOpen, setLyricsDialogOpen] = useState(false);
+  const [lyricsView, setLyricsView] = useState<{
+    trackName: string;
+    lyrics: string | null;
+  } | null>(null);
 
   useEffect(() => {
     fetchData();
@@ -516,7 +529,7 @@ export default function AdminReleaseDetail() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10 h-8 w-8"
+                      className="absolute top-2 right-2 z-10 h-8 w-8 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
@@ -526,6 +539,33 @@ export default function AdminReleaseDetail() {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="bg-[#0F0F0F] border-gray-800">
+                    <DropdownMenuItem
+                      onSelect={() => {
+                        setLyricsView({
+                          trackName: track.name,
+                          lyrics: track.lyrics ?? null,
+                        });
+                        setLyricsDialogOpen(true);
+                      }}
+                    >
+                      <FileText className="w-4 h-4 mr-2" />
+                      View lyrics
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      disabled={!track.stemsFile}
+                      onSelect={() => {
+                        if (track.stemsFile) {
+                          window.open(
+                            track.stemsFile,
+                            "_blank",
+                            "noopener,noreferrer"
+                          );
+                        }
+                      }}
+                    >
+                      <Download className="w-4 h-4 mr-2" />
+                      Download stems
+                    </DropdownMenuItem>
                     <DropdownMenuItem
                       onSelect={() => {
                         requestAnimationFrame(() => openEditTrack(track));
@@ -613,6 +653,40 @@ export default function AdminReleaseDetail() {
               </Button>
               <Button variant="destructive" onClick={handleDeleteTrackConfirm}>
                 Delete
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog
+          open={lyricsDialogOpen}
+          onOpenChange={(open) => {
+            setLyricsDialogOpen(open);
+            if (!open) setLyricsView(null);
+          }}
+        >
+          <DialogContent className="bg-[#0F0F0F] border-gray-800 text-white max-h-[85vh] flex flex-col sm:max-w-lg">
+            <DialogHeader>
+              <DialogTitle>Lyrics</DialogTitle>
+              <DialogDescription className="text-gray-400 truncate">
+                {lyricsView?.trackName}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="min-h-[120px] max-h-[55vh] overflow-y-auto rounded-lg border border-white/10 bg-black/40 p-4 text-sm text-gray-200 whitespace-pre-wrap">
+              {lyricsView?.lyrics?.trim()
+                ? lyricsView.lyrics
+                : "No lyrics saved for this track. Add them in Edit track."}
+            </div>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                className="border-gray-700"
+                onClick={() => {
+                  setLyricsDialogOpen(false);
+                  setLyricsView(null);
+                }}
+              >
+                Close
               </Button>
             </DialogFooter>
           </DialogContent>

@@ -44,6 +44,7 @@ export type CatalogReleaseRow = {
   artist: string;
   songCount: number;
   showLatestOnHome?: boolean;
+  showOnHome?: boolean;
   spotifyLink?: string | null;
   appleMusicLink?: string | null;
   tidalLink?: string | null;
@@ -60,10 +61,12 @@ function kindLabel(type: CatalogReleaseRow["type"]) {
 function SortableRow({
   release,
   onLatestChange,
+  onShowOnHomeChange,
   onDeleteClick,
 }: {
   release: CatalogReleaseRow;
   onLatestChange: (id: string, checked: boolean) => void | Promise<void>;
+  onShowOnHomeChange: (id: string, checked: boolean) => void | Promise<void>;
   onDeleteClick: (id: string, name: string) => void;
 }) {
   const {
@@ -140,6 +143,15 @@ function SortableRow({
           />
           <span className="whitespace-nowrap">Latest on home</span>
         </label>
+        <label className="flex cursor-pointer items-center gap-2 text-xs text-gray-400 select-none">
+          <input
+            type="checkbox"
+            checked={Boolean(release.showOnHome)}
+            onChange={(e) => onShowOnHomeChange(release.id, e.target.checked)}
+            className="h-4 w-4 rounded border-gray-600 bg-black accent-white"
+          />
+          <span className="whitespace-nowrap">New Music carousel</span>
+        </label>
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -178,11 +190,13 @@ export default function CatalogReleasesSortableList({
   releases,
   onReorderSave,
   onLatestChange,
+  onShowOnHomeChange,
   onDeleteClick,
 }: {
   releases: CatalogReleaseRow[];
   onReorderSave: (ordered: CatalogReleaseRow[]) => Promise<void>;
   onLatestChange: (id: string, checked: boolean) => Promise<void>;
+  onShowOnHomeChange: (id: string, checked: boolean) => Promise<void>;
   onDeleteClick: (id: string, name: string) => void;
 }) {
   const [local, setLocal] = useState(releases);
@@ -236,6 +250,7 @@ export default function CatalogReleasesSortableList({
                 key={release.id}
                 release={release}
                 onLatestChange={onLatestChange}
+                onShowOnHomeChange={onShowOnHomeChange}
                 onDeleteClick={onDeleteClick}
               />
             ))}

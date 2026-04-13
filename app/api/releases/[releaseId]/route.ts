@@ -77,6 +77,7 @@ export async function GET(
       soundcloudLink: release.soundcloudLink,
       sortOrder: release.sortOrder,
       showLatestOnHome: release.showLatestOnHome,
+      showOnHome: release.showOnHome,
       artists,
       tracks,
       songs: tracks,
@@ -204,6 +205,7 @@ export async function PATCH(
       soundcloudLink,
       sortOrder,
       showLatestOnHome,
+      showOnHome,
       primaryArtistIds,
       featureArtistIds,
       tracks: tracksRaw,
@@ -325,6 +327,9 @@ export async function PATCH(
           }),
           ...(showLatestOnHome !== undefined && {
             showLatestOnHome: Boolean(showLatestOnHome),
+          }),
+          ...(showOnHome !== undefined && {
+            showOnHome: Boolean(showOnHome),
           }),
           ...(primaryArtistIds !== undefined && { primaryArtistIds }),
           ...(featIds !== undefined && { featureArtistIds: featIds }),

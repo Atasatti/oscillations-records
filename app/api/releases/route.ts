@@ -15,7 +15,7 @@ export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 const ADMIN_EMAIL = "oscillationrecordz@gmail.com";
 
-// GET /api/releases — list releases for public grid (optional `?limit=` for home carousel)
+// GET /api/releases — list releases for public grid (optional `?limit=`; `?carousel=1` returns all `showOnHome` releases with no cap, or all releases if none flagged)
 export async function GET(request: NextRequest) {
   try {
     const token = await getToken({
@@ -34,13 +34,31 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    const releases = await prisma.release.findMany({
-      ...(take !== undefined ? { take } : {}),
-      orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
+    const carouselOnly = searchParams.get("carousel") === "1";
+
+    const baseList = {
+      orderBy: [{ sortOrder: "asc" as const }, { createdAt: "desc" as const }],
       include: {
-        tracks: { orderBy: { sortOrder: "asc" } },
+        tracks: { orderBy: { sortOrder: "asc" as const } },
       },
-    });
+    };
+
+    let releases;
+    if (carouselOnly) {
+      const featured = await prisma.release.findMany({
+        where: { showOnHome: true },
+        ...baseList,
+      });
+      releases =
+        featured.length > 0
+          ? featured
+          : await prisma.release.findMany(baseList);
+    } else {
+      releases = await prisma.release.findMany({
+        ...(take !== undefined ? { take } : {}),
+        ...baseList,
+      });
+    }
 
     const allArtistIds = new Set<string>();
     releases.forEach((r) => {
@@ -95,6 +113,7 @@ export async function GET(request: NextRequest) {
         isrcExplicit: r.isrcExplicit,
         sortOrder: r.sortOrder,
         showLatestOnHome: r.showLatestOnHome,
+        showOnHome: r.showOnHome,
         createdAt: r.createdAt,
         year: rd
           ? rd.getFullYear().toString()
@@ -139,6 +158,7 @@ export async function POST(request: NextRequest) {
       youtubeLink,
       soundcloudLink,
       isrcExplicit,
+      upcCode,
       primaryArtistIds,
       featureArtistIds,
     } = body;
@@ -208,6 +228,10 @@ export async function POST(request: NextRequest) {
         youtubeLink: youtubeLink || null,
         soundcloudLink: soundcloudLink || null,
         isrcExplicit: Boolean(isrcExplicit),
+        upcCode:
+          upcCode != null && String(upcCode).trim() !== ""
+            ? String(upcCode).trim()
+            : null,
       },
       include: { tracks: { orderBy: { sortOrder: "asc" } } },
     });

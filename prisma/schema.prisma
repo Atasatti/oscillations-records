@@ -138,6 +138,8 @@ model Release {
   sortOrder        Int          @default(0)
   /// When true, home New Music carousel shows a Latest pill on this release's featured track.
   showLatestOnHome Boolean      @default(false)
+  /// When true, release is eligible for the "New Music" horizontal carousel on home and /releases (up to API limit; order follows catalog sort). If none are selected, all releases are considered (fallback).
+  showOnHome       Boolean      @default(false)
   tracks           Track[]
   createdAt        DateTime     @default(now())
   updatedAt        DateTime     @updatedAt

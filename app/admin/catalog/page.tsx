@@ -69,6 +69,7 @@ interface CatalogRelease {
   isrcExplicit?: boolean;
   sortOrder?: number;
   showLatestOnHome?: boolean;
+  showOnHome?: boolean;
 }
 
 interface UpcomingRelease {
@@ -555,6 +556,32 @@ export default function AdminCatalog() {
     }
   };
 
+  const handleReleaseShowOnHomeChange = async (id: string, checked: boolean) => {
+    const prev = [...releases];
+    setReleases((list) =>
+      list.map((x) => (x.id === id ? { ...x, showOnHome: checked } : x))
+    );
+    try {
+      const res = await fetch(`/api/releases/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ showOnHome: checked }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        alert(
+          typeof err.error === "string"
+            ? err.error
+            : "Failed to update New Music carousel"
+        );
+        setReleases(prev);
+      }
+    } catch {
+      setReleases(prev);
+      alert("Failed to update New Music carousel");
+    }
+  };
+
   const handleUpcomingReorderSave = async (ordered: UpcomingRelease[]) => {
     try {
       const res = await fetch("/api/admin/upcoming-releases/reorder", {
@@ -638,7 +665,9 @@ export default function AdminCatalog() {
                 Releases
               </h2>
               <p className="max-w-xl text-sm text-gray-500">
-                Drag to set one global order across Singles, EPs, and Albums. Toggle <span className="text-gray-400">Latest on home</span> to show the red pill in New Music.
+                Drag to set one global order across Singles, EPs, and Albums.{" "}
+                <span className="text-gray-400">Latest on home</span> shows the red pill;{" "}
+                <span className="text-gray-400">New Music carousel</span> picks which releases appear in the home and releases page carousel (all checked releases, in catalog order; if none are checked, every release is shown in that order).
               </p>
             </div>
             <NewReleaseDropdown />
@@ -650,6 +679,7 @@ export default function AdminCatalog() {
               releases={releases}
               onReorderSave={handleCatalogReorderSave}
               onLatestChange={handleReleaseLatestChange}
+              onShowOnHomeChange={handleReleaseShowOnHomeChange}
               onDeleteClick={handleContentDeleteClick}
             />
           )}

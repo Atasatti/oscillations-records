@@ -490,57 +490,74 @@ export default function ReleaseDetail() {
               <p className="text-gray-400">No tracks available.</p>
             ) : (
               <div className="rounded-2xl border border-white/10 overflow-hidden bg-gradient-to-b from-white/[0.04] to-white/[0.015]">
-                {trackList.map((song, index) => (
+                {trackList.map((song, index) => {
+                  const trackStreamProps = {
+                    spotifyLink: song.spotifyLink,
+                    appleMusicLink: song.appleMusicLink,
+                    tidalLink: song.tidalLink,
+                    amazonMusicLink: song.amazonMusicLink,
+                    youtubeLink: song.youtubeLink,
+                    soundcloudLink: song.soundcloudLink,
+                  };
+                  const showTrackLinks = hasStreamingLinks(trackStreamProps);
+                  return (
                   <div
                     key={song.id}
-                    className="grid grid-cols-[auto_auto_1fr_auto_auto_auto] items-center gap-3 px-3 sm:px-4 py-2.5 border-b border-white/5 last:border-b-0"
+                    className="border-b border-white/5 last:border-b-0"
                   >
-                    <span className="w-5 text-xs text-gray-500 text-right">{index + 1}</span>
-                    <button
-                      type="button"
-                      onClick={() => playTrackFromArtwork(song)}
-                      className="group/cover relative h-11 w-11 overflow-hidden rounded-md ring-1 ring-white/10 hover:ring-white/30 transition"
-                      aria-label={`Play ${song.name}`}
-                    >
-                      <img
-                        src={song.image || release.coverImage}
-                        alt={song.name}
-                        className="h-full w-full object-cover"
-                      />
-                      <span className="absolute inset-0 bg-black/0 group-hover/cover:bg-black/30 transition-colors" />
-                    </button>
-                    <div className="min-w-0">
-                      <p className="text-sm text-white/95 truncate flex items-center gap-1.5">
-                        <span>{song.name}</span>
-                        {song.isrcExplicit ? <ExplicitBadge size="sm" /> : null}
-                      </p>
-                      <p className="text-xs text-gray-400 truncate">{formatArtistLine(song)}</p>
+                    <div className="grid grid-cols-[auto_auto_1fr_auto_auto_auto] items-center gap-3 px-3 sm:px-4 py-2.5">
+                      <span className="w-5 text-xs text-gray-500 text-right">{index + 1}</span>
+                      <button
+                        type="button"
+                        onClick={() => playTrackFromArtwork(song)}
+                        className="group/cover relative h-11 w-11 overflow-hidden rounded-md ring-1 ring-white/10 hover:ring-white/30 transition"
+                        aria-label={`Play ${song.name}`}
+                      >
+                        <img
+                          src={song.image || release.coverImage}
+                          alt={song.name}
+                          className="h-full w-full object-cover"
+                        />
+                        <span className="absolute inset-0 bg-black/0 group-hover/cover:bg-black/30 transition-colors" />
+                      </button>
+                      <div className="min-w-0">
+                        <p className="text-sm text-white/95 truncate flex items-center gap-1.5">
+                          <span>{song.name}</span>
+                          {song.isrcExplicit ? <ExplicitBadge size="sm" /> : null}
+                        </p>
+                        <p className="text-xs text-gray-400 truncate">{formatArtistLine(song)}</p>
+                      </div>
+                      <div className="hidden md:flex justify-start">
+                        <StreamingLinks
+                          {...trackStreamProps}
+                          size="sm"
+                          className="opacity-85 hover:opacity-100 transition-opacity"
+                        />
+                      </div>
+                      <span className="text-xs text-gray-500 tabular-nums">
+                        {formatDuration(song.duration)}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedTrack(song)}
+                        className="h-7 w-7 inline-flex items-center justify-center rounded-md text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
+                        aria-label={`Open details for ${song.name}`}
+                      >
+                        <MoreVertical className="h-4 w-4" />
+                      </button>
                     </div>
-                    <div className="hidden md:flex justify-start">
-                      <StreamingLinks
-                        spotifyLink={song.spotifyLink}
-                        appleMusicLink={song.appleMusicLink}
-                        tidalLink={song.tidalLink}
-                        amazonMusicLink={song.amazonMusicLink}
-                        youtubeLink={song.youtubeLink}
-                        soundcloudLink={song.soundcloudLink}
-                        size="sm"
-                        className="opacity-85 hover:opacity-100 transition-opacity"
-                      />
-                    </div>
-                    <span className="text-xs text-gray-500 tabular-nums">
-                      {formatDuration(song.duration)}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => setSelectedTrack(song)}
-                      className="h-7 w-7 inline-flex items-center justify-center rounded-md text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
-                      aria-label={`Open details for ${song.name}`}
-                    >
-                      <MoreVertical className="h-4 w-4" />
-                    </button>
+                    {showTrackLinks ? (
+                      <div className="md:hidden px-3 sm:px-4 pb-3 pt-0 pl-[5.5rem] sm:pl-[5.75rem]">
+                        <StreamingLinks
+                          {...trackStreamProps}
+                          size="sm"
+                          className="opacity-90"
+                        />
+                      </div>
+                    ) : null}
                   </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>

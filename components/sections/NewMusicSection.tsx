@@ -23,6 +23,7 @@ interface HomeRelease {
   soundcloudLink?: string | null;
   isrcExplicit?: boolean;
   showLatestOnHome?: boolean;
+  showOnHome?: boolean;
 }
 
 const SCROLL_GAP_PX = 16; // matches gap-4
@@ -81,7 +82,7 @@ const NewMusicSection = () => {
 
   const fetchReleases = useCallback(async () => {
     try {
-      const response = await fetch("/api/releases?limit=8");
+      const response = await fetch("/api/releases?carousel=1");
       if (response.ok) {
         const data: HomeRelease[] = await response.json();
         setReleases(Array.isArray(data) ? data : []);
