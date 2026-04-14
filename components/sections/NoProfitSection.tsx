@@ -4,9 +4,14 @@ import React from "react";
 const NoProfitSection = () => {
   return (
     <div
-      className="bg-center bg-contain bg-no-repeat px-4 sm:px-6 md:px-[10%] w-full mx-auto mt-10 sm:mt-16 md:mt-20 pt-14 sm:pt-20 md:pt-28 pb-20 sm:pb-32 md:pb-40"
+      className="relative overflow-hidden bg-background bg-center bg-contain bg-no-repeat px-4 sm:px-6 md:px-[10%] w-full mx-auto mt-10 sm:mt-16 md:mt-20 pt-14 sm:pt-20 md:pt-28 pb-20 sm:pb-32 md:pb-40"
       style={{ backgroundImage: `url('/profit-bg.svg')` }}
     >
+      <div
+        className="pointer-events-none absolute inset-x-0 bottom-0 z-[1] h-28 bg-gradient-to-b from-transparent via-background/75 to-background sm:h-36 md:h-44"
+        aria-hidden
+      />
+      <div className="relative z-[2]">
       <p className="font-light text-2xl sm:text-3xl md:text-4xl lg:text-5xl opacity-90 text-center tracking-tighter">
         Oscillation Records: Built for
         <br /> <span className="font-normal opacity-35">Artists</span>, Not
@@ -35,6 +40,7 @@ const NoProfitSection = () => {
            No endless meetings. No BS. Just results.
           </p>
         </div>
+      </div>
       </div>
     </div>
   );

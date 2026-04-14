@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
+import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import {
   apiKindToPrisma,
@@ -35,6 +36,7 @@ export async function GET(request: NextRequest) {
     }
 
     const carouselOnly = searchParams.get("carousel") === "1";
+    const qParam = (searchParams.get("q") || "").trim();
 
     const baseList = {
       orderBy: [{ sortOrder: "asc" as const }, { createdAt: "desc" as const }],
@@ -54,7 +56,29 @@ export async function GET(request: NextRequest) {
           ? featured
           : await prisma.release.findMany(baseList);
     } else {
+      let releaseWhere: Prisma.ReleaseWhereInput | undefined;
+
+      if (qParam.length > 0) {
+        const matchingArtists = await prisma.artist.findMany({
+          where: { name: { contains: qParam, mode: "insensitive" } },
+          select: { id: true },
+        });
+        const artistIds = matchingArtists.map((a) => a.id);
+        releaseWhere = {
+          OR: [
+            { name: { contains: qParam, mode: "insensitive" } },
+            ...(artistIds.length > 0
+              ? [
+                  { primaryArtistIds: { hasSome: artistIds } },
+                  { featureArtistIds: { hasSome: artistIds } },
+                ]
+              : []),
+          ],
+        };
+      }
+
       releases = await prisma.release.findMany({
+        ...(releaseWhere ? { where: releaseWhere } : {}),
         ...(take !== undefined ? { take } : {}),
         ...baseList,
       });

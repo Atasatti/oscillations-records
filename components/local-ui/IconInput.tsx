@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Search } from "lucide-react"
 import { cn } from "@/lib/utils"
-import type React from "react"
+import * as React from "react"
 import type { LucideIcon } from "lucide-react"
 
 interface SearchInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
@@ -13,18 +13,23 @@ interface SearchInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   icon?: LucideIcon
 }
 
-const IconInput: React.FC<SearchInputProps> = ({
-  placeholder,
-  value,
-  onChange,
-  onArrowClick,
-  className,
-  icon: Icon = Search,
-  ...rest
-}) => {
+const IconInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
+  function IconInput(
+    {
+      placeholder,
+      value,
+      onChange,
+      onArrowClick,
+      className,
+      icon: Icon = Search,
+      ...rest
+    },
+    ref
+  ) {
   return (
     <div className={cn("relative w-full", className)}>
       <Input
+        ref={ref}
         className="pr-12 pl-5 h-11 rounded-full text-xs outline-none"
         placeholder={placeholder}
         value={value}
@@ -43,6 +48,9 @@ const IconInput: React.FC<SearchInputProps> = ({
       </Button>
     </div>
   )
-}
+  }
+)
+
+IconInput.displayName = "IconInput"
 
 export default IconInput

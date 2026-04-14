@@ -13,8 +13,8 @@ export default function Home() {
       <Navbar />
       <HomeHeroSection />
       <NoProfitSection />
-      <NewMusicSection />
       <UpcomingReleasesSection />
+      <NewMusicSection />
       <MeetArtistSection />
       <MusicHeardSection
         heading="Let's get your music heard."

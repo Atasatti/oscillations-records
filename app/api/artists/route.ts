@@ -5,13 +5,31 @@ import { prisma } from "@/lib/prisma";
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
-// GET /api/artists - Get all artists
-export async function GET() {
+// GET /api/artists — all artists, or search with `?q=` (case-insensitive substring) and optional `?limit=`
+export async function GET(request: NextRequest) {
   try {
+    const { searchParams } = new URL(request.url);
+    const q = (searchParams.get("q") || "").trim();
+    const limitRaw = searchParams.get("limit");
+    let take: number | undefined;
+    if (limitRaw !== null && limitRaw !== "") {
+      const n = parseInt(limitRaw, 10);
+      if (Number.isFinite(n) && n > 0) {
+        take = Math.min(n, 100);
+      }
+    }
+
+    const where =
+      q.length > 0
+        ? { name: { contains: q, mode: "insensitive" as const } }
+        : undefined;
+
     const artists = await prisma.artist.findMany({
+      ...(where ? { where } : {}),
       orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
+      ...(take !== undefined ? { take } : {}),
     });
-    
+
     return NextResponse.json(artists);
   } catch (error) {
     console.error("Error fetching artists:", error);

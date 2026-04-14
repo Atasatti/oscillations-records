@@ -2,8 +2,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import React, { useState } from "react";
-import IconInput from "./IconInput";
-import { Search, LogOut, User, Menu, X } from "lucide-react";
+import NavbarSearch from "./NavbarSearch";
+import { LogOut, User, Menu, X } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -34,7 +34,8 @@ const Navbar = () => {
 
   return (
     <>
-      <div className="flex justify-between items-center py-6 md:py-8 px-4 md:px-[10%]">
+      <header className="sticky top-0 z-40 w-full border-b border-white/[0.06] bg-background/90 shadow-[0_1px_0_rgba(255,255,255,0.04)] backdrop-blur-md supports-[backdrop-filter]:bg-background/75">
+        <div className="mx-auto flex max-w-[100vw] items-center justify-between px-4 py-5 md:px-[10%] md:py-7">
         {/* Logo - smaller on mobile */}
         <Link href={"/"}>
         <div className="flex items-center gap-1.5 md:gap-3">
@@ -90,8 +91,8 @@ const Navbar = () => {
         {/* Right side - Search, Auth, Hamburger */}
         <div className="flex items-center gap-2 md:gap-4">
           {/* Search - hidden on mobile, smaller on tablet */}
-          <div className="hidden md:block w-full max-w-[200px] lg:max-w-[250px]">
-            <IconInput placeholder="search" icon={Search} className="w-full" />
+          <div className="hidden md:block w-full max-w-[200px] lg:max-w-[280px]">
+            <NavbarSearch className="w-full" />
           </div>
 
           {/* Auth Section - Desktop */}
@@ -173,7 +174,8 @@ const Navbar = () => {
             )}
           </button>
         </div>
-      </div>
+        </div>
+      </header>
 
       {/* Mobile Side Menu */}
       <div
@@ -216,7 +218,10 @@ const Navbar = () => {
 
           {/* Search in mobile menu */}
           <div className="p-4 border-b">
-            <IconInput placeholder="search" icon={Search} className="w-full" />
+            <NavbarSearch
+              className="w-full"
+              onNavigate={closeMobileMenu}
+            />
           </div>
 
           {/* Navigation Links */}
