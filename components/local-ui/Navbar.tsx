@@ -130,12 +130,6 @@ const Navbar = () => {
                     </p>
                   </div>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
-                    <Link href="/profile" className="cursor-pointer">
-                      Profile
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
                   <DropdownMenuItem
                     onClick={handleSignOut}
                     className="cursor-pointer text-destructive"
@@ -294,13 +288,6 @@ const Navbar = () => {
                     </p>
                   </div>
                 </div>
-                <Link
-                  href="/profile"
-                  onClick={closeMobileMenu}
-                  className="block w-full text-center py-2 px-4 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                >
-                  Profile
-                </Link>
                 <button
                   onClick={() => {
                     handleSignOut();
