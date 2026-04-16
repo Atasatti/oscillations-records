@@ -4,7 +4,7 @@ import React from "react";
 const AboutHeroSection = () => {
   return (
     <div
-      className="bg-center bg-no-repeat px-[10%] w-full mx-auto py-14"
+      className="bg-background bg-center bg-no-repeat px-[10%] w-full mx-auto py-14"
       style={{ backgroundImage: `url('/hero-bg.svg')` }}
     >
       <p className="text-center uppercase text-muted-foreground text-xl tracking-widest font-light">

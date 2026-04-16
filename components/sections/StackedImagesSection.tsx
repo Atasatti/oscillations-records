@@ -13,7 +13,7 @@ const StackedImagesSection = ({ image1, image2, image3 }: StackedImagesSectionPr
   return (
     <div className="flex flex-col md:flex-row justify-between items-center md:items-start mx-auto gap-4 md:gap-0">
         <p className="w-full md:w-1/5 text-muted-foreground text-xs sm:text-sm text-center md:text-left">Pain has been top charted, listen to the new single by <span className="font-black text-white opacity-90">Ryan Jones.</span></p>
-      <div className="relative mt-10 h-[200px] w-[200px] sm:h-[300px] sm:w-[300px] md:mt-0 md:h-[500px] md:w-[500px] lg:h-[500px] lg:w-[500px] xl:h-[580px] xl:w-[580px]">
+      <div className="relative mt-6 h-[200px] w-[200px] sm:mt-6 sm:h-[300px] sm:w-[300px] md:mt-0 md:h-[500px] md:w-[500px] lg:h-[500px] lg:w-[500px] xl:h-[580px] xl:w-[580px]">
         <Image
         src={image3}
         width={580}

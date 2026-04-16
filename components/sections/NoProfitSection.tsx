@@ -4,7 +4,7 @@ import React from "react";
 const NoProfitSection = () => {
   return (
     <div
-      className="relative overflow-hidden bg-background bg-center bg-contain bg-no-repeat px-4 sm:px-6 md:px-[10%] w-full mx-auto mt-10 sm:mt-16 md:mt-20 pt-14 sm:pt-20 md:pt-28 pb-20 sm:pb-32 md:pb-40"
+      className="relative overflow-hidden bg-background bg-center bg-contain bg-no-repeat px-4 sm:px-6 md:px-[10%] w-full mx-auto mt-0 pt-12 sm:pt-16 md:pt-20 pb-20 sm:pb-32 md:pb-40"
       style={{ backgroundImage: `url('/profit-bg.svg')` }}
     >
       <div
