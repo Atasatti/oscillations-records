@@ -25,11 +25,11 @@ function formatCountdown(ms: number): string {
 }
 
 type BenertRemixPageContentProps = {
-  /** Used for sign-in / sign-out redirects (e.g. `/benert-remix` or `/benert-remix/test`) */
+  /** Used for sign-in / sign-out redirects (e.g. `/benert-remix` or `/benert-remix/result`) */
   callbackBasePath: string;
 };
 
-const BENERT_REMIX_ENDED_PATH = "/benert-remix/test";
+const BENERT_REMIX_ENDED_PATH = "/benert-remix/result";
 
 export default function BenertRemixPageContent({
   callbackBasePath,
@@ -87,7 +87,7 @@ export default function BenertRemixPageContent({
   }, [competition?.active, fetchCompetition]);
 
   // When the competition is over, everyone (including people who already submitted) goes to
-  // /benert-remix/test. While the competition is still running, submitters only see the message on this page.
+  // /benert-remix/result. While the competition is still running, submitters only see the message on this page.
   useEffect(() => {
     if (!competition?.endsAt || competition.active) return;
     router.replace(BENERT_REMIX_ENDED_PATH);

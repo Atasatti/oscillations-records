@@ -11,7 +11,7 @@ const rewardItems = [
   "A limited Benert EP T-shirt",
 ];
 
-export default function BenertRemixTestPage() {
+export default function BenertRemixResultPage() {
   return (
     <div className="relative min-h-screen bg-[#0a0a0a] text-white flex flex-col font-[family-name:var(--font-inter)] overflow-x-hidden">
       <div
@@ -25,7 +25,7 @@ export default function BenertRemixTestPage() {
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.2)_0%,transparent_30%,transparent_70%,rgba(0,0,0,0.35)_100%)]" aria-hidden />
 
       <div className="relative z-10 flex min-h-0 min-h-screen flex-col">
-        <BenertRemixNavbar authCallbackPath="/benert-remix/test" />
+        <BenertRemixNavbar authCallbackPath="/benert-remix/result" />
 
         <section className="flex flex-1 flex-col lg:flex-row lg:min-h-0">
           <div className="order-2 flex flex-1 flex-col justify-center px-4 py-10 sm:px-6 md:px-8 lg:order-1 lg:px-12 lg:py-12 xl:px-[10%]">

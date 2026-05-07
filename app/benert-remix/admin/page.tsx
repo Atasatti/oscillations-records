@@ -162,12 +162,12 @@ export default function BenertRemixAdminPage() {
         To review the <strong className="text-white/80">public thank-you page</strong> (same as after the competition ends) without
         closing the competition or interrupting uploads/downloads, open it directly:{" "}
         <a
-          href="/benert-remix/test"
+          href="/benert-remix/result"
           target="_blank"
           rel="noopener noreferrer"
           className="text-rose-400 underline decoration-rose-400/50 hover:decoration-rose-400"
         >
-          /benert-remix/test
+          /benert-remix/result
         </a>{" "}
         (new tab)
       </p>

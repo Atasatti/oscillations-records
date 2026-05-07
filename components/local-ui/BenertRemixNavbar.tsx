@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { useSession, signIn, signOut } from "next-auth/react";
 
 type BenertRemixNavbarProps = {
-  /** Post-login / post-logout redirect (include path only, e.g. `/benert-remix` or `/benert-remix/test`) */
+  /** Post-login / post-logout redirect (include path only, e.g. `/benert-remix` or `/benert-remix/result`) */
   authCallbackPath?: string;
 };
 
