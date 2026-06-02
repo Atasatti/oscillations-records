@@ -71,7 +71,7 @@ const Navbar = () => {
             : "border-b border-white/[0.06] shadow-[0_1px_0_rgba(255,255,255,0.04)]"
         }`}
       >
-        <div className="mx-auto flex max-w-[100vw] items-center justify-between px-4 py-5 md:px-[10%] md:py-7">
+        <div className="mx-auto flex max-w-full items-center justify-between px-4 py-5 md:px-[10%] md:py-7">
 
           {/* Logo — scale on hover */}
           <Link href="/">
