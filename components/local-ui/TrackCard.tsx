@@ -1,13 +1,20 @@
 "use client";
-import React from "react";
+
+import React, { useRef, useState } from "react";
 import { Play } from "lucide-react";
 import { useMusic } from "@/contexts/music-context";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import StreamingLinks from "./StreamingLinks";
 import ExplicitBadge from "./ExplicitBadge";
+import {
+  motion,
+  useMotionValue,
+  useTransform,
+  useSpring,
+  useMotionTemplate,
+} from "motion/react";
 
-/** Playable track card (former MusicCard) — use for songs/tracks only, not release covers. */
 export interface TrackCardTrack {
   id: string | number;
   title: string;
@@ -24,7 +31,6 @@ export interface TrackCardTrack {
   amazonMusicLink?: string | null;
   youtubeLink?: string | null;
   soundcloudLink?: string | null;
-  /** Parental advisory — show "E" beside title */
   isrcExplicit?: boolean;
   releaseType?: string;
 }
@@ -33,16 +39,44 @@ const TrackCard: React.FC<{ track: TrackCardTrack }> = ({ track }) => {
   const { playSong } = useMusic();
   const { data: session, status } = useSession();
   const router = useRouter();
+  const cardRef = useRef<HTMLDivElement>(null);
+  const [isHovered, setIsHovered] = useState(false);
+
+  const mouseX = useMotionValue(0.5);
+  const mouseY = useMotionValue(0.5);
+
+  const rawRotateX = useTransform(mouseY, [0, 1], [8, -8]);
+  const rawRotateY = useTransform(mouseX, [0, 1], [-8, 8]);
+  const rotateX = useSpring(rawRotateX, { stiffness: 300, damping: 30 });
+  const rotateY = useSpring(rawRotateY, { stiffness: 300, damping: 30 });
+
+  const shadowX = useTransform(rotateY, [-8, 8], [-14, 14]);
+  const shadowY = useTransform(rotateX, [-8, 8], [14, -14]);
+  const boxShadow = useMotionTemplate`${shadowX}px ${shadowY}px 40px rgba(0,0,0,0.7)`;
+
+  const shimmerX = useTransform(mouseX, [0, 1], [0, 100]);
+  const shimmerY = useTransform(mouseY, [0, 1], [0, 100]);
+  const shimmerBg = useMotionTemplate`radial-gradient(circle at ${shimmerX}% ${shimmerY}%, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.05) 40%, transparent 68%)`;
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!cardRef.current) return;
+    const rect = cardRef.current.getBoundingClientRect();
+    mouseX.set((e.clientX - rect.left) / rect.width);
+    mouseY.set((e.clientY - rect.top) / rect.height);
+  };
+
+  const handleMouseLeave = () => {
+    mouseX.set(0.5);
+    mouseY.set(0.5);
+    setIsHovered(false);
+  };
 
   const handlePlay = (e: React.MouseEvent) => {
     e.stopPropagation();
-
     if (status === "unauthenticated" || !session) {
-      const currentPath = window.location.pathname;
-      router.push(`/login?callbackUrl=${encodeURIComponent(currentPath)}`);
+      router.push(`/login?callbackUrl=${encodeURIComponent(window.location.pathname)}`);
       return;
     }
-
     if (track.audio) {
       playSong({
         id: String(track.id),
@@ -63,66 +97,87 @@ const TrackCard: React.FC<{ track: TrackCardTrack }> = ({ track }) => {
   };
 
   return (
-    <div className="relative flex-shrink-0 w-84 h-100 rounded-2xl overflow-hidden group cursor-pointer">
-      <div
-        className="absolute inset-0 bg-cover bg-center transition-transform duration-300 group-hover:scale-105"
-        style={{ backgroundImage: `url(${track.backgroundImage})` }}
-      />
-
-      <div className="absolute left-0 right-0 top-0 bottom-16 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-
-      {track.audio && (
-        <div className="absolute left-0 right-0 top-0 bottom-16 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
-          <button
-            onClick={handlePlay}
-            className="h-16 w-16 rounded-full bg-[#dc2626] hover:bg-[#ef4444] active:bg-[#991b1b] flex items-center justify-center transition-all duration-200 shadow-lg hover:shadow-[0_0_20px_rgba(220,38,38,0.4)] active:scale-95"
-            aria-label="Play track"
-          >
-            <Play className="w-6 h-6 text-white fill-white ml-1" />
-          </button>
-        </div>
-      )}
-
-      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-      <div className="absolute inset-0 p-4 flex flex-col justify-end z-0">
-        <div className="text-white">
-          <img
-            src={track.avatar || "/placeholder.svg"}
-            alt={track.artist}
-            className="w-8 h-8 rounded-md"
+    /* Perspective wrapper — no overflow-hidden so the 3D tilt isn't clipped */
+    <div style={{ perspective: "800px" }} className="flex-shrink-0 w-84 h-100">
+      <motion.div
+        ref={cardRef}
+        onMouseMove={handleMouseMove}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={handleMouseLeave}
+        animate={{ z: isHovered ? 18 : 0, scale: isHovered ? 1.02 : 1 }}
+        transition={{ type: "spring", stiffness: 300, damping: 28 }}
+        style={{ rotateX, rotateY, boxShadow, transformStyle: "preserve-3d" }}
+        className="relative w-full h-full rounded-2xl cursor-pointer group"
+      >
+        {/* Background image — clipped inside here so it doesn't bleed on tilt */}
+        <div className="absolute inset-0 rounded-2xl overflow-hidden">
+          <div
+            className="absolute inset-0 bg-cover bg-center"
+            style={{ backgroundImage: `url(${track.backgroundImage})` }}
           />
-          <h3 className="text-lg font-medium mb-1 mt-1 flex items-center gap-2 flex-wrap">
-            <span className="line-clamp-2 min-w-0 flex-1">{track.title}</span>
-            {track.isrcExplicit ? <ExplicitBadge size="sm" /> : null}
-          </h3>
-          {track.primaryArtistName ? (
-            <>
-              <p className="text-xs text-white/90 line-clamp-2">
-                {track.primaryArtistName}
-              </p>
-              {track.featureArtistNames && track.featureArtistNames.length > 0 ? (
-                <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">
-                  ft {track.featureArtistNames.join(", ")}
-                </p>
-              ) : null}
-            </>
-          ) : (
-            <p className="text-xs text-muted-foreground line-clamp-2">{track.artist}</p>
-          )}
-          <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-            <span>{track.duration}</span>
+        </div>
+
+        {/* Gradient overlay */}
+        <div className="absolute inset-0 rounded-2xl bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+
+        {/* Play button */}
+        {track.audio && (
+          <div className="absolute left-0 right-0 top-0 bottom-16 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
+            <button
+              onClick={handlePlay}
+              className="h-16 w-16 rounded-full bg-[#dc2626] hover:bg-[#ef4444] active:bg-[#991b1b] flex items-center justify-center transition-all duration-200 shadow-lg hover:shadow-[0_0_20px_rgba(220,38,38,0.4)] active:scale-95"
+              aria-label="Play track"
+            >
+              <Play className="w-6 h-6 text-white fill-white ml-1" />
+            </button>
           </div>
-          <StreamingLinks
-            spotifyLink={track.spotifyLink}
-            appleMusicLink={track.appleMusicLink}
-            tidalLink={track.tidalLink}
-            amazonMusicLink={track.amazonMusicLink}
-            youtubeLink={track.youtubeLink}
-            soundcloudLink={track.soundcloudLink}
-            className="mt-2"
-          />
+        )}
+
+        {/* Gloss shimmer */}
+        <motion.div
+          className="absolute inset-0 rounded-2xl pointer-events-none z-20"
+          style={{ background: shimmerBg }}
+        />
+
+        {/* Track info */}
+        <div className="absolute inset-0 p-4 flex flex-col justify-end z-10">
+          <div className="text-white">
+            <img
+              src={track.avatar || "/placeholder.svg"}
+              alt={track.artist}
+              className="w-8 h-8 rounded-md"
+            />
+            <h3 className="text-lg font-medium mb-1 mt-1 flex items-center gap-2 flex-wrap">
+              <span className="line-clamp-2 min-w-0 flex-1">{track.title}</span>
+              {track.isrcExplicit ? <ExplicitBadge size="sm" /> : null}
+            </h3>
+            {track.primaryArtistName ? (
+              <>
+                <p className="text-xs text-white/90 line-clamp-2">{track.primaryArtistName}</p>
+                {track.featureArtistNames && track.featureArtistNames.length > 0 && (
+                  <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">
+                    ft {track.featureArtistNames.join(", ")}
+                  </p>
+                )}
+              </>
+            ) : (
+              <p className="text-xs text-muted-foreground line-clamp-2">{track.artist}</p>
+            )}
+            <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+              <span>{track.duration}</span>
+            </div>
+            <StreamingLinks
+              spotifyLink={track.spotifyLink}
+              appleMusicLink={track.appleMusicLink}
+              tidalLink={track.tidalLink}
+              amazonMusicLink={track.amazonMusicLink}
+              youtubeLink={track.youtubeLink}
+              soundcloudLink={track.soundcloudLink}
+              className="mt-2"
+            />
+          </div>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 };
