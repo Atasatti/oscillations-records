@@ -1,31 +1,38 @@
 import { NextResponse } from "next/server";
+import { sessionTokenCookieName } from "@/lib/auth-session";
 
 // Force dynamic rendering - prevent static generation
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
+const useSecureCookies =
+  process.env.NEXTAUTH_URL?.startsWith("https://") ?? !!process.env.VERCEL;
+
 export async function POST() {
   try {
-    // Clear the session by setting a cookie with an expired date
     const response = NextResponse.json({ success: true });
-    
-    // Clear the NextAuth session cookie
-    response.cookies.set("next-auth.session-token", "", {
+    const cookieOptions = {
       expires: new Date(0),
       path: "/",
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-    });
+      secure: useSecureCookies,
+      sameSite: "lax" as const,
+    };
 
-    // Also clear the callback cookie
-    response.cookies.set("next-auth.csrf-token", "", {
-      expires: new Date(0),
-      path: "/",
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-    });
+    response.cookies.set(sessionTokenCookieName(), "", cookieOptions);
+
+    // Clear legacy non-prefixed cookie if production previously set the wrong name
+    if (useSecureCookies) {
+      response.cookies.set("next-auth.session-token", "", cookieOptions);
+    }
+
+    const csrfName = useSecureCookies
+      ? "__Host-next-auth.csrf-token"
+      : "next-auth.csrf-token";
+    response.cookies.set(csrfName, "", cookieOptions);
+    if (useSecureCookies) {
+      response.cookies.set("next-auth.csrf-token", "", cookieOptions);
+    }
 
     return response;
   } catch (error) {
