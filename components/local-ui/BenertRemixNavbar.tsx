@@ -11,7 +11,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { useSession, signIn, signOut } from "next-auth/react";
+import { useSession, signIn } from "next-auth/react";
+import { signOutCompletely } from "@/lib/sign-out-client";
 
 type BenertRemixNavbarProps = {
   /** Post-login / post-logout redirect (include path only, e.g. `/benert-remix` or `/benert-remix/result`) */
@@ -61,7 +62,7 @@ export default function BenertRemixNavbar({ authCallbackPath = "/benert-remix" }
               </div>
               <DropdownMenuSeparator className="bg-white/10" />
               <DropdownMenuItem
-                onClick={() => signOut({ callbackUrl: authCallbackPath })}
+                onClick={() => signOutCompletely(authCallbackPath)}
                 className="cursor-pointer text-rose-400 focus:text-rose-300 focus:bg-rose-500/10"
               >
                 <LogOut className="mr-2 h-4 w-4" />

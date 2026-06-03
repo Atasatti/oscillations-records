@@ -1,11 +1,11 @@
 "use client"
 
 import { Button } from "../ui/button"
-import { signOut } from "next-auth/react"
+import { signOutCompletely } from "@/lib/sign-out-client"
 
 export function SignOutButton() {
   const handleSignOut = async () => {
-    await signOut({ callbackUrl: "/login?force=true" })
+    await signOutCompletely("/")
   }
   
   return (

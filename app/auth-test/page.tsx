@@ -1,7 +1,8 @@
 "use client";
 
 import React from "react";
-import { useSession, signIn, signOut } from "next-auth/react";
+import { useSession, signIn } from "next-auth/react";
+import { signOutCompletely } from "@/lib/sign-out-client";
 import { Button } from "@/components/ui/button";
 
 export default function AuthTestPage() {
@@ -31,7 +32,7 @@ export default function AuthTestPage() {
             
             <div className="flex justify-center">
               <Button 
-                onClick={() => signOut({ callbackUrl: "/auth-test" })}
+                onClick={() => signOutCompletely("/auth-test")}
                 className="bg-red-500 hover:bg-red-600"
               >
                 Sign Out

@@ -21,6 +21,15 @@ const LoginContent = () => {
     }
   }, [error])
 
+  // Clear stale session cookies left by older sign-out implementations
+  useEffect(() => {
+    if (searchParams.get("force") === "true") {
+      fetch("/api/auth/clear-session", { method: "POST", credentials: "include" }).catch(
+        () => undefined
+      )
+    }
+  }, [searchParams])
+
   const handleGoogleSignIn = async () => {
     try {
       setLoading(true)

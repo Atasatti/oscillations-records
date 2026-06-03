@@ -13,7 +13,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { useSession, signOut } from "next-auth/react";
+import { useSession } from "next-auth/react";
+import { signOutCompletely } from "@/lib/sign-out-client";
 import { motion } from "motion/react";
 
 const navLinks = [
@@ -52,7 +53,7 @@ const Navbar = () => {
   }, []);
 
   const handleSignOut = async () => {
-    await signOut({ callbackUrl: "/login" });
+    await signOutCompletely("/");
   };
 
   const toggleMobileMenu = () => setIsMobileMenuOpen((v) => !v);

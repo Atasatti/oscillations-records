@@ -10,7 +10,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useSession, signOut } from "next-auth/react";
+import { useSession } from "next-auth/react";
+import { signOutCompletely } from "@/lib/sign-out-client";
 
 const AdminNavbar = () => {
   const { data: session, status } = useSession();
@@ -19,7 +20,7 @@ const AdminNavbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const handleSignOut = async () => {
-    await signOut({ callbackUrl: "/login" });
+    await signOutCompletely("/");
   };
 
   const toggleMobileMenu = () => {
