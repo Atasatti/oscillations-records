@@ -45,6 +45,17 @@
 
 :root {
   --radius: 0.625rem;
+
+  /* Fluid type scale — see BRAND.md §5. Use via font-size: var(--text-h1) etc. */
+  --text-display: clamp(2.75rem, 7vw, 7rem);
+  --text-h1: clamp(2rem, 4.5vw, 4rem);
+  --text-h2: clamp(1.5rem, 3vw, 2.5rem);
+  --text-h3: clamp(1.25rem, 2vw, 1.75rem);
+  --text-body-lg: clamp(1.05rem, 1.2vw, 1.25rem);
+
+  /* Film-grain overlay strength — see BRAND.md §6. */
+  --grain-opacity: 0.035;
+
   --background: oklch(1 0 0);
   --foreground: oklch(0.1684 0 0);
   --card: oklch(1 0 0);
@@ -148,5 +159,29 @@
   to {
     transform: translateY(0);
     opacity: 1;
+  }
+}
+
+/* Film grain — subtle, desaturated, fixed overlay for analog texture (BRAND.md §6).
+   Non-interactive and barely visible; tune strength with --grain-opacity. */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: var(--grain-opacity);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Respect users who prefer less motion (BRAND.md §7). */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
