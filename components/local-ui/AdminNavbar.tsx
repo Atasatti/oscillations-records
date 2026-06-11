@@ -12,12 +12,23 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useSession } from "next-auth/react";
 import { signOutCompletely } from "@/lib/sign-out-client";
+import { usePathname } from "next/navigation";
+
+const adminLinks = [
+  { href: "/admin", label: "Dashboard" },
+  { href: "/admin/catalog", label: "Catalog" },
+  { href: "/admin/settings", label: "Settings" },
+];
+
+const isAdminLinkActive = (pathname: string, href: string) =>
+  href === "/admin" ? pathname === "/admin" : pathname.startsWith(href);
 
 const AdminNavbar = () => {
   const { data: session, status } = useSession();
   const isAuthenticated = status === "authenticated";
   const isLoading = status === "loading";
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const pathname = usePathname();
 
   const handleSignOut = async () => {
     await signOutCompletely("/");
@@ -55,20 +66,23 @@ const AdminNavbar = () => {
         </Link>
         {/* Desktop Navigation - hidden on md and below */}
         <div
-          className="hidden lg:flex items-center gap-8 xl:gap-10 font-[family-name:var(--font-inter)]
+          className="hidden md:flex items-center gap-6 lg:gap-8 font-[family-name:var(--font-inter)]
                backdrop-blur-sm shadow-[5px_5px_30px_rgba(0,0,0,0.25)]
-               px-4 xl:px-6 py-2.5 xl:py-3 rounded-xl"
+               px-4 lg:px-6 py-2.5 lg:py-3 rounded-xl"
         >
-          <Link href={"/admin"}>
-            <p className="uppercase text-muted-foreground text-xs xl:text-sm tracking-wider">
-              Dashboard
-            </p>
-          </Link>
-          <Link href={"/admin/catalog"}>
-            <p className="uppercase text-muted-foreground text-xs xl:text-sm tracking-wider">
-              Catalog
-            </p>
-          </Link>
+          {adminLinks.map((link) => (
+            <Link key={link.href} href={link.href}>
+              <p
+                className={`uppercase text-xs lg:text-sm tracking-wider transition-colors ${
+                  isAdminLinkActive(pathname, link.href)
+                    ? "text-white"
+                    : "text-muted-foreground hover:text-white"
+                }`}
+              >
+                {link.label}
+              </p>
+            </Link>
+          ))}
         </div>
 
         {/* Right side - Auth, Hamburger */}
@@ -182,20 +196,20 @@ const AdminNavbar = () => {
 
           {/* Navigation Links */}
           <nav className="flex flex-col p-4 space-y-2">
-            <Link
-              href={"/admin"}
-              onClick={closeMobileMenu}
-              className="uppercase text-muted-foreground text-sm tracking-wider py-3 px-4 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-            >
-              Dashboard
-            </Link>
-            <Link
-              href={"/admin/catalog"}
-              onClick={closeMobileMenu}
-              className="uppercase text-muted-foreground text-sm tracking-wider py-3 px-4 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-            >
-              Catalog
-            </Link>
+            {adminLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                onClick={closeMobileMenu}
+                className={`uppercase text-sm tracking-wider py-3 px-4 rounded-lg transition-colors ${
+                  isAdminLinkActive(pathname, link.href)
+                    ? "bg-white/10 text-white"
+                    : "text-muted-foreground hover:bg-white/5 hover:text-white"
+                }`}
+              >
+                {link.label}
+              </Link>
+            ))}
           </nav>
 
           {/* Auth Section in mobile menu */}
