@@ -52,14 +52,20 @@ export async function GET(request: NextRequest) {
 
     let releases;
     if (carouselOnly) {
-      const featured = await prisma.release.findMany({
-        where: { showOnHome: true },
-        ...baseList,
-      });
-      releases =
-        featured.length > 0
-          ? featured
-          : await prisma.release.findMany(baseList);
+      // Pin + auto-fill: releases flagged "New Music carousel" (showOnHome) come
+      // first in their admin (sortOrder) order, then the rest auto-fill newest
+      // first. New releases therefore appear automatically without being flagged,
+      // and the newest cycle to the front. Capped so it stays a highlight reel.
+      const all = await prisma.release.findMany(baseList);
+      const pinned = all.filter((r) => r.showOnHome);
+      const rest = all
+        .filter((r) => !r.showOnHome)
+        .sort((a, b) => {
+          const ta = (a.releaseDate ? new Date(a.releaseDate) : new Date(a.createdAt)).getTime();
+          const tb = (b.releaseDate ? new Date(b.releaseDate) : new Date(b.createdAt)).getTime();
+          return tb - ta;
+        });
+      releases = [...pinned, ...rest].slice(0, 12);
     } else if (qParam.length > 0) {
       // Fuzzy match in JS (catalog is small) so "bigheck" still finds
       // releases by "Big Heck" — against release name, linked artists, and

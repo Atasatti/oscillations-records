@@ -39,6 +39,7 @@ const NewMusicSection = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
 
   const updateScrollArrows = useCallback(() => {
     const el = scrollContainerRef.current;
@@ -79,6 +80,30 @@ const NewMusicSection = () => {
       ro.disconnect();
     };
   }, [releases, updateScrollArrows]);
+
+  // Gentle auto-advance: step one card every few seconds, loop at the end.
+  // Pauses on hover and is disabled for users who prefer reduced motion.
+  useEffect(() => {
+    if (releases.length <= 1 || isPaused) return;
+    const prefersReduced =
+      typeof window !== "undefined" &&
+      window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    if (prefersReduced) return;
+
+    const id = setInterval(() => {
+      const node = scrollContainerRef.current;
+      if (!node) return;
+      const first = node.firstElementChild as HTMLElement | null;
+      const delta = first ? first.offsetWidth + SCROLL_GAP_PX : node.clientWidth;
+      const atEnd = node.scrollLeft + node.clientWidth >= node.scrollWidth - 4;
+      node.scrollTo({
+        left: atEnd ? 0 : node.scrollLeft + delta,
+        behavior: "smooth",
+      });
+    }, 4500);
+
+    return () => clearInterval(id);
+  }, [releases, isPaused]);
 
   const fetchReleases = useCallback(async () => {
     try {
@@ -122,7 +147,11 @@ const NewMusicSection = () => {
         ) : releases.length === 0 ? (
           <p className="text-center text-muted-foreground mt-10">No releases available yet.</p>
         ) : (
-          <div className="flex items-center gap-2 sm:gap-3 mt-8 sm:mt-10 min-w-0">
+          <div
+            className="flex items-center gap-2 sm:gap-3 mt-8 sm:mt-10 min-w-0"
+            onMouseEnter={() => setIsPaused(true)}
+            onMouseLeave={() => setIsPaused(false)}
+          >
             {canScrollLeft ? (
               <button
                 type="button"
