@@ -6,9 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft, Save, Image as ImageIcon, Loader2 } from "lucide-react";
+import { useToast } from "@/components/local-ui/Toast";
 
 export default function CreateArtist() {
   const router = useRouter();
+  const toast = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [imageError, setImageError] = useState<string>("");
@@ -160,11 +162,11 @@ export default function CreateArtist() {
         router.push("/admin/catalog");
       } else {
         const error = await response.json();
-        alert(`Error: ${error.error}`);
+        toast.error(`Error: ${error.error}`);
       }
     } catch (error) {
       console.error("Error creating artist:", error);
-      alert(`Failed to create artist: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      toast.error(`Failed to create artist: ${error instanceof Error ? error.message : 'Unknown error'}`);
       setUploadingImage(false);
     } finally {
       setIsLoading(false);

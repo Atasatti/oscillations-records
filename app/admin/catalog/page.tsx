@@ -33,6 +33,7 @@ import {
   Library,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/components/local-ui/Toast";
 
 interface Artist {
   id: string;
@@ -160,6 +161,7 @@ function NewReleaseDropdown({
 }
 
 export default function AdminCatalog() {
+  const toast = useToast();
   const [artists, setArtists] = useState<Artist[]>([]);
   const [releases, setReleases] = useState<CatalogRelease[]>([]);
   const [upcomingReleases, setUpcomingReleases] = useState<UpcomingRelease[]>([]);
@@ -264,13 +266,13 @@ export default function AdminCatalog() {
         const err = await res.json().catch(() => ({}));
         const msg =
           typeof err.error === "string" ? err.error : "Failed to save artist order";
-        alert(msg);
+        toast.error(msg);
         throw new Error(msg);
       }
       setArtists(ordered);
     } catch (e) {
       if (e instanceof TypeError) {
-        alert("Network error - could not save artist order.");
+        toast.error("Network error - could not save artist order.");
       }
       throw e;
     }
@@ -289,7 +291,7 @@ export default function AdminCatalog() {
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        alert(
+        toast.error(
           typeof err.error === "string"
             ? err.error
             : "Failed to update artist visibility"
@@ -298,7 +300,7 @@ export default function AdminCatalog() {
       }
     } catch {
       setArtists(prev);
-      alert("Failed to update artist visibility");
+      toast.error("Failed to update artist visibility");
     }
   };
 
@@ -316,11 +318,11 @@ export default function AdminCatalog() {
         fetchAllData();
       } else {
         const error = await response.json();
-        alert(`Error: ${error.error}`);
+        toast.error(`Error: ${error.error}`);
       }
     } catch (error) {
       console.error("Error deleting artist:", error);
-      alert("Failed to delete artist");
+      toast.error("Failed to delete artist");
     }
   };
 
@@ -342,11 +344,11 @@ export default function AdminCatalog() {
         fetchAllData();
       } else {
         const error = await response.json();
-        alert(`Error: ${error.error}`);
+        toast.error(`Error: ${error.error}`);
       }
     } catch (error) {
       console.error("Error deleting release:", error);
-      alert("Failed to delete release");
+      toast.error("Failed to delete release");
     }
   };
 
@@ -405,7 +407,7 @@ export default function AdminCatalog() {
     e.preventDefault();
     if (!upcomingEditingId) return;
     if (!upcomingEditForm.name.trim() || !upcomingEditForm.releaseDate) {
-      alert("Name and release date are required");
+      toast.error("Name and release date are required");
       return;
     }
 
@@ -448,7 +450,7 @@ export default function AdminCatalog() {
       fetchAllData();
     } catch (error) {
       console.error("Error updating upcoming release:", error);
-      alert(error instanceof Error ? error.message : "Failed to update upcoming release");
+      toast.error(error instanceof Error ? error.message : "Failed to update upcoming release");
     } finally {
       setIsUploadingUpcomingImage(false);
       setIsSavingUpcomingEdit(false);
@@ -458,7 +460,7 @@ export default function AdminCatalog() {
   const handleCreateUpcomingRelease = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!upcomingForm.name || !upcomingForm.releaseDate || !upcomingForm.imageFile) {
-      alert("Please fill all fields and choose an image");
+      toast.error("Please fill all fields and choose an image");
       return;
     }
 
@@ -505,7 +507,7 @@ export default function AdminCatalog() {
       fetchAllData();
     } catch (error) {
       console.error("Error creating upcoming release:", error);
-      alert(error instanceof Error ? error.message : "Failed to create upcoming release");
+      toast.error(error instanceof Error ? error.message : "Failed to create upcoming release");
     } finally {
       setIsUploadingUpcomingImage(false);
       setIsCreatingUpcoming(false);
@@ -526,7 +528,7 @@ export default function AdminCatalog() {
       fetchAllData();
     } catch (error) {
       console.error("Error deleting upcoming release:", error);
-      alert(error instanceof Error ? error.message : "Failed to delete upcoming release");
+      toast.error(error instanceof Error ? error.message : "Failed to delete upcoming release");
     }
   };
 
@@ -543,13 +545,13 @@ export default function AdminCatalog() {
         const err = await res.json().catch(() => ({}));
         const msg =
           typeof err.error === "string" ? err.error : "Failed to save order";
-        alert(msg);
+        toast.error(msg);
         throw new Error(msg);
       }
       setReleases(ordered);
     } catch (e) {
       if (e instanceof TypeError) {
-        alert("Network error — could not save order.");
+        toast.error("Network error — could not save order.");
       }
       throw e;
     }
@@ -570,7 +572,7 @@ export default function AdminCatalog() {
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        alert(
+        toast.error(
           typeof err.error === "string"
             ? err.error
             : "Failed to update Latest flag"
@@ -579,7 +581,7 @@ export default function AdminCatalog() {
       }
     } catch {
       setReleases(prev);
-      alert("Failed to update Latest flag");
+      toast.error("Failed to update Latest flag");
     }
   };
 
@@ -596,7 +598,7 @@ export default function AdminCatalog() {
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        alert(
+        toast.error(
           typeof err.error === "string"
             ? err.error
             : "Failed to update New Music carousel"
@@ -605,7 +607,7 @@ export default function AdminCatalog() {
       }
     } catch {
       setReleases(prev);
-      alert("Failed to update New Music carousel");
+      toast.error("Failed to update New Music carousel");
     }
   };
 
@@ -620,13 +622,13 @@ export default function AdminCatalog() {
         const err = await res.json().catch(() => ({}));
         const msg =
           typeof err.error === "string" ? err.error : "Failed to save order";
-        alert(msg);
+        toast.error(msg);
         throw new Error(msg);
       }
       setUpcomingReleases(ordered);
     } catch (e) {
       if (e instanceof TypeError) {
-        alert("Network error — could not save order.");
+        toast.error("Network error — could not save order.");
       }
       throw e;
     }

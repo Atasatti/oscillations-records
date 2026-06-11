@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft, Save, Image as ImageIcon, Loader2 } from "lucide-react";
 import { MultiSelect } from "@/components/ui/multi-select";
+import { useToast } from "@/components/local-ui/Toast";
 import {
   buildArtistMap,
   combinedFeatureDisplayNames,
@@ -31,6 +32,7 @@ export default function ReleaseForm({
   releaseId,
 }: ReleaseFormProps) {
   const router = useRouter();
+  const toast = useToast();
   const [loadedKind, setLoadedKind] = useState<
     "SINGLE" | "EP" | "ALBUM" | null
   >(null);
@@ -75,7 +77,7 @@ export default function ReleaseForm({
         if (res.ok) setArtists(await res.json());
       } catch (e) {
         console.error(e);
-        alert("Failed to fetch artists");
+        toast.error("Failed to fetch artists");
       } finally {
         setLoadingArtists(false);
       }
@@ -89,7 +91,7 @@ export default function ReleaseForm({
       try {
         const res = await fetch(`/api/releases/${releaseId}`);
         if (!res.ok) {
-          alert("Failed to load release");
+          toast.error("Failed to load release");
           router.push("/admin/catalog");
           return;
         }
@@ -130,7 +132,7 @@ export default function ReleaseForm({
         if (data.kind) setLoadedKind(data.kind as "SINGLE" | "EP" | "ALBUM");
       } catch (e) {
         console.error(e);
-        alert("Failed to load release");
+        toast.error("Failed to load release");
       } finally {
         if (!cancelled) setLoadingRelease(false);
       }
@@ -209,23 +211,23 @@ export default function ReleaseForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name?.trim()) {
-      alert("Please enter a release name");
+      toast.error("Please enter a release name");
       return;
     }
     if (mode === "create" && !formData.coverImageFile) {
-      alert("Please select a cover image");
+      toast.error("Please select a cover image");
       return;
     }
     if (mode === "edit" && !formData.coverImageFile && !coverImageUrl) {
-      alert("Cover image is missing");
+      toast.error("Cover image is missing");
       return;
     }
     if (formData.primaryArtistIds.length === 0) {
-      alert("Please select at least one primary artist");
+      toast.error("Please select at least one primary artist");
       return;
     }
     if (artists.length === 0) {
-      alert("No artists available. Create an artist first.");
+      toast.error("No artists available. Create an artist first.");
       return;
     }
 
@@ -284,7 +286,7 @@ export default function ReleaseForm({
           router.push(`/admin/catalog/release/${created.id}`);
         } else {
           const err = await res.json();
-          alert(err.error || "Create failed");
+          toast.error(err.error || "Create failed");
         }
       } else {
         const res = await fetch(`/api/releases/${releaseId}`, {
@@ -296,12 +298,12 @@ export default function ReleaseForm({
           router.push(`/admin/catalog/release/${releaseId}`);
         } else {
           const err = await res.json();
-          alert(err.error || "Update failed");
+          toast.error(err.error || "Update failed");
         }
       }
     } catch (err) {
       console.error(err);
-      alert(err instanceof Error ? err.message : "Failed");
+      toast.error(err instanceof Error ? err.message : "Failed");
     } finally {
       setIsLoading(false);
     }

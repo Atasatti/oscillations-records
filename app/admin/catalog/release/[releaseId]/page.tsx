@@ -51,6 +51,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import Link from "next/link";
+import { useToast } from "@/components/local-ui/Toast";
 import {
   buildArtistMap,
   combinedFeatureDisplayNames,
@@ -227,6 +228,7 @@ export default function AdminReleaseDetail() {
   const params = useParams();
   const router = useRouter();
   const releaseId = params.releaseId as string;
+  const toast = useToast();
 
   const [release, setRelease] = useState<ReleaseDetail | null>(null);
   const [allArtists, setAllArtists] = useState<ArtistSummary[]>([]);
@@ -342,11 +344,11 @@ export default function AdminReleaseDetail() {
         router.push("/admin/catalog");
       } else {
         const err = await res.json();
-        alert(err.error || "Failed to delete");
+        toast.error(err.error || "Failed to delete");
       }
     } catch (e) {
       console.error(e);
-      alert("Failed to delete release");
+      toast.error("Failed to delete release");
     }
   };
 
@@ -362,11 +364,11 @@ export default function AdminReleaseDetail() {
         fetchData();
       } else {
         const err = await res.json();
-        alert(err.error || "Failed to delete track");
+        toast.error(err.error || "Failed to delete track");
       }
     } catch (e) {
       console.error(e);
-      alert("Failed to delete track");
+      toast.error("Failed to delete track");
     }
   };
 
@@ -394,14 +396,14 @@ export default function AdminReleaseDetail() {
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        alert(
+        toast.error(
           typeof err.error === "string" ? err.error : "Failed to save track order"
         );
         setOrderedTracks(prev);
       }
     } catch {
       setOrderedTracks(prev);
-      alert("Network error — could not save track order.");
+      toast.error("Network error — could not save track order.");
     }
   };
 

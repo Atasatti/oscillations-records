@@ -6,11 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft, Save, Image as ImageIcon, Loader2 } from "lucide-react";
+import { useToast } from "@/components/local-ui/Toast";
 
 export default function EditArtist() {
   const params = useParams();
   const router = useRouter();
   const artistId = params.artistId as string;
+  const toast = useToast();
   const imageInputRef = useRef<HTMLInputElement>(null);
 
   const [isLoading, setIsLoading] = useState(false);
@@ -59,7 +61,7 @@ export default function EditArtist() {
         if (data.profilePicture) setImagePreview(data.profilePicture);
       } catch (error) {
         console.error(error);
-        alert("Failed to load artist");
+        toast.error("Failed to load artist");
         router.push("/admin/catalog");
       } finally {
         setIsFetching(false);
@@ -136,7 +138,7 @@ export default function EditArtist() {
       router.push("/admin/catalog");
     } catch (error) {
       console.error(error);
-      alert(error instanceof Error ? error.message : "Failed to update artist");
+      toast.error(error instanceof Error ? error.message : "Failed to update artist");
     } finally {
       setUploadingImage(false);
       setIsLoading(false);

@@ -13,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { MultiSelect } from "@/components/ui/multi-select";
 import { Loader2, Music } from "lucide-react";
 import { normalizeFeatureArtistNamesInput } from "@/lib/release-format";
+import { useToast } from "@/components/local-ui/Toast";
 
 type ArtistOpt = { id: string; name: string };
 
@@ -268,6 +269,7 @@ export default function TrackFormDialog({
   track,
   onSaved,
 }: Props) {
+  const toast = useToast();
   const [saving, setSaving] = useState(false);
   const [uploadingAudio, setUploadingAudio] = useState(false);
   const [calcDuration, setCalcDuration] = useState(false);
@@ -425,7 +427,7 @@ export default function TrackFormDialog({
         };
       });
     } catch {
-      alert("Could not read audio duration");
+      toast.error("Could not read audio duration");
     } finally {
       setCalcDuration(false);
     }
@@ -451,7 +453,7 @@ export default function TrackFormDialog({
       const hasName = Boolean(r.name.trim());
       const hasRole = Boolean(r.role.trim());
       if (hasName !== hasRole) {
-        alert(`${label}: each row needs both name and role (or leave both blank)`);
+        toast.error(`${label}: each row needs both name and role (or leave both blank)`);
         return false;
       }
     }
@@ -461,23 +463,23 @@ export default function TrackFormDialog({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) {
-      alert("Track name is required");
+      toast.error("Track name is required");
       return;
     }
     if (primaryArtistIds.length === 0) {
-      alert("Select at least one primary artist");
+      toast.error("Select at least one primary artist");
       return;
     }
     if (mode === "create" && (!audioFile || duration <= 0)) {
-      alert("Add an audio file (WAV or MP3) and wait for duration");
+      toast.error("Add an audio file (WAV or MP3) and wait for duration");
       return;
     }
     if (!isrcCode.trim()) {
-      alert("ISRC is required");
+      toast.error("ISRC is required");
       return;
     }
     if (mode === "edit" && !audioFile && !track?.audioFile) {
-      alert("Audio is missing");
+      toast.error("Audio is missing");
       return;
     }
 
@@ -489,7 +491,7 @@ export default function TrackFormDialog({
       const hasName = Boolean(r.name.trim());
       const hasRole = Boolean(r.role.trim());
       if (hasName !== hasRole) {
-        alert('Additional credits: each "Add more" row needs both name and role');
+        toast.error('Additional credits: each "Add more" row needs both name and role');
         return;
       }
     }
@@ -569,7 +571,7 @@ export default function TrackFormDialog({
       onSaved();
     } catch (err) {
       console.error(err);
-      alert(err instanceof Error ? err.message : "Failed");
+      toast.error(err instanceof Error ? err.message : "Failed");
     } finally {
       setUploadingStems(false);
       setSaving(false);
