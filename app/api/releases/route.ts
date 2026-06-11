@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getToken } from "next-auth/jwt";
 import { prisma } from "@/lib/prisma";
 import { fuzzyScore } from "@/lib/fuzzy";
+import { isAdminRequest, requireAdmin } from "@/lib/auth-guard";
 import {
   apiKindToPrisma,
   buildArtistMap,
@@ -16,16 +16,11 @@ import {
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
-const ADMIN_EMAIL = "oscillationrecordz@gmail.com";
 
 // GET /api/releases — list releases for public grid (optional `?limit=`; `?carousel=1` returns all `showOnHome` releases with no cap, or all releases if none flagged)
 export async function GET(request: NextRequest) {
   try {
-    const token = await getToken({
-      req: request,
-      secret: process.env.NEXTAUTH_SECRET,
-    });
-    const isAdmin = Boolean(token?.email && token.email === ADMIN_EMAIL);
+    const isAdmin = await isAdminRequest(request);
 
     const { searchParams } = new URL(request.url);
     const limitRaw = searchParams.get("limit");
@@ -43,7 +38,15 @@ export async function GET(request: NextRequest) {
     const baseList = {
       orderBy: [{ sortOrder: "asc" as const }, { createdAt: "desc" as const }],
       include: {
-        tracks: { orderBy: { sortOrder: "asc" as const } },
+        // Listing/search/carousel only need the first track's audio (for the card
+        // player) and a track count — not every track's audio/lyrics/credits.
+        // This keeps the payload small even as the catalog grows.
+        tracks: {
+          orderBy: { sortOrder: "asc" as const },
+          take: 1,
+          select: { audioFile: true },
+        },
+        _count: { select: { tracks: true } },
       },
     };
 
@@ -149,11 +152,20 @@ export async function GET(request: NextRequest) {
         year: rd
           ? rd.getFullYear().toString()
           : new Date(r.createdAt).getFullYear().toString(),
-        songCount: r.tracks.length,
+        songCount: r._count.tracks,
       };
     });
 
-    return NextResponse.json(out);
+    // Cache the public response at the CDN (results vary by query string, which
+    // is part of the cache key). Admin responses include private fields, so they
+    // are never shared-cached.
+    return NextResponse.json(out, {
+      headers: {
+        "Cache-Control": isAdmin
+          ? "private, no-store"
+          : "public, s-maxage=60, stale-while-revalidate=300",
+      },
+    });
   } catch (error) {
     console.error("Error fetching releases:", error);
     return NextResponse.json(
@@ -166,6 +178,9 @@ export async function GET(request: NextRequest) {
 // POST /api/releases — create release shell (tracks added separately)
 export async function POST(request: NextRequest) {
   try {
+    const guard = await requireAdmin(request);
+    if (!guard.ok) return guard.response;
+
     const body = await request.json();
     const kind = apiKindToPrisma(body.kind);
     if (!kind) {
